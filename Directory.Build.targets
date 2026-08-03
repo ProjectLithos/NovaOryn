@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="RejectPublicVoidMethods" AfterTargets="CoreCompile" Condition="'$(NovaOrynSkipPublicApiValidation)' != 'true'">
+    <Message Importance="Low" Text="NovaOryn public API validation is performed by NovaOryn.SourcePolicy.Tests." />
+  </Target>
+</Project>

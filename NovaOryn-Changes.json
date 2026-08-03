@@ -1,0 +1,17 @@
+{
+  "product": "Nova Oryn OS SDK",
+  "shortName": "NovaOryn",
+  "version": "0.0.5",
+  "baseVersion": "0.0.4",
+  "repositoryWasEmpty": false,
+  "initialCommitArchive": "NovaOryn-FullSource-0.0.5.zip",
+  "toolchainDownloadAllowedAfterSourceCommitAndPush": true,
+  "deletedFiles": [],
+  "renamedFiles": [],
+  "notes": [
+    "Fixes 'fatal: Needed a single revision' in an initialised repository with no commits.",
+    "The HEAD check now uses Start-Process and tests Git's exit code without surfacing the expected empty-repository diagnostic.",
+    "An initialised repository without HEAD continues to select the latest FullSource archive.",
+    "The updater creates commits but does not push or download the toolchain."
+  ]
+}
