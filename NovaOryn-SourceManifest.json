@@ -1,7 +1,7 @@
 {
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.10",
-  "initialCommitArchive": "NovaOryn-FullSource-0.0.10.zip",
+  "version": "0.0.11",
+  "initialCommitArchive": "NovaOryn-FullSource-0.0.11.zip",
   "files": [
     {
       "path": ".gitignore",
@@ -11,7 +11,7 @@
     {
       "path": "Directory.Build.props",
       "size": 692,
-      "sha256": "d0ac6c04d1fc35a4c2acef2d21c2abee34a221e0e3fb57e84409c4b37609ce20"
+      "sha256": "260eb48e10f7a6ddeb81ae9e40cbae80140d3b1e2a7c997fde4e997eb2fa4afb"
     },
     {
       "path": "Directory.Build.targets",
@@ -25,13 +25,13 @@
     },
     {
       "path": "Install-NovaOrynToolchain.ps1",
-      "size": 7770,
-      "sha256": "3ce7c0dc5e2531ed3cce798e59288c90bb74f94987c6a18d126bbb7c51d41819"
+      "size": 8169,
+      "sha256": "01f4fec6946000883fcfdaa31dab336ae5bdcd83b36df513f2669f645d233b91"
     },
     {
       "path": "NovaOryn-Changes.json",
-      "size": 884,
-      "sha256": "ea36f158f1272696937b9dea15bdf4fad519ea51f02593b3073f7573ca33d01b"
+      "size": 705,
+      "sha256": "8b424a241203f75f4984b673571e59dee28b6fb60a7181bd4d15f9b8b3b8f4a9"
     },
     {
       "path": "NovaOryn.sln",
@@ -40,8 +40,8 @@
     },
     {
       "path": "README.md",
-      "size": 2260,
-      "sha256": "9bb0d54fffc40dca4604c2e8552653971ae0ca2678a7780c9630f70731964e4e"
+      "size": 2520,
+      "sha256": "4d80741878303d74f98e53ad02c19db7d416471b24ff320a143d89a1e50904d4"
     },
     {
       "path": "Update-NovaOryn.bat",
@@ -72,6 +72,11 @@
       "path": "docs/Release-0.0.10.md",
       "size": 1063,
       "sha256": "6f6b91260bac08cfffeadef021a0ac45294c28b51c9e85346e3d95aacd4c9553"
+    },
+    {
+      "path": "docs/Release-0.0.11.md",
+      "size": 842,
+      "sha256": "71a586c4f4149c953ecf6d13db15bbeb25c340acc6c3945c597fd880336b916f"
     },
     {
       "path": "docs/Release-0.0.2.md",
@@ -305,8 +310,8 @@
     },
     {
       "path": "toolchain/NovaOryn.Toolchain.json",
-      "size": 893,
-      "sha256": "0455084904447cd3580c00a9900e6a2c480714af5c77821a18cad814fee273f7"
+      "size": 922,
+      "sha256": "fc1c03bcbdc8830b989edeec495a00dc92c7c173d453b93bc64400dc8c631975"
     }
   ]
 }

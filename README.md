@@ -2,7 +2,7 @@
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.10
+## Release 0.0.11
 
 This release fixes NativeAOT acquisition by allowing the .NET SDK to resolve its `DotnetPlatform` runtime packs instead of directly referencing them as ordinary NuGet packages.
 
@@ -50,6 +50,10 @@ The pinned components are declared in `toolchain/NovaOryn.Toolchain.json`:
 - .NET SDK 10.0.302
 - NativeAOT/ILC packages 10.0.10
 - LLD and selected LLVM binary utilities 22.1.6
+
+### LLVM assembler policy
+
+`llvm-mc.exe` is optional. NovaOryn uses NASM for required x64 assembly, so toolchain installation does not fail when the official LLVM Windows package omits `llvm-mc.exe`. LLD and the listed LLVM binary utilities remain mandatory.
 - QEMU 11.0.0 or newer
 - NASM 2.16.0 or newer
 
@@ -70,4 +74,4 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.10.md` for this release.
+See `docs/Release-0.0.11.md` for this release.

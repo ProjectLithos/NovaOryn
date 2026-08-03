@@ -1,8 +1,8 @@
 {
   "product": "Nova Oryn OS SDK",
   "shortName": "NovaOryn",
-  "version": "0.0.10",
-  "baseVersion": "0.0.9",
+  "version": "0.0.11",
+  "baseVersion": "0.0.10",
   "repositoryWasEmpty": false,
   "toolchainDownloadAllowedAfterSourceCommitAndPush": true,
   "deletedFiles": [],
@@ -13,15 +13,12 @@
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
-    "docs/Release-0.0.10.md",
-    "toolchain/NovaOryn.NativeAot.Bootstrap.cs",
-    "toolchain/NovaOryn.NativeAot.Bootstrap.csproj",
+    "docs/Release-0.0.11.md",
     "toolchain/NovaOryn.Toolchain.json"
   ],
   "notes": [
-    "Removes the direct PackageReference to the DotnetPlatform NativeAOT runtime pack.",
-    "Uses SDK runtime-pack resolution with PublishAot and win-x64.",
-    "Pins RuntimeFrameworkVersion 10.0.10.",
-    "Reuses the installed .NET SDK before continuing toolchain setup."
+    "Makes llvm-mc.exe optional because NASM is the required assembler.",
+    "Keeps LLD and selected LLVM binary utilities mandatory.",
+    "Reuses already-installed valid toolchain components."
   ]
 }

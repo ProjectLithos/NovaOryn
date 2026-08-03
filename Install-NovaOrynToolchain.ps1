@@ -99,6 +99,15 @@ function Install-LlvmTools([string]$RepositoryRoot, [pscustomobject]$Manifest) {
     foreach ($tool in $Manifest.llvm.requiredTools) {
         if (-not (Test-Path -LiteralPath (Join-Path $binRoot $tool) -PathType Leaf)) { Fail "Required LLVM tool is missing: $tool" }
     }
+    if ($null -ne $Manifest.llvm.optionalTools) {
+        foreach ($tool in $Manifest.llvm.optionalTools) {
+            if (Test-Path -LiteralPath (Join-Path $binRoot $tool) -PathType Leaf) {
+                Write-Ok "Optional LLVM tool is available: $tool"
+            } else {
+                Write-Step "Optional LLVM tool is unavailable and is not required: $tool"
+            }
+        }
+    }
     if (-not (Test-VersionOutput (Join-Path $binRoot 'ld.lld.exe') $Manifest.llvm.version)) { Fail 'LLD version validation failed.' }
     Write-Ok 'LLD and required LLVM utilities installed.'
 }
