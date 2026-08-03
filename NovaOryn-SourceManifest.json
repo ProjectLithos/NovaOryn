@@ -1,7 +1,7 @@
 {
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.8",
-  "initialCommitArchive": "NovaOryn-FullSource-0.0.8.zip",
+  "version": "0.0.9",
+  "initialCommitArchive": "NovaOryn-FullSource-0.0.9.zip",
   "files": [
     {
       "path": ".gitignore",
@@ -11,7 +11,7 @@
     {
       "path": "Directory.Build.props",
       "size": 688,
-      "sha256": "17a4d8fe2d98986b188380a6fa31083be4019f95d1af3624d57bb8225ca184c2"
+      "sha256": "a5493113a132ed1a7ae65ee5006d4c71d01bf2b6e1ee401117527fd270f2c261"
     },
     {
       "path": "Directory.Build.targets",
@@ -25,13 +25,13 @@
     },
     {
       "path": "Install-NovaOrynToolchain.ps1",
-      "size": 7323,
-      "sha256": "83ba7337dac69cb7c1cde9fcf82231a9059e7cb8246d6d21ad46fd2bcb3c4cae"
+      "size": 7469,
+      "sha256": "8f913a3833c97bae68592c240d3d7362c46f3b178cc9a6c380d529a5a624461a"
     },
     {
       "path": "NovaOryn-Changes.json",
-      "size": 813,
-      "sha256": "a477533d6f5a5f4909c4d3f5f0473295e761aaccf9459d4249e8e964c24db426"
+      "size": 751,
+      "sha256": "badb7b60c29b484a4ef8791a95d1971a60d4c1f6c25b7817d499f3535ee61a0d"
     },
     {
       "path": "NovaOryn.sln",
@@ -40,8 +40,8 @@
     },
     {
       "path": "README.md",
-      "size": 2223,
-      "sha256": "92b0108e3e653811cc57b52c25bbf57d25975427ac9dcc81d3b4f9c2f8dfc32d"
+      "size": 2209,
+      "sha256": "8d1e1b848dbce43395ce380dbb5c9d09797aaba8f64bdddb3c5996df823479ad"
     },
     {
       "path": "Update-NovaOryn.bat",
@@ -102,6 +102,11 @@
       "path": "docs/Release-0.0.8.md",
       "size": 935,
       "sha256": "e2ce4559c50c18b9d966322fabb5372972387ae94e3ea444acf7ecf535357e73"
+    },
+    {
+      "path": "docs/Release-0.0.9.md",
+      "size": 884,
+      "sha256": "63c453dfc26903bce356ce16bff1eca5a4e6e0cd776757fc7aff9a6accc9d00f"
     },
     {
       "path": "examples/MinimalKernel/NovaOrynProject.json",
@@ -291,7 +296,7 @@
     {
       "path": "toolchain/NovaOryn.Toolchain.json",
       "size": 843,
-      "sha256": "0a584f9f9bd7db8b11278fd95f0dbcac40743a67c41c454d6f3b426b5ba9f3e6"
+      "sha256": "41c3ad098f510474828bec00df828ef1a0a8c5d9bef389a3c8d7c11ccd23b994"
     }
   ]
 }

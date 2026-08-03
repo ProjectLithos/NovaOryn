@@ -29,7 +29,7 @@ function Install-DotNet([string]$RepositoryRoot, [pscustomobject]$Manifest) {
     $dotnet = Join-Path $installRoot 'dotnet.exe'
     if (Test-VersionOutput $dotnet $Manifest.dotNetSdk.version) {
         Write-Ok ".NET SDK $($Manifest.dotNetSdk.version) is already valid."
-        return $dotnet
+        return
     }
 
     New-Item -ItemType Directory -Path $installRoot -Force | Out-Null
@@ -37,13 +37,14 @@ function Install-DotNet([string]$RepositoryRoot, [pscustomobject]$Manifest) {
     Write-Step "Downloading the official .NET installer."
     Invoke-WebRequest -UseBasicParsing -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile $installer
     Write-Step "Installing .NET SDK $($Manifest.dotNetSdk.version)."
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Version $Manifest.dotNetSdk.version -InstallDir $installRoot -NoPath
-    if ($LASTEXITCODE -ne 0 -or -not (Test-VersionOutput $dotnet $Manifest.dotNetSdk.version)) {
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -Version $Manifest.dotNetSdk.version -InstallDir $installRoot -NoPath 2>&1 | ForEach-Object { Write-Host $_ }
+    $installExitCode = $LASTEXITCODE
+    if ($installExitCode -ne 0 -or -not (Test-VersionOutput $dotnet $Manifest.dotNetSdk.version)) {
         Fail 'The pinned .NET SDK could not be installed or validated.'
     }
     Write-Ok ".NET SDK $($Manifest.dotNetSdk.version) installed."
-    return $dotnet
 }
+
 
 function Install-NativeAot([string]$RepositoryRoot, [string]$DotNet, [pscustomobject]$Manifest) {
     $project = Join-Path $RepositoryRoot 'toolchain\NovaOryn.NativeAot.Bootstrap.csproj'
@@ -116,7 +117,8 @@ try {
 
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
     New-Item -ItemType Directory -Path (Join-Path $repositoryRoot '.toolchain') -Force | Out-Null
-    $dotnet = Install-DotNet $repositoryRoot $manifest
+    Install-DotNet $repositoryRoot $manifest
+    $dotnet = Join-Path (Join-Path $repositoryRoot $manifest.dotNetSdk.installDirectory) 'dotnet.exe'
     Install-NativeAot $repositoryRoot $dotnet $manifest
     Install-LlvmTools $repositoryRoot $manifest
     Ensure-WingetTool 'QEMU' 'qemu-system-x86_64.exe' $manifest.qemu.wingetId

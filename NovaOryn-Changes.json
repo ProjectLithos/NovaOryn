@@ -1,25 +1,25 @@
 {
   "product": "Nova Oryn OS SDK",
   "shortName": "NovaOryn",
-  "version": "0.0.8",
-  "baseVersion": "0.0.7",
+  "version": "0.0.9",
+  "baseVersion": "0.0.8",
   "repositoryWasEmpty": false,
   "toolchainDownloadAllowedAfterSourceCommitAndPush": true,
   "deletedFiles": [],
   "renamedFiles": [],
   "changedFiles": [
     "Directory.Build.props",
+    "Install-NovaOrynToolchain.ps1",
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
-    "Update-NovaOryn.ps1",
-    "docs/Release-0.0.8.md",
+    "docs/Release-0.0.9.md",
     "toolchain/NovaOryn.Toolchain.json"
   ],
   "notes": [
-    "Cumulative uncommitted NovaOryn release files are validated against the existing source manifest.",
-    "Selected release files are validated by SHA-256 against the ChangedFiles archive.",
-    "Unrelated or locally modified files remain protected.",
+    "Corrects PowerShell output capture from dotnet-install.ps1.",
+    "Computes the dotnet.exe path explicitly after installation.",
+    "Existing .NET SDK installation is reused.",
     "Toolchain installation remains after a successful push."
   ]
 }
