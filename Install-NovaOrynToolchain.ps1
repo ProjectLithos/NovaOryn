@@ -56,12 +56,24 @@ function Install-NativeAot([string]$RepositoryRoot, [string]$DotNet, [pscustomob
         return
     }
     New-Item -ItemType Directory -Path $packages -Force | Out-Null
-    Write-Step "Restoring NativeAOT/ILC packages $($Manifest.nativeAot.packageVersion)."
-    Invoke-Checked $DotNet @('restore', $project, '--packages', $packages, '--nologo')
+    Write-Step "Restoring NativeAOT/ILC runtime packs $($Manifest.nativeAot.packageVersion) through the .NET SDK."
+    Invoke-Checked $DotNet @(
+        'restore',
+        $project,
+        '--runtime',
+        'win-x64',
+        '--packages',
+        $packages,
+        '--nologo',
+        '/p:PublishAot=true',
+        '/p:SelfContained=true',
+        "/p:RuntimeFrameworkVersion=$($Manifest.nativeAot.packageVersion)",
+        '/p:TargetLatestRuntimePatch=false'
+    )
     if (-not (Test-Path $ilcPackage) -or -not (Test-Path $runtimePackage)) {
         Fail 'NativeAOT/ILC packages were not restored to the pinned package directory.'
     }
-    Write-Ok 'NativeAOT/ILC packages installed.'
+    Write-Ok 'NativeAOT/ILC runtime packs installed.'
 }
 
 function Install-LlvmTools([string]$RepositoryRoot, [pscustomobject]$Manifest) {

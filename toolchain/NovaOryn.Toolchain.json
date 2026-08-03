@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "productVersion": "0.0.9",
+  "productVersion": "0.0.10",
   "dotNetSdk": {
     "version": "10.0.302",
     "installDirectory": ".toolchain/DotNet"
@@ -11,7 +11,8 @@
       "Microsoft.DotNet.ILCompiler",
       "Microsoft.NETCore.App.Runtime.NativeAOT.win-x64"
     ],
-    "packageDirectory": ".toolchain/NuGetPackages"
+    "packageDirectory": ".toolchain/NuGetPackages",
+    "restoreMethod": "SdkRuntimePackResolution"
   },
   "llvm": {
     "version": "22.1.6",

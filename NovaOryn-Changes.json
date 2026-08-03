@@ -1,8 +1,8 @@
 {
   "product": "Nova Oryn OS SDK",
   "shortName": "NovaOryn",
-  "version": "0.0.9",
-  "baseVersion": "0.0.8",
+  "version": "0.0.10",
+  "baseVersion": "0.0.9",
   "repositoryWasEmpty": false,
   "toolchainDownloadAllowedAfterSourceCommitAndPush": true,
   "deletedFiles": [],
@@ -13,13 +13,15 @@
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
-    "docs/Release-0.0.9.md",
+    "docs/Release-0.0.10.md",
+    "toolchain/NovaOryn.NativeAot.Bootstrap.cs",
+    "toolchain/NovaOryn.NativeAot.Bootstrap.csproj",
     "toolchain/NovaOryn.Toolchain.json"
   ],
   "notes": [
-    "Corrects PowerShell output capture from dotnet-install.ps1.",
-    "Computes the dotnet.exe path explicitly after installation.",
-    "Existing .NET SDK installation is reused.",
-    "Toolchain installation remains after a successful push."
+    "Removes the direct PackageReference to the DotnetPlatform NativeAOT runtime pack.",
+    "Uses SDK runtime-pack resolution with PublishAot and win-x64.",
+    "Pins RuntimeFrameworkVersion 10.0.10.",
+    "Reuses the installed .NET SDK before continuing toolchain setup."
   ]
 }

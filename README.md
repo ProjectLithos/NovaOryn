@@ -2,9 +2,9 @@
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.9
+## Release 0.0.10
 
-This release fixes .NET installer output capture so successful installer progress cannot be mistaken for the `dotnet.exe` path.
+This release fixes NativeAOT acquisition by allowing the .NET SDK to resolve its `DotnetPlatform` runtime packs instead of directly referencing them as ordinary NuGet packages.
 
 ## Source update workflow
 
@@ -70,4 +70,4 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.9.md` for this release.
+See `docs/Release-0.0.10.md` for this release.
