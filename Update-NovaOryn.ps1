@@ -92,10 +92,136 @@ function Expand-SourceArchive([string]$ArchivePath, [string]$RepositoryRoot) {
     }
 }
 
-function Assert-CleanRepository([string]$RepositoryRoot) {
-    $status = & git.exe -C $RepositoryRoot status --porcelain
+function Get-ArchivePathSet([string]$ArchivePath) {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $paths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $archive = [IO.Compression.ZipFile]::OpenRead($ArchivePath)
+    try {
+        foreach ($entry in $archive.Entries) {
+            if ([string]::IsNullOrWhiteSpace($entry.Name)) { continue }
+            $relativePath = $entry.FullName.Replace('\', '/').TrimStart('/')
+            $null = $paths.Add($relativePath)
+        }
+    } finally {
+        $archive.Dispose()
+    }
+
+    $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) ('NovaOrynManifest-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
+    try {
+        Expand-Archive -LiteralPath $ArchivePath -DestinationPath $temporaryRoot -Force
+        $manifestPath = Join-Path $temporaryRoot 'NovaOryn-Changes.json'
+        if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
+            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            foreach ($path in @($manifest.deletedFiles)) {
+                if (-not [string]::IsNullOrWhiteSpace([string]$path)) { $null = $paths.Add(([string]$path).Replace('\', '/')) }
+            }
+            foreach ($rename in @($manifest.renamedFiles)) {
+                if ($null -eq $rename) { continue }
+                if (-not [string]::IsNullOrWhiteSpace([string]$rename.from)) { $null = $paths.Add(([string]$rename.from).Replace('\', '/')) }
+                if (-not [string]::IsNullOrWhiteSpace([string]$rename.to)) { $null = $paths.Add(([string]$rename.to).Replace('\', '/')) }
+            }
+        }
+    } finally {
+        Remove-Item -LiteralPath $temporaryRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    return $paths
+}
+
+function Get-Sha256([string]$Path) {
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+function Get-ArchiveFileHashes([string]$ArchivePath) {
+    $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) ('NovaOrynArchiveHashes-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
+    try {
+        Expand-Archive -LiteralPath $ArchivePath -DestinationPath $temporaryRoot -Force
+        $hashes = @{}
+        Get-ChildItem -LiteralPath $temporaryRoot -File -Recurse -Force | ForEach-Object {
+            $relative = $_.FullName.Substring($temporaryRoot.Length).TrimStart('\', '/').Replace('\', '/')
+            $hashes[$relative] = Get-Sha256 $_.FullName
+        }
+        return $hashes
+    } finally {
+        Remove-Item -LiteralPath $temporaryRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Get-PreviouslySuppliedFileHashes([string]$RepositoryRoot) {
+    $manifestPath = Join-Path $RepositoryRoot 'NovaOryn-SourceManifest.json'
+    $hashes = @{}
+    if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) { return $hashes }
+
+    try {
+        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+        foreach ($file in @($manifest.files)) {
+            if ($null -eq $file) { continue }
+            $relative = ([string]$file.path).Replace('\', '/')
+            $hash = ([string]$file.sha256).ToLowerInvariant()
+            if (-not [string]::IsNullOrWhiteSpace($relative) -and -not [string]::IsNullOrWhiteSpace($hash)) {
+                $hashes[$relative] = $hash
+            }
+        }
+    } catch {
+        Fail 'NovaOryn-SourceManifest.json is invalid and cannot be used to validate previously supplied files.'
+    }
+    return $hashes
+}
+
+function Assert-SafeWorkingTree([string]$RepositoryRoot, [string]$ArchivePath) {
+    $status = @(& git.exe -C $RepositoryRoot -c core.quotepath=false status --porcelain --untracked-files=all)
     if ($LASTEXITCODE -ne 0) { Fail 'Could not inspect repository status.' }
-    if (-not [string]::IsNullOrWhiteSpace(($status -join "`n"))) { Fail 'C:\NovaOryn has uncommitted changes.' }
+    if ($status.Count -eq 0) { return }
+
+    $archivePaths = Get-ArchivePathSet $ArchivePath
+    $archiveHashes = Get-ArchiveFileHashes $ArchivePath
+    $previousHashes = Get-PreviouslySuppliedFileHashes $RepositoryRoot
+    $unexpected = [Collections.Generic.List[string]]::new()
+
+    foreach ($line in $status) {
+        if ([string]::IsNullOrWhiteSpace($line) -or $line.Length -lt 4) { continue }
+        $statusCode = $line.Substring(0, 2)
+        $pathText = $line.Substring(3).Trim()
+        $candidatePaths = if ($pathText.Contains(' -> ')) { $pathText -split ' -> ' } else { @($pathText) }
+
+        foreach ($candidate in $candidatePaths) {
+            $normalized = $candidate.Trim('"').Replace('\', '/')
+            $localPath = Join-Path $RepositoryRoot $normalized
+
+            # A deletion or rename source is safe only when the selected release explicitly declares it.
+            if (($statusCode.Contains('D') -or $pathText.Contains(' -> ')) -and $archivePaths.Contains($normalized)) {
+                continue
+            }
+
+            if (-not (Test-Path -LiteralPath $localPath -PathType Leaf)) {
+                $unexpected.Add($normalized)
+                continue
+            }
+
+            $currentHash = Get-Sha256 $localPath
+
+            # Accept a file already extracted from the selected ChangedFiles archive.
+            if ($archiveHashes.ContainsKey($normalized) -and $archiveHashes[$normalized] -eq $currentHash) {
+                continue
+            }
+
+            # Also accept unchanged NovaOryn files left uncommitted by an earlier release,
+            # but only when their exact content matches the source manifest already supplied.
+            if ($previousHashes.ContainsKey($normalized) -and $previousHashes[$normalized] -eq $currentHash) {
+                continue
+            }
+
+            $unexpected.Add($normalized)
+        }
+    }
+
+    if ($unexpected.Count -gt 0) {
+        $uniqueUnexpected = $unexpected | Sort-Object -Unique
+        Fail "C:\NovaOryn contains uncommitted changes that are neither exact files from $([IO.Path]::GetFileName($ArchivePath)) nor unchanged files recorded by NovaOryn-SourceManifest.json: $($uniqueUnexpected -join ', ')"
+    }
+
+    Write-Ok 'Existing uncommitted files are verified NovaOryn release files and are safe to commit.'
 }
 
 function Clear-UncommittedInitialTree([string]$RepositoryRoot) {
@@ -148,7 +274,7 @@ try {
 
     Write-Ok "Selected $($latest.File.Name)."
     Ensure-Repository $repositoryRoot $remoteUrl
-    if ($hasCommit) { Assert-CleanRepository $repositoryRoot } else { Clear-UncommittedInitialTree $repositoryRoot }
+    if ($hasCommit) { Assert-SafeWorkingTree $repositoryRoot $latest.File.FullName } else { Clear-UncommittedInitialTree $repositoryRoot }
     Expand-SourceArchive $latest.File.FullName $repositoryRoot
     if ($hasCommit) { Apply-ChangeManifest $repositoryRoot }
 
@@ -165,8 +291,17 @@ try {
     if ($LASTEXITCODE -ne 0) { Fail 'git commit failed. Configure Git user.name and user.email, then run the batch again.' }
 
     Write-Ok "Committed $($latest.File.Name) to $repositoryRoot."
-    Write-Host '[INFO] No toolchain was downloaded and no source was pushed automatically.'
-    Write-Host '[INFO] Review the commit, push it, and only then run the separate toolchain installer.'
+    Write-Step 'Pushing main to origin before any toolchain download.'
+    & git.exe -C $repositoryRoot push -u origin main
+    if ($LASTEXITCODE -ne 0) { Fail 'git push failed. The toolchain was not downloaded.' }
+    Write-Ok 'The source commit is present on origin/main.'
+
+    $toolchainInstaller = Join-Path $repositoryRoot 'Install-NovaOrynToolchain.bat'
+    if (-not (Test-Path -LiteralPath $toolchainInstaller -PathType Leaf)) { Fail "Missing toolchain installer: $toolchainInstaller" }
+    Write-Step 'Checking and installing the pinned toolchain where required.'
+    & $toolchainInstaller
+    if ($LASTEXITCODE -ne 0) { Fail 'The source was pushed, but toolchain installation failed.' }
+    Write-Ok 'Source update, push, and toolchain validation completed.'
     exit 0
 } catch {
     Write-Host $_.Exception.Message

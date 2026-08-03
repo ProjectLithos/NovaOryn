@@ -1,4 +1,4 @@
-# Nova Oryn OS SDK 0.0.5
+# Nova Oryn OS SDK 0.0.6
 
 ## Purpose
 

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "productVersion": "0.0.8",
+  "dotNetSdk": {
+    "version": "10.0.302",
+    "installDirectory": ".toolchain/DotNet"
+  },
+  "nativeAot": {
+    "packageVersion": "10.0.10",
+    "packages": [
+      "Microsoft.DotNet.ILCompiler",
+      "Microsoft.NETCore.App.Runtime.NativeAOT.win-x64"
+    ],
+    "packageDirectory": ".toolchain/NuGetPackages"
+  },
+  "llvm": {
+    "version": "22.1.6",
+    "requiredTools": [
+      "ld.lld.exe",
+      "lld-link.exe",
+      "llvm-ar.exe",
+      "llvm-objcopy.exe",
+      "llvm-readobj.exe",
+      "llvm-nm.exe",
+      "llvm-objdump.exe",
+      "llvm-mc.exe"
+    ],
+    "installDirectory": ".toolchain/LLVM"
+  },
+  "qemu": {
+    "minimumVersion": "11.0.0",
+    "wingetId": "SoftwareFreedomConservancy.QEMU"
+  },
+  "nasm": {
+    "minimumVersion": "2.16.0",
+    "wingetId": "NASM.NASM"
+  }
+}

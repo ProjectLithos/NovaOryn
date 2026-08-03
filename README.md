@@ -2,87 +2,72 @@
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.5
+## Release 0.0.8
 
-The first source release established the repository, public API rules, `KMain` kernel-entry contract, x64 native entry and halt assets, and the executable-oriented compiler/linker/image/QEMU tool boundaries.
+This release adds the pinned post-commit toolchain bootstrap. The updater commits and pushes source before it permits any toolchain download.
 
-This release is an implementation foundation. It does not yet claim a boot-complete NativeAOT runtime.
+## Source update workflow
 
-## First repository commit
-
-The first Git commit must be created from the **FullSource** archive, not the ChangedFiles archive.
-
-1. Create or empty `C:\NovaOryn`.
-2. Extract `NovaOryn-FullSource-0.0.5.zip` directly into `C:\NovaOryn`.
-3. Initialise Git and connect the repository to:
+Run:
 
 ```text
-https://github.com/ProjectLithos/NovaOryn.git
+Update-NovaOryn.bat
 ```
 
-4. Commit and push the complete source tree.
-5. Only after that commit has been pushed may the pinned toolchain be downloaded into `C:\NovaOryn\.toolchain`.
+or provide the folder containing the release archives:
 
-The ChangedFiles archive is included to preserve the standard two-archive release format. Because version `0.0.1` starts from an empty repository, it contains the same source-controlled files as FullSource, but it is not the archive used for the initial commit.
+```text
+Update-NovaOryn.bat D:\NovaOryn-Releases
+```
 
-## Later releases
+The updater performs this order:
 
-For version `0.0.5` and later:
+```text
+First repository update:
+    latest FullSource ZIP
+    -> C:\NovaOryn
+    -> initial Git commit
+    -> push main to origin
+    -> toolchain validation/install
 
-- extract `NovaOryn-ChangedFiles-<version>.zip` into the existing `C:\NovaOryn` repository
-- review, commit, and push those source changes
-- run any explicitly requested toolchain update only after the source commit
-- use `NovaOryn-FullSource-<version>.zip` as the complete authoritative snapshot
+Later repository updates:
+    latest ChangedFiles ZIP
+    -> C:\NovaOryn
+    -> apply deletion/rename manifest
+    -> update Git commit
+    -> push main to origin
+    -> toolchain validation/install
+```
 
-### Empty repository handling
+If the GitHub push fails, no toolchain is downloaded.
 
-Version 0.0.5 checks for `HEAD` without allowing Git's expected empty-repository diagnostic to terminate PowerShell. A repository that has been initialised but has no commits is therefore correctly treated as requiring FullSource.
+## Toolchain
 
-## Build policy
+`Install-NovaOrynToolchain.bat` is normally invoked automatically after a successful source push. It can also be run directly after the repository is clean and committed.
 
-Kernel and OS creation is performed by NovaOryn executable tools. No script translates, creates, links, or packages the kernel.
+The pinned components are declared in `toolchain/NovaOryn.Toolchain.json`:
 
-## Entry point
+- .NET SDK 10.0.302
+- NativeAOT/ILC packages 10.0.10
+- LLD and selected LLVM binary utilities 22.1.6
+- QEMU 11.0.0 or newer
+- NASM 2.16.0 or newer
+
+ILC compiles the managed kernel. LLD links the ILC objects and NovaOryn native assets into the freestanding kernel. The full Clang compiler is not part of the managed compilation path.
+
+Repository-local tools and packages are stored below `C:\NovaOryn\.toolchain` and are excluded from Git.
+
+## Kernel entry point
 
 ```csharp
 [KernelEntry]
 public static bool KMain(BootContext boot)
 ```
 
-## Projects in 0.0.5
+## Build policy
 
-- `NovaOryn.Primitives`
-- `NovaOryn.Core`
-- `NovaOryn.Runtime.Contracts`
-- `NovaOryn.Boot.Contracts`
-- `NovaOryn.Architecture.Contracts`
-- `NovaOryn.Architecture.X64`
-- `NovaOryn.Console.Contracts`
-- `NovaOryn.Console.Serial`
-- `NovaOryn.ProjectModel`
-- `NovaOryn.ManagedCompiler`
-- `NovaOryn.Linker`
-- `NovaOryn.ImageBuilder`
-- `NovaOryn.QemuLauncher`
-- `NovaOryn.Kernel.Sample`
-- `NovaOryn.SourcePolicy.Tests`
+Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bootstrap and validate the development toolchain, but they do not translate, link, or package the kernel.
 
-See `docs/Release-0.0.5.md` for the current release and `docs/Release-0.0.1.md` for the initial foundation.
+The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-
-## Source archive updater
-
-`Update-NovaOryn.bat` automates source archive selection and Git commits.
-
-- When `C:\NovaOryn` has no commit, it selects the highest-versioned `NovaOryn-FullSource-x.y.z.zip`, extracts the complete tree, and creates the initial commit.
-- After the first commit, it selects the highest-versioned `NovaOryn-ChangedFiles-x.y.z.zip`, applies deletions and renames from `NovaOryn-Changes.json`, stages only the resulting differences, and creates the update commit.
-- It searches the batch-file directory and the current user's Downloads directory by default. A different archive directory may be passed as the first argument.
-- It refuses to overwrite an existing repository with uncommitted changes.
-- It does not push and does not download the toolchain. The commit must be reviewed and pushed before the separate toolchain installer is run.
-
-Example:
-
-```text
-Update-NovaOryn.bat
-Update-NovaOryn.bat D:\NovaOryn-Releases
-```
+See `docs/Release-0.0.8.md` for this release.
