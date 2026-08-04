@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.24
+# Nova Oryn OS SDK 0.0.25
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.24
+## Release 0.0.25
 
-This release updates the direct ILC bootstrap for .NET 10. The no-GC kernel now compiles with the IL scanner disabled, so ILC resolves only helpers reachable from the user-owned `KMain` path instead of eagerly demanding the complete `System.Private.CoreLib` helper surface.
+This release aligns the compiler and linker on compilation manifest schema 5. Direct ILC compilation was already succeeding; the linker was incorrectly limited to schema 4 and stopped before reading the generated native object.
 
 ## Source update workflow
 
@@ -74,7 +74,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.24.md` for this release.
+See `docs/Release-0.0.25.md` for this release.
 
 
 ## 0.0.22 build
@@ -113,3 +113,8 @@ The `win-x64` name now appears only in the path of the ILC executable that runs 
 ## 0.0.24 .NET 10 ILC scanner correction
 
 The direct bootstrap compiler now passes `--noscan`, `--reflectiondata:none`, and `--nopreinitstatics`. The previous `-O` switch implied the IL scanner, which eagerly requested `System.Buffer` and would subsequently request other full-CoreLib helpers that are outside the no-GC bootstrap contract. NovaOryn also defines the required `System.Buffer.BulkMoveWithWriteBarrier` fail-fast boundary so an accidental managed-reference bulk copy halts rather than corrupting memory.
+
+
+## 0.0.25 compilation manifest correction
+
+`NovaOryn.ManagedCompiler.exe` emits schema 5 because the direct-ILC manifest records the scanner mode, optimisation policy, ILC executable, compiler-host RID, and direct native object. `NovaOryn.Linker.exe` now accepts exactly schema 5 and reports both the received and supported schema when they differ. A source-policy regression test keeps the writer and reader aligned.

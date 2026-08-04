@@ -33,10 +33,11 @@ static int MainEntry(string[] args)
 
     using JsonDocument document = JsonDocument.Parse(File.ReadAllText(manifestPath));
     JsonElement root = document.RootElement;
+    const int SupportedCompilationManifestSchema = 5;
     int schemaVersion = root.GetProperty("schemaVersion").GetInt32();
-    if (schemaVersion != 4)
+    if (schemaVersion != SupportedCompilationManifestSchema)
     {
-        return Fail($"Unsupported compilation manifest schema: {schemaVersion}");
+        return Fail($"Unsupported compilation manifest schema: {schemaVersion}. Supported schema: {SupportedCompilationManifestSchema}.");
     }
     string runtimeMode = root.GetProperty("runtimeMode").GetString() ?? string.Empty;
     if (!string.Equals(runtimeMode, "NoGcBootstrap", StringComparison.Ordinal))

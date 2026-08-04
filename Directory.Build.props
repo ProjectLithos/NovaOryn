@@ -6,10 +6,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-    <Version>0.0.24</Version>
-    <AssemblyVersion>0.0.24.0</AssemblyVersion>
-    <FileVersion>0.0.24.0</FileVersion>
-    <PackageVersion>0.0.24</PackageVersion>
+    <Version>0.0.25</Version>
+    <AssemblyVersion>0.0.25.0</AssemblyVersion>
+    <FileVersion>0.0.25.0</FileVersion>
+    <PackageVersion>0.0.25</PackageVersion>
     <Authors>ProjectLithos</Authors>
     <Company>ProjectLithos</Company>
     <Product>Nova Oryn OS SDK</Product>

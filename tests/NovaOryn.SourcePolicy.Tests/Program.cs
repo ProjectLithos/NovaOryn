@@ -100,6 +100,10 @@ if (!managedCompiler.Contains("nativeObject", StringComparison.Ordinal))
 {
     failures.Add("Compilation manifest must record the direct ILC native object.");
 }
+if (!managedCompiler.Contains("schemaVersion = 5", StringComparison.Ordinal))
+{
+    failures.Add("NovaOryn.ManagedCompiler must emit compilation manifest schema 5.");
+}
 
 string linker = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Linker", "Program.cs"));
 if (!linker.Contains("GetProperty(\"nativeObject\")", StringComparison.Ordinal))
@@ -109,6 +113,10 @@ if (!linker.Contains("GetProperty(\"nativeObject\")", StringComparison.Ordinal))
 if (linker.Contains("nativeLibrary", StringComparison.Ordinal))
 {
     failures.Add("NovaOryn.Linker must not expect the obsolete NativeAOT static library output.");
+}
+if (!linker.Contains("SupportedCompilationManifestSchema = 5", StringComparison.Ordinal))
+{
+    failures.Add("NovaOryn.Linker must accept compilation manifest schema 5.");
 }
 
 if (failures.Count != 0)
