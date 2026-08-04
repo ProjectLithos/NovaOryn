@@ -1,15 +1,14 @@
 {
   "schemaVersion": 2,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.33",
-  "baseVersion": "0.0.32",
+  "version": "0.0.34",
+  "baseVersion": "0.0.33",
   "changedFiles": [
     "Build-NovaOrynVSIX.ps1",
     "Directory.Build.props",
     "Install-NovaOrynVSIX.bat",
     "README.md",
-    "docs/Release-0.0.33.md",
-    "src/NovaOryn.VisualStudio/NovaOrynLaunchService.cs",
+    "docs/Release-0.0.34.md",
     "src/NovaOryn.VisualStudio/NovaOrynPackage.cs",
     "src/NovaOryn.VisualStudio/ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.vstemplate",
     "src/NovaOryn.VisualStudio/ProjectTemplates/NovaOryn.VisualStudio.Project.vstman",

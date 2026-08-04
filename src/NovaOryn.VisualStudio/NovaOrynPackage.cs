@@ -7,16 +7,25 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 namespace NovaOryn.VisualStudio;
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-[InstalledProductRegistration("NovaOryn OS SDK", "Visual Studio integration for NovaOryn kernels", "0.0.33")]
+[InstalledProductRegistration("NovaOryn OS SDK", "Visual Studio integration for NovaOryn kernels", "0.0.34")]
 [ProvideMenuResource("Menus.ctmenu", 1)]
 [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
 [Guid(PackageIds.PackageGuidString)]
+/// <summary>
+/// Provides the NovaOryn Visual Studio package and registers its build and run command handlers.
+/// </summary>
 public sealed class NovaOrynPackage : AsyncPackage
 {
     private IVsRegisterPriorityCommandTarget _registration;
     private NovaOrynPriorityLaunchCommandTarget _target;
     private uint _cookie;
     internal NovaOrynOutputPane Output { get; private set; }
+    /// <summary>
+    /// Initialises the NovaOryn Visual Studio services and command targets.
+    /// </summary>
+    /// <param name="token">A cancellation token supplied by Visual Studio.</param>
+    /// <param name="progress">Visual Studio package-load progress reporting.</param>
+    /// <returns>A task representing package initialisation.</returns>
     protected override async Task InitializeAsync(CancellationToken token, IProgress<ServiceProgressData> progress)
     {
         await JoinableTaskFactory.SwitchToMainThreadAsync(token);
@@ -26,8 +35,12 @@ public sealed class NovaOrynPackage : AsyncPackage
             ?? throw new InvalidOperationException("Visual Studio priority command service is unavailable.");
         _target = new NovaOrynPriorityLaunchCommandTarget(new NovaOrynLaunchService(this));
         ErrorHandler.ThrowOnFailure(_registration.RegisterPriorityCommandTarget(0, _target, out _cookie));
-        Output.WriteLine("[ OK ] NovaOryn Visual Studio extension 0.0.33 loaded.");
+        Output.WriteLine("[ OK ] NovaOryn Visual Studio extension 0.0.34 loaded.");
     }
+    /// <summary>
+    /// Releases the registered Visual Studio command target and package resources.
+    /// </summary>
+    /// <param name="disposing">True when managed resources should be released.</param>
     protected override void Dispose(bool disposing)
     {
         ThreadHelper.ThrowIfNotOnUIThread();
