@@ -7,82 +7,211 @@ return MainEntry(args);
 static int MainEntry(string[] args)
 {
     if (args.Length < 2 || !string.Equals(args[0], "compile", StringComparison.OrdinalIgnoreCase))
-        return Fail("Usage: NovaOryn.ManagedCompiler compile <NovaOrynProject.json> [--dotnet <path>] [--configuration Debug|Release] [--dry-run]");
+    {
+        return Fail("Usage: NovaOryn.ManagedCompiler compile <NovaOrynProject.json> [--dotnet <path>] [--ilc <path>] [--configuration Debug|Release] [--dry-run]");
+    }
 
-    if (!NovaOrynProject.TryLoad(args[1], out NovaOrynProject? project, out string error) || project is null) return Fail(error);
+    if (!NovaOrynProject.TryLoad(args[1], out NovaOrynProject? project, out string error) || project is null)
+    {
+        return Fail(error);
+    }
+
     string dotnet = GetOption(args, "--dotnet") ?? "dotnet";
     string configuration = GetOption(args, "--configuration") ?? "Release";
     bool dryRun = HasOption(args, "--dry-run");
-    string nativeOutput = Path.Combine(project.OutputDirectory, "NativeAot");
-    Directory.CreateDirectory(nativeOutput);
+    string repositoryRoot = FindRepositoryRoot(Path.GetDirectoryName(project.ProjectFile)!);
+    string ilc = GetOption(args, "--ilc") ?? FindIlc(repositoryRoot);
 
-    string[] publishArguments =
+    string managedOutput = Path.Combine(project.OutputDirectory, "ManagedIL");
+    string nativeOutput = Path.Combine(project.OutputDirectory, "NativeAot");
+    RecreateDirectory(managedOutput);
+    RecreateDirectory(nativeOutput);
+
+    string[] buildArguments =
     [
-        "publish", project.ProjectFile,
+        "build", project.ProjectFile,
         "--configuration", configuration,
-        "--runtime", "win-x64",
-        "--self-contained", "true",
-        "--output", nativeOutput,
+        "--output", managedOutput,
         "--nologo",
-        "-p:PublishAot=true",
-        "-p:NativeLib=Static",
-        "-p:NoStdLib=true",
-        "-p:NoConfig=true",
-        "-p:IlcSystemModule=NovaOryn.Kernel.Bootstrap",
-        "-p:IlcGenerateCompleteTypeMetadata=false",
-        "-p:IlcDisableReflection=true",
-        "-p:IlcGenerateStackTraceData=false",
-        "-p:StackTraceSupport=false",
-        "-p:EventSourceSupport=false",
-        "-p:DebuggerSupport=false",
-        "-p:MetadataUpdaterSupport=false",
-        "-p:BuiltInComInteropSupport=false",
-        "-p:InvariantGlobalization=true",
-        "-p:StripSymbols=false"
+        "-p:PublishAot=false",
+        "-p:SelfContained=false"
     ];
 
-    Console.WriteLine($"[INFO] Compiling {project.Name} with NovaOryn.RuntimePack.X64.Bootstrap.");
-    Console.WriteLine("[INFO] The stock Windows CoreLib and NativeAOT runtime libraries are intentionally excluded.");
-    Console.WriteLine("[INFO] RID win-x64 selects Microsoft x64 ILC compiler assets only; it is not the NovaOryn runtime target.");
-    if (dryRun) return 0;
-    int exitCode = Run(dotnet, publishArguments, Path.GetDirectoryName(project.ProjectFile)!);
-    if (exitCode != 0) return Fail($"NovaOryn bootstrap ILC publish failed with exit code {exitCode}.");
+    Console.WriteLine($"[INFO] Compiling {project.Name} C# source to managed IL.");
+    Console.WriteLine("[INFO] The bootstrap project has no standard library and no runtime identifier.");
+    if (dryRun)
+    {
+        PrintCommand(dotnet, buildArguments);
+        return 0;
+    }
 
-    string? nativeLibrary = Directory.GetFiles(nativeOutput, "*.lib", SearchOption.TopDirectoryOnly)
-        .OrderByDescending(File.GetLastWriteTimeUtc)
-        .FirstOrDefault();
-    if (nativeLibrary is null) return Fail($"ILC did not produce a static library in {nativeOutput}.");
+    int exitCode = Run(dotnet, buildArguments, Path.GetDirectoryName(project.ProjectFile)!);
+    if (exitCode != 0)
+    {
+        return Fail($"NovaOryn bootstrap C# compilation failed with exit code {exitCode}.");
+    }
+
+    string assemblyName = Path.GetFileNameWithoutExtension(project.ProjectFile);
+    string managedAssembly = Path.Combine(managedOutput, assemblyName + ".dll");
+    if (!File.Exists(managedAssembly))
+    {
+        return Fail($"Roslyn did not produce the bootstrap IL assembly: {managedAssembly}");
+    }
+
+    string nativeObject = Path.Combine(nativeOutput, project.Name + ".obj");
+    string ilcMap = Path.Combine(nativeOutput, project.Name + ".ilc.map");
+    string[] ilcArguments =
+    [
+        managedAssembly,
+        $"-o:{nativeObject}",
+        "--systemmodule", assemblyName,
+        "--targetos:win",
+        "--targetarch:x64",
+        "--nativelib",
+        "--directpinvoke:*",
+        $"--map:{ilcMap}",
+        "-O"
+    ];
+
+    Console.WriteLine($"[INFO] Compiling managed IL with the repository-pinned ILC host: {ilc}");
+    Console.WriteLine("[INFO] targetos:win selects the PE/COFF ABI used by x64 UEFI; no Windows CoreLib or Windows runtime library is referenced.");
+    exitCode = Run(ilc, ilcArguments, repositoryRoot);
+    if (exitCode != 0)
+    {
+        return Fail($"Direct ILC compilation failed with exit code {exitCode}.");
+    }
+    if (!File.Exists(nativeObject))
+    {
+        return Fail($"ILC did not produce the expected x64 COFF object: {nativeObject}");
+    }
 
     string compileManifest = Path.Combine(project.OutputDirectory, "NovaOryn.Compile.json");
     File.WriteAllText(compileManifest, JsonSerializer.Serialize(new
     {
-        schemaVersion = 3,
-        productVersion = "0.0.22",
+        schemaVersion = 4,
+        productVersion = "0.0.23",
         project = project.Name,
         kernelEntry = project.KernelEntry,
         architecture = project.TargetArchitecture,
         runtimePack = "NovaOryn.RuntimePack.X64.Bootstrap",
         runtimeMode = "NoGcBootstrap",
-        nativeLibrary,
-        runtimeLibraries = Array.Empty<string>(),
+        managedAssembly,
+        nativeObject,
+        ilcMap,
+        ilcExecutable = ilc,
+        compilerHostRid = "win-x64",
+        windowsRuntimeLibraries = 0,
         producedUtc = DateTimeOffset.UtcNow
     }, new JsonSerializerOptions { WriteIndented = true }));
 
-    Console.WriteLine($"[ OK ] ILC produced freestanding library: {nativeLibrary}");
-    Console.WriteLine("[ OK ] Windows platform runtime libraries linked: 0");
+    Console.WriteLine($"[ OK ] Roslyn produced managed IL: {managedAssembly}");
+    Console.WriteLine($"[ OK ] ILC produced freestanding x64 object: {nativeObject}");
+    Console.WriteLine("[ OK ] Windows CoreLib/runtime libraries linked: 0");
     Console.WriteLine($"[ OK ] Compilation manifest: {compileManifest}");
     return 0;
 }
 
+static string FindIlc(string repositoryRoot)
+{
+    string manifestPath = Path.Combine(repositoryRoot, "toolchain", "NovaOryn.Toolchain.json");
+    if (!File.Exists(manifestPath))
+    {
+        throw new FileNotFoundException("NovaOryn toolchain manifest was not found.", manifestPath);
+    }
+
+    using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+    string version = manifest.RootElement.GetProperty("nativeAot").GetProperty("packageVersion").GetString()
+        ?? throw new InvalidOperationException("NativeAOT packageVersion is missing.");
+    string packageDirectory = manifest.RootElement.GetProperty("nativeAot").GetProperty("packageDirectory").GetString()
+        ?? throw new InvalidOperationException("NativeAOT packageDirectory is missing.");
+
+    List<string> candidates =
+    [
+        Path.Combine(repositoryRoot, packageDirectory, "runtime.win-x64.microsoft.dotnet.ilcompiler", version, "tools", "ilc.exe")
+    ];
+
+    string? userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    if (!string.IsNullOrWhiteSpace(userProfile))
+    {
+        candidates.Add(Path.Combine(userProfile, ".nuget", "packages", "runtime.win-x64.microsoft.dotnet.ilcompiler", version, "tools", "ilc.exe"));
+    }
+
+    foreach (string candidate in candidates)
+    {
+        if (File.Exists(candidate))
+        {
+            return Path.GetFullPath(candidate);
+        }
+    }
+
+    throw new FileNotFoundException($"Pinned ILC {version} was not found. Checked: {string.Join(", ", candidates)}");
+}
+
+static string FindRepositoryRoot(string start)
+{
+    DirectoryInfo? directory = new(start);
+    while (directory is not null)
+    {
+        if (File.Exists(Path.Combine(directory.FullName, "toolchain", "NovaOryn.Toolchain.json")))
+        {
+            return directory.FullName;
+        }
+        directory = directory.Parent;
+    }
+    throw new DirectoryNotFoundException("NovaOryn repository root was not found.");
+}
+
+static void RecreateDirectory(string path)
+{
+    if (Directory.Exists(path))
+    {
+        Directory.Delete(path, true);
+    }
+    Directory.CreateDirectory(path);
+}
+
 static int Run(string executable, IEnumerable<string> arguments, string workingDirectory)
 {
+    string[] argumentArray = arguments.ToArray();
+    PrintCommand(executable, argumentArray);
     using Process process = new();
-    process.StartInfo = new ProcessStartInfo(executable) { UseShellExecute = false, WorkingDirectory = workingDirectory };
-    foreach (string argument in arguments) process.StartInfo.ArgumentList.Add(argument);
-    if (!process.Start()) return -1;
+    process.StartInfo = new ProcessStartInfo(executable)
+    {
+        UseShellExecute = false,
+        WorkingDirectory = workingDirectory
+    };
+    foreach (string argument in argumentArray)
+    {
+        process.StartInfo.ArgumentList.Add(argument);
+    }
+    if (!process.Start())
+    {
+        return -1;
+    }
     process.WaitForExit();
     return process.ExitCode;
 }
+
+static void PrintCommand(string executable, IEnumerable<string> arguments)
+{
+    Console.WriteLine($"[INFO] {Quote(executable)} {string.Join(" ", arguments.Select(Quote))}");
+}
+
+static string Quote(string value) => value.Any(char.IsWhiteSpace) ? $"\"{value}\"" : value;
 static bool HasOption(string[] args, string option) => args.Any(value => string.Equals(value, option, StringComparison.OrdinalIgnoreCase));
-static string? GetOption(string[] args, string name) { for (int i = 0; i + 1 < args.Length; i++) if (string.Equals(args[i], name, StringComparison.OrdinalIgnoreCase)) return args[i + 1]; return null; }
-static int Fail(string message) { Console.Error.WriteLine($"[FAIL] {message}"); return 1; }
+static string? GetOption(string[] args, string name)
+{
+    for (int index = 0; index + 1 < args.Length; index++)
+    {
+        if (string.Equals(args[index], name, StringComparison.OrdinalIgnoreCase))
+        {
+            return args[index + 1];
+        }
+    }
+    return null;
+}
+static int Fail(string message)
+{
+    Console.Error.WriteLine($"[FAIL] {message}");
+    return 1;
+}

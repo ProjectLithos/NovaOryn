@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.22
+# Nova Oryn OS SDK 0.0.23
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.22
+## Release 0.0.23
 
-This release fixes the custom no-CoreLib bootstrap compilation by retaining the NativeAOT object-header field while narrowly suppressing the expected `CS0169` warning for that compiler-consumed field.
+This release removes the SDK NativeAOT `dotnet publish` path from the no-CoreLib kernel. NovaOryn now builds the bootstrap project as ordinary managed IL and invokes the pinned `ilc.exe` directly to produce one x64 COFF object for the UEFI linker.
 
 ## Source update workflow
 
@@ -74,7 +74,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.22.md` for this release.
+See `docs/Release-0.0.23.md` for this release.
 
 
 ## 0.0.22 build
@@ -97,3 +97,14 @@ The dedicated bootstrap publish currently uses `win-x64` only to select the Micr
 
 `System.Object._methodTable` is part of the minimal NativeAOT object layout. Generated native code consumes it even though ordinary C# source does not, so the field now has a local `CS0169` suppression instead of weakening repository-wide warning checks.
 
+
+## 0.0.23 direct ILC correction
+
+The `ResolvedILCompilerPack` failure is eliminated because the bootstrap project no longer imports NativeAOT publish targets. `NovaOryn.ManagedCompiler.exe` performs two explicit stages:
+
+```text
+Roslyn build -> NovaOryn.Kernel.Bootstrap.dll
+pinned ilc.exe -> MinimalKernel.obj
+```
+
+The `win-x64` name now appears only in the path of the ILC executable that runs on the Windows development host. ILC is passed `--targetos:win` solely to produce PE/COFF code using the Microsoft x64 ABI required by UEFI. No Windows CoreLib or NativeAOT runtime library is linked.

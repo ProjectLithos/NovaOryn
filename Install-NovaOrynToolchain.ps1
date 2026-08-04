@@ -49,14 +49,16 @@ function Install-DotNet([string]$RepositoryRoot, [pscustomobject]$Manifest) {
 function Install-NativeAot([string]$RepositoryRoot, [string]$DotNet, [pscustomobject]$Manifest) {
     $project = Join-Path $RepositoryRoot 'toolchain\NovaOryn.NativeAot.Bootstrap.csproj'
     $packages = Join-Path $RepositoryRoot $Manifest.nativeAot.packageDirectory
-    $ilcPackage = Join-Path $packages ("microsoft.dotnet.ilcompiler\" + $Manifest.nativeAot.packageVersion)
-    $runtimePackage = Join-Path $packages ("microsoft.netcore.app.runtime.nativeaot.win-x64\" + $Manifest.nativeAot.packageVersion)
-    if ((Test-Path $ilcPackage) -and (Test-Path $runtimePackage)) {
-        Write-Ok "NativeAOT/ILC packages $($Manifest.nativeAot.packageVersion) are already present."
+    $compilerPackage = Join-Path $packages ("microsoft.dotnet.ilcompiler\" + $Manifest.nativeAot.packageVersion)
+    $hostPackage = Join-Path $packages ("runtime.win-x64.microsoft.dotnet.ilcompiler\" + $Manifest.nativeAot.packageVersion)
+    $ilc = Join-Path $hostPackage 'tools\ilc.exe'
+    if ((Test-Path -LiteralPath $compilerPackage -PathType Container) -and (Test-Path -LiteralPath $ilc -PathType Leaf)) {
+        Save-ResolvedToolPath $RepositoryRoot 'ilc' $ilc
+        Write-Ok "NativeAOT ILC compiler $($Manifest.nativeAot.packageVersion) is already valid: $ilc"
         return
     }
     New-Item -ItemType Directory -Path $packages -Force | Out-Null
-    Write-Step "Restoring NativeAOT/ILC runtime packs $($Manifest.nativeAot.packageVersion) through the .NET SDK."
+    Write-Step "Restoring the NativeAOT ILC compiler host $($Manifest.nativeAot.packageVersion)."
     Invoke-Checked $DotNet @(
         'restore',
         $project,
@@ -65,15 +67,13 @@ function Install-NativeAot([string]$RepositoryRoot, [string]$DotNet, [pscustomob
         '--packages',
         $packages,
         '--nologo',
-        '/p:PublishAot=true',
-        '/p:SelfContained=true',
-        "/p:RuntimeFrameworkVersion=$($Manifest.nativeAot.packageVersion)",
-        '/p:TargetLatestRuntimePatch=false'
+        "/p:ILCompilerVersion=$($Manifest.nativeAot.packageVersion)"
     )
-    if (-not (Test-Path $ilcPackage) -or -not (Test-Path $runtimePackage)) {
-        Fail 'NativeAOT/ILC packages were not restored to the pinned package directory.'
+    if (-not (Test-Path -LiteralPath $compilerPackage -PathType Container) -or -not (Test-Path -LiteralPath $ilc -PathType Leaf)) {
+        Fail 'The pinned NativeAOT ILC compiler host was not restored to the repository-local package directory.'
     }
-    Write-Ok 'NativeAOT/ILC runtime packs installed.'
+    Save-ResolvedToolPath $RepositoryRoot 'ilc' $ilc
+    Write-Ok "NativeAOT ILC compiler installed: $ilc"
 }
 
 function Install-LlvmTools([string]$RepositoryRoot, [pscustomobject]$Manifest) {

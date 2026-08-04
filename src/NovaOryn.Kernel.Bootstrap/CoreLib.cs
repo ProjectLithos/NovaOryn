@@ -24,7 +24,8 @@ namespace System
     public abstract class ValueType { }
     public abstract class Enum : ValueType { }
     public abstract class Array { }
-    public class String { public readonly Int32 Length; }
+    internal class Array<T> : Array { }
+    public sealed class String { public readonly Int32 Length; }
     public abstract class Delegate { }
     public abstract class MulticastDelegate : Delegate { }
     public class Attribute { }

@@ -71,11 +71,21 @@ $nasm = Find-Executable -DisplayName "NASM assembler (nasm.exe)" -Candidates @(
     "%LOCALAPPDATA%\Microsoft\WinGet\Links\nasm.exe",
     ((Get-Command nasm.exe -ErrorAction SilentlyContinue).Source)
 )
+$toolchainManifestPath = Join-Path $root "toolchain\NovaOryn.Toolchain.json"
+$toolchainManifest = Get-Content -LiteralPath $toolchainManifestPath -Raw | ConvertFrom-Json
+$ilcVersion = [string]$toolchainManifest.nativeAot.packageVersion
+$ilc = Find-Executable -DisplayName "NativeAOT compiler (ilc.exe)" -Candidates @(
+    (Get-RecordedPath @("ilc", "ilc.exe", "ilcPath")),
+    (Join-Path $root ".toolchain\NuGetPackages\runtime.win-x64.microsoft.dotnet.ilcompiler\$ilcVersion\tools\ilc.exe"),
+    (Join-Path $env:USERPROFILE ".nuget\packages\runtime.win-x64.microsoft.dotnet.ilcompiler\$ilcVersion\tools\ilc.exe")
+)
+
 
 Write-Host "[ OK ] dotnet : $dotnet"
 Write-Host "[ OK ] lld-link: $lldLink"
 Write-Host "[ OK ] llvm-nm: $llvmNm"
 Write-Host "[ OK ] nasm    : $nasm"
+Write-Host "[ OK ] ilc     : $ilc"
 
 $projectManifest = Join-Path $root $Project
 if (-not (Test-Path -LiteralPath $projectManifest -PathType Leaf)) {
@@ -97,6 +107,12 @@ Write-Host "[INFO] Building NovaOryn executable tools."
 & $dotnet build (Join-Path $root "NovaOryn.sln") --configuration $Configuration --property:Platform="Any CPU" --nologo
 if ($LASTEXITCODE -ne 0) { throw "NovaOryn solution build failed with exit code $LASTEXITCODE." }
 
+Write-Host "[INFO] Running NovaOryn source-policy tests."
+$sourcePolicyTests = Join-Path $root "tests\NovaOryn.SourcePolicy.Tests\bin\$Configuration\net10.0\NovaOryn.SourcePolicy.Tests.dll"
+if (-not (Test-Path -LiteralPath $sourcePolicyTests -PathType Leaf)) { throw "NovaOryn source-policy test executable was not produced: $sourcePolicyTests" }
+& $dotnet $sourcePolicyTests
+if ($LASTEXITCODE -ne 0) { throw "NovaOryn source-policy tests failed with exit code $LASTEXITCODE." }
+
 $compiler = Join-Path $root "src\NovaOryn.ManagedCompiler\bin\$Configuration\net10.0\NovaOryn.ManagedCompiler.dll"
 $linker = Join-Path $root "src\NovaOryn.Linker\bin\$Configuration\net10.0\NovaOryn.Linker.dll"
 foreach ($tool in @(@{Name='NovaOryn.ManagedCompiler';Path=$compiler}, @{Name='NovaOryn.Linker';Path=$linker})) {
@@ -108,7 +124,7 @@ foreach ($tool in @(@{Name='NovaOryn.ManagedCompiler';Path=$compiler}, @{Name='N
 $dry = @()
 if ($DryRun) { $dry = @("--dry-run") }
 
-& $dotnet $compiler compile $projectManifest --dotnet $dotnet --configuration $Configuration @dry
+& $dotnet $compiler compile $projectManifest --dotnet $dotnet --ilc $ilc --configuration $Configuration @dry
 if ($LASTEXITCODE -ne 0) { throw "Managed compilation failed with exit code $LASTEXITCODE." }
 
 & $dotnet $linker link $projectManifest --lld-link $lldLink --llvm-nm $llvmNm --nasm $nasm --native-root $nativeOutput @dry
