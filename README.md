@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.39
+# Nova Oryn OS SDK 0.0.40
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.39
+## Release 0.0.40
 
-Release 0.0.39 corrects project instantiation and separates build from run. The Visual Studio template now follows the proven Oryn project-item model: every C# source file and `NovaOrynProject.json` are explicitly declared in both the `.vstemplate` and generated `.csproj`. The VSIX builder also opens the completed VSIX and refuses the release when any required template file is absent.
+Release 0.0.40 corrects project instantiation and separates build from run. The Visual Studio template now follows the proven Oryn project-item model: every C# source file and `NovaOrynProject.json` are explicitly declared in both the `.vstemplate` and generated `.csproj`. The VSIX builder also opens the completed VSIX and refuses the release when any required template file is absent.
 
 `Build-NovaOryn.bat` now stops after managed compilation, native linking and EFI image creation. QEMU is launched only by `Build-NovaOryn.bat -Run`, `Build-NovaOryn.ps1 -Run`, or the Visual Studio Run/F5 command.
 
@@ -88,7 +88,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.39.md` for this release.
+See `docs/Release-0.0.40.md` for this release.
 
 
 ## 0.0.22 build
@@ -160,7 +160,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.39** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.40** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 

@@ -259,7 +259,7 @@ if (!buildScript.Contains("Source\\Repos\\NovaOrynKernel", StringComparison.Ordi
 {
     failures.Add("Build script must create and consume the external C# kernel project.");
 }
-string kernelTemplate = Path.Combine(root, "templates", "NovaOrynKernel", "Kernel.cs");
+string kernelTemplate = Path.Combine(root, "templates", "NovaOrynKernel", "Kernel", "Kernel.cs");
 if (!File.Exists(kernelTemplate))
 {
     failures.Add("External C# kernel project template is missing Kernel.cs.");
