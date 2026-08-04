@@ -119,6 +119,65 @@ if (!linker.Contains("SupportedCompilationManifestSchema = 5", StringComparison.
     failures.Add("NovaOryn.Linker must accept compilation manifest schema 5.");
 }
 
+
+string bootstrapKernel = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "Kernel.cs"));
+if (!bootstrapKernel.Contains("WriteLineNovaOrynStarted", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("WriteLineCpuHalted", StringComparison.Ordinal))
+{
+    failures.Add("Freestanding bootstrap must emit both runtime acceptance lines before halting.");
+}
+
+string imageBuilder = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ImageBuilder", "Program.cs"));
+string efiDiskImage = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ImageBuilder", "EfiDiskImage.cs"));
+foreach (string required in new[] { "BOOTX64.EFI", "GPT/FAT32 EFI System Partition", "NovaOryn.Image.json" })
+{
+    if (!imageBuilder.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"NovaOryn.ImageBuilder is missing boot-image contract: {required}");
+    }
+}
+foreach (string required in new[] { "EFI PART", "FAT32", "BOOTX64 EFI", "EfiSystemPartitionType", "WriteGuidPartitionTable" })
+{
+    if (!efiDiskImage.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"NovaOryn.ImageBuilder is missing real GPT/FAT32 implementation detail: {required}");
+    }
+}
+if (imageBuilder.Contains("FoundationOnly", StringComparison.Ordinal))
+{
+    failures.Add("NovaOryn.ImageBuilder must not remain a foundation-only placeholder.");
+}
+
+string qemuLauncher = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.QemuLauncher", "Program.cs"));
+foreach (string required in new[] { "edk2-x86_64-code.fd", "edk2-i386-vars.fd", "NovaOryn KMain started.", "CPU halted.", "qemuRemainedOpen = true", "-no-shutdown" })
+{
+    if (!qemuLauncher.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"NovaOryn.QemuLauncher is missing runtime acceptance contract: {required}");
+    }
+}
+if (qemuLauncher.Contains("\"-S\"", StringComparison.Ordinal) || qemuLauncher.Contains("process.WaitForExit()", StringComparison.Ordinal))
+{
+    failures.Add("QEMU runtime acceptance must launch immediately and return while the halted VM remains open.");
+}
+
+string installer = File.ReadAllText(Path.Combine(root, "Install-NovaOrynToolchain.ps1"));
+foreach (string required in new[] { "Ensure-Ovmf", "ovmfCodeX64", "ovmfVarsX64", "edk2-x86_64-code.fd", "edk2-i386-vars.fd" })
+{
+    if (!installer.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"Toolchain installer is missing x64 OVMF handling: {required}");
+    }
+}
+
+if (!buildScript.Contains("NovaOryn.ImageBuilder", StringComparison.Ordinal) ||
+    !buildScript.Contains("NovaOryn.QemuLauncher", StringComparison.Ordinal) ||
+    !buildScript.Contains("--ovmf-code", StringComparison.Ordinal) ||
+    !buildScript.Contains("--ovmf-vars", StringComparison.Ordinal))
+{
+    failures.Add("Build script must create the FAT32 image and execute OVMF/QEMU runtime acceptance.");
+}
+
 if (failures.Count != 0)
 {
     foreach (string failure in failures)
@@ -132,6 +191,7 @@ Console.WriteLine("[ OK ] Kernel entry is KMain and returns bool.");
 Console.WriteLine("[ OK ] x64 halt executes CLI and a repeating HLT loop.");
 Console.WriteLine("[ OK ] No-CoreLib kernel compilation invokes ILC directly.");
 Console.WriteLine("[ OK ] Windows NativeAOT runtime-pack resolution is not used.");
+Console.WriteLine("[ OK ] GPT/FAT32 image creation and OVMF/QEMU runtime acceptance are wired.");
 return 0;
 
 static string FindRepositoryRoot(string start)

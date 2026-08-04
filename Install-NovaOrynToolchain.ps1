@@ -159,6 +159,56 @@ function Ensure-Qemu([string]$RepositoryRoot, [pscustomobject]$Manifest) {
     if ($null -eq $qemu) { Fail 'QEMU was installed but qemu-system-x86_64.exe could not be found in PATH or standard installation locations.' }
     Save-ResolvedToolPath $RepositoryRoot 'qemuSystemX64' $qemu
     Write-Ok "QEMU is available: $qemu"
+    return $qemu
+}
+
+function Find-OvmfFirmware([string]$QemuPath, [string[]]$FileNames) {
+    $qemuDirectory = Split-Path -Parent $QemuPath
+    $roots = @(
+        $qemuDirectory,
+        (Join-Path $qemuDirectory 'share'),
+        (Join-Path $qemuDirectory 'share\qemu'),
+        ([IO.Path]::GetFullPath((Join-Path $qemuDirectory '..\share'))),
+        ([IO.Path]::GetFullPath((Join-Path $qemuDirectory '..\share\qemu'))),
+        ([Environment]::ExpandEnvironmentVariables('%ProgramFiles%\qemu')),
+        ([Environment]::ExpandEnvironmentVariables('%ProgramFiles(x86)%\qemu')),
+        ([Environment]::ExpandEnvironmentVariables('%LOCALAPPDATA%\Programs\qemu'))
+    ) | Select-Object -Unique
+
+    foreach ($root in $roots) {
+        if (-not (Test-Path -LiteralPath $root -PathType Container)) { continue }
+        foreach ($fileName in $FileNames) {
+            $direct = Join-Path $root $fileName
+            if (Test-Path -LiteralPath $direct -PathType Leaf) { return (Resolve-Path -LiteralPath $direct).Path }
+            $recursive = Get-ChildItem -LiteralPath $root -Filter $fileName -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($null -ne $recursive) { return $recursive.FullName }
+        }
+    }
+    return $null
+}
+
+function Ensure-Ovmf([string]$RepositoryRoot, [pscustomobject]$Manifest, [string]$QemuPath) {
+    $codeNames = @($Manifest.ovmf.codeFileNames)
+    $varsNames = @($Manifest.ovmf.variableStoreFileNames)
+    $code = Find-OvmfFirmware $QemuPath $codeNames
+    $vars = Find-OvmfFirmware $QemuPath $varsNames
+
+    if ($null -eq $code -or $null -eq $vars) {
+        $winget = Get-CommandPath 'winget.exe'
+        if ($null -eq $winget) { Fail 'x64 OVMF firmware is missing and winget.exe is unavailable to repair the QEMU installation.' }
+        Write-Step 'The QEMU installation does not contain the required x64 OVMF files. Repairing QEMU with winget.'
+        Invoke-Checked $winget @('install', '--id', $Manifest.qemu.wingetId, '--exact', '--accept-package-agreements', '--accept-source-agreements', '--silent', '--force')
+        $code = Find-OvmfFirmware $QemuPath $codeNames
+        $vars = Find-OvmfFirmware $QemuPath $varsNames
+    }
+
+    if ($null -eq $code) { Fail 'x64 OVMF code firmware was not found after QEMU installation: edk2-x86_64-code.fd or OVMF_CODE.fd.' }
+    if ($null -eq $vars) { Fail 'x64 OVMF variable-store template was not found after QEMU installation: edk2-i386-vars.fd, edk2-x86_64-vars.fd or OVMF_VARS.fd.' }
+    Save-ResolvedToolPath $RepositoryRoot 'ovmfCodeX64' $code
+    Save-ResolvedToolPath $RepositoryRoot 'ovmfVarsX64' $vars
+    Write-Ok "x64 OVMF code firmware is available: $code"
+    Write-Ok "x64 OVMF variable-store template is available: $vars"
+    return $true
 }
 
 function Ensure-WingetTool([string]$RepositoryRoot, [string]$DisplayName, [string]$CommandName, [string]$WingetId, [string[]]$CandidatePaths) {
@@ -197,7 +247,8 @@ try {
     $dotnet = Join-Path (Join-Path $repositoryRoot $manifest.dotNetSdk.installDirectory) 'dotnet.exe'
     Install-NativeAot $repositoryRoot $dotnet $manifest
     Install-LlvmTools $repositoryRoot $manifest
-    Ensure-Qemu $repositoryRoot $manifest
+    $qemu = Ensure-Qemu $repositoryRoot $manifest
+    if (-not (Ensure-Ovmf $repositoryRoot $manifest $qemu)) { Fail 'x64 OVMF validation failed.' }
     Ensure-WingetTool $repositoryRoot 'NASM' 'nasm.exe' $manifest.nasm.wingetId @(
         '%LOCALAPPDATA%\bin\NASM\nasm.exe',
         '%ProgramFiles%\NASM\nasm.exe',

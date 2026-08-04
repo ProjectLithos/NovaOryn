@@ -1,10 +1,19 @@
-# Nova Oryn OS SDK 0.0.25
+# Nova Oryn OS SDK 0.0.26
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.25
+## Release 0.0.26
 
-This release aligns the compiler and linker on compilation manifest schema 5. Direct ILC compilation was already succeeding; the linker was incorrectly limited to schema 4 and stopped before reading the generated native object.
+This release implements the first complete x64 UEFI boot-and-run stage. The build now links the freestanding NativeAOT EFI application, creates a real GPT disk image with a FAT32 EFI System Partition, installs the kernel at `EFI/BOOT/BOOTX64.EFI`, launches QEMU with x64 OVMF without `-S`, captures COM1 serial output, confirms managed `KMain`, confirms `CPU.Halt()`, and leaves the halted VM open.
+
+The required runtime acceptance output is:
+
+```text
+NovaOryn KMain started.
+CPU halted.
+```
+
+`Build-NovaOryn.bat` now performs build, image creation, and runtime acceptance by default. Use `Build-NovaOryn.bat -NoRun` to stop after producing `Artifacts\MinimalKernel\MinimalKernel.img`.
 
 ## Source update workflow
 
@@ -74,7 +83,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.25.md` for this release.
+See `docs/Release-0.0.26.md` for this release.
 
 
 ## 0.0.22 build
@@ -118,3 +127,16 @@ The direct bootstrap compiler now passes `--noscan`, `--reflectiondata:none`, an
 ## 0.0.25 compilation manifest correction
 
 `NovaOryn.ManagedCompiler.exe` emits schema 5 because the direct-ILC manifest records the scanner mode, optimisation policy, ILC executable, compiler-host RID, and direct native object. `NovaOryn.Linker.exe` now accepts exactly schema 5 and reports both the received and supported schema when they differ. A source-policy regression test keeps the writer and reader aligned.
+
+## 0.0.26 boot-and-run stage
+
+`NovaOryn.ImageBuilder.exe` now writes the disk image itself. It creates a protective MBR, primary and backup GPT headers, an EFI System Partition, a FAT32 volume, and the required removable-media path:
+
+```text
+EFI\BOOT\BOOTX64.EFI
+```
+
+`Install-NovaOrynToolchain.bat` locates the non-secure x64 OVMF code image and writable variable-store template shipped with QEMU. Their resolved paths are recorded in `.toolchain\NovaOryn.ToolPaths.json`.
+
+`NovaOryn.QemuLauncher.exe` copies the boot image and OVMF variable store into a unique run directory, starts QEMU immediately without `-S`, watches the serial log for both acceptance lines, confirms the QEMU process remains alive, writes `NovaOryn.Run.json`, and returns without terminating the VM.
+

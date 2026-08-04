@@ -14,8 +14,8 @@ public static class Kernel
         SerialConsole console = new();
         if (!console.Configure(SerialConfiguration.Com1())) return false;
         if (!console.Initialize(boot)) return false;
-        if (!console.WriteLine("NovaOryn 0.0.25 KMain started.")) return false;
-        if (!console.WriteLine("KMain was compiled by the real NativeAOT ILC pipeline.")) return false;
+        if (!console.WriteLine("NovaOryn KMain started.")) return false;
+        if (!console.WriteLine("CPU halted.")) return false;
         return CPU.Halt();
     }
 

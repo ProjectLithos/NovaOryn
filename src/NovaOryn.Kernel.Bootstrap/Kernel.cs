@@ -47,6 +47,12 @@ public static class Kernel
 
     private static Boolean WriteText()
     {
+        if (!WriteLineNovaOrynStarted()) return false;
+        return WriteLineCpuHalted();
+    }
+
+    private static Boolean WriteLineNovaOrynStarted()
+    {
         if (!Write((Byte)'N')) return false;
         if (!Write((Byte)'o')) return false;
         if (!Write((Byte)'v')) return false;
@@ -62,12 +68,31 @@ public static class Kernel
         if (!Write((Byte)'i')) return false;
         if (!Write((Byte)'n')) return false;
         if (!Write((Byte)' ')) return false;
-        if (!Write((Byte)'0')) return false;
+        if (!Write((Byte)'s')) return false;
+        if (!Write((Byte)'t')) return false;
+        if (!Write((Byte)'a')) return false;
+        if (!Write((Byte)'r')) return false;
+        if (!Write((Byte)'t')) return false;
+        if (!Write((Byte)'e')) return false;
+        if (!Write((Byte)'d')) return false;
         if (!Write((Byte)'.')) return false;
-        if (!Write((Byte)'0')) return false;
+        if (!Write((Byte)'\r')) return false;
+        return Write((Byte)'\n');
+    }
+
+    private static Boolean WriteLineCpuHalted()
+    {
+        if (!Write((Byte)'C')) return false;
+        if (!Write((Byte)'P')) return false;
+        if (!Write((Byte)'U')) return false;
+        if (!Write((Byte)' ')) return false;
+        if (!Write((Byte)'h')) return false;
+        if (!Write((Byte)'a')) return false;
+        if (!Write((Byte)'l')) return false;
+        if (!Write((Byte)'t')) return false;
+        if (!Write((Byte)'e')) return false;
+        if (!Write((Byte)'d')) return false;
         if (!Write((Byte)'.')) return false;
-        if (!Write((Byte)'2')) return false;
-        if (!Write((Byte)'4')) return false;
         if (!Write((Byte)'\r')) return false;
         return Write((Byte)'\n');
     }
