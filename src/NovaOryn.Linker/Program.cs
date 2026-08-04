@@ -31,9 +31,10 @@ static int MainEntry(string[] args)
     Console.WriteLine("[INFO] Verifying that the ILC output exports NovaOrynManagedEntry for managed KMain.");
     if (!HasOption(args, "--dry-run"))
     {
-        (int nmExit, string nmOutput) = Capture(llvmNm, ["--defined-only", nativeLibrary]);
-        if (nmExit != 0) return Fail($"llvm-nm failed with exit code {nmExit}.");
-        if (!nmOutput.Contains("NovaOrynManagedEntry", StringComparison.Ordinal))
+        ProcessResult nmResult = Capture(llvmNm, ["--defined-only", nativeLibrary], TimeSpan.FromSeconds(30));
+        if (nmResult.TimedOut) return Fail("llvm-nm exceeded the 30-second validation timeout.");
+        if (nmResult.ExitCode != 0) return Fail($"llvm-nm failed with exit code {nmResult.ExitCode}.");
+        if (!nmResult.Output.Contains("NovaOrynManagedEntry", StringComparison.Ordinal))
             return Fail("The NativeAOT library does not export NovaOrynManagedEntry, which is the native bridge to KMain.");
     }
 
@@ -49,52 +50,67 @@ static int MainEntry(string[] args)
     if (!File.Exists(entryObject) || !File.Exists(cpuObject) || !File.Exists(runtimeObject))
         return Fail("Native entry or runtime objects are missing. Run Build-NovaOryn before linking.");
 
-    List<string> baseInputs = [entryObject, cpuObject, runtimeObject, nativeLibrary];
-    string[] firstArguments = CreateLinkArguments(efi, map, baseInputs);
-    Console.WriteLine($"[INFO] {lld} {string.Join(" ", firstArguments.Select(Quote))}");
-    if (HasOption(args, "--dry-run")) return 0;
-
-    (int firstExit, string firstOutput) = Capture(lld, firstArguments);
-    if (firstExit == 0)
+    if (HasOption(args, "--dry-run"))
     {
-        Console.WriteLine($"[ OK ] EFI application linked: {efi}");
+        string[] dryArguments = CreateLinkArguments(efi, map, [entryObject, cpuObject, runtimeObject, nativeLibrary]);
+        Console.WriteLine($"[INFO] {lld} {string.Join(" ", dryArguments.Select(Quote))}");
         return 0;
     }
 
-    string[] unresolved = ParseUndefinedSymbols(firstOutput);
-    string[] forbidden = unresolved.Where(IsNovaOrynOrRuntimeContract).ToArray();
-    if (forbidden.Length != 0)
+    HashSet<string> platformImports = new(StringComparer.Ordinal);
+    const int maximumPasses = 32;
+
+    for (int pass = 1; pass <= maximumPasses; pass++)
     {
-        Console.Error.WriteLine(firstOutput);
-        return Fail($"Required NovaOryn/runtime symbols remain unresolved: {string.Join(", ", forbidden)}");
+        List<string> inputs = [entryObject, cpuObject, runtimeObject];
+        if (platformImports.Count != 0)
+        {
+            WritePlatformStubAssembly(shimSource, platformImports.OrderBy(value => value, StringComparer.Ordinal));
+            int nasmExit = Run(nasm, ["-f", "win64", shimSource, "-o", shimObject], TimeSpan.FromSeconds(30));
+            if (nasmExit != 0) return Fail($"NASM failed while generating NativeAOT platform stubs with exit code {nasmExit}.");
+            inputs.Add(shimObject);
+        }
+        inputs.Add(nativeLibrary);
+
+        string[] linkArguments = CreateLinkArguments(efi, map, inputs);
+        Console.WriteLine($"[INFO] Native link pass {pass}/{maximumPasses} with {platformImports.Count} compatibility stubs.");
+        ProcessResult linkResult = Capture(lld, linkArguments, TimeSpan.FromMinutes(2));
+        if (linkResult.TimedOut)
+            return Fail("LLD exceeded the two-minute link timeout. The linker process was terminated instead of leaving the build hung.");
+
+        if (linkResult.ExitCode == 0)
+        {
+            string report = Path.Combine(output, "NovaOryn.NativeAot.PlatformImports.txt");
+            File.WriteAllLines(report, platformImports.OrderBy(value => value, StringComparer.Ordinal));
+            Console.WriteLine($"[ OK ] EFI application linked: {efi}");
+            Console.WriteLine($"[ OK ] Platform import report: {report}");
+            return 0;
+        }
+
+        string[] unresolved = ParseUndefinedSymbols(linkResult.Output);
+        string[] forbidden = unresolved.Where(IsNovaOrynOrRuntimeContract).ToArray();
+        if (forbidden.Length != 0)
+        {
+            Console.Error.WriteLine(linkResult.Output);
+            return Fail($"Required NovaOryn/runtime symbols remain unresolved: {string.Join(", ", forbidden)}");
+        }
+
+        string[] newlyDiscovered = unresolved
+            .Where(IsSupportedPlatformImport)
+            .Where(platformImports.Add)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        if (newlyDiscovered.Length == 0)
+        {
+            Console.Error.WriteLine(linkResult.Output);
+            return Fail($"LLD failed with exit code {linkResult.ExitCode}, but no additional supported platform imports were discovered.");
+        }
+
+        Console.WriteLine($"[WARN] Link pass {pass} discovered {newlyDiscovered.Length} additional stock-runtime host imports.");
     }
 
-    string[] platformImports = unresolved.Where(IsSupportedPlatformImport).Distinct(StringComparer.Ordinal).Order().ToArray();
-    if (platformImports.Length == 0)
-    {
-        Console.Error.WriteLine(firstOutput);
-        return Fail($"LLD failed with exit code {firstExit}, and no supported platform imports could be isolated.");
-    }
-
-    WritePlatformStubAssembly(shimSource, platformImports);
-    Console.WriteLine($"[WARN] The stock Windows NativeAOT pack requested {platformImports.Length} host imports.");
-    Console.WriteLine("[INFO] Generating freestanding compatibility stubs for unreachable host-platform paths.");
-    int nasmExit = Run(nasm, ["-f", "win64", shimSource, "-o", shimObject]);
-    if (nasmExit != 0) return Fail($"NASM failed while generating NativeAOT platform stubs with exit code {nasmExit}.");
-
-    List<string> finalInputs = [entryObject, cpuObject, runtimeObject, shimObject, nativeLibrary];
-    string[] finalArguments = CreateLinkArguments(efi, map, finalInputs);
-    (int finalExit, string finalOutput) = Capture(lld, finalArguments);
-    if (finalExit != 0)
-    {
-        Console.Error.WriteLine(finalOutput);
-        return Fail($"LLD failed after the freestanding platform-stub pass with exit code {finalExit}.");
-    }
-
-    File.WriteAllLines(Path.Combine(output, "NovaOryn.NativeAot.PlatformImports.txt"), platformImports);
-    Console.WriteLine($"[ OK ] EFI application linked: {efi}");
-    Console.WriteLine($"[ OK ] Platform import report: {Path.Combine(output, "NovaOryn.NativeAot.PlatformImports.txt")}");
-    return 0;
+    return Fail($"Native linking did not converge after {maximumPasses} bounded passes.");
 }
 
 static string[] CreateLinkArguments(string output, string map, IEnumerable<string> inputs)
@@ -102,7 +118,7 @@ static string[] CreateLinkArguments(string output, string map, IEnumerable<strin
     List<string> arguments =
     [
         "/nologo", "/subsystem:efi_application", "/machine:x64", "/nodefaultlib", "/entry:NovaOrynUefiEntry",
-        "/errorlimit:0", $"/out:{output}", $"/map:{map}"
+        "/errorlimit:256", $"/out:{output}", $"/map:{map}"
     ];
     arguments.AddRange(inputs);
     return arguments.ToArray();
@@ -150,33 +166,48 @@ static void WritePlatformStubAssembly(string path, IEnumerable<string> symbols)
     File.WriteAllText(path, source.ToString(), new UTF8Encoding(false));
 }
 
-static int Run(string executable, IEnumerable<string> arguments)
+static int Run(string executable, IEnumerable<string> arguments, TimeSpan timeout)
 {
-    using Process process = new();
-    process.StartInfo = new ProcessStartInfo(executable) { UseShellExecute = false };
-    foreach (string argument in arguments) process.StartInfo.ArgumentList.Add(argument);
-    if (!process.Start()) return -1;
-    process.WaitForExit();
-    return process.ExitCode;
+    ProcessResult result = Capture(executable, arguments, timeout);
+    if (result.TimedOut) return -2;
+    return result.ExitCode;
 }
 
-static (int ExitCode, string Output) Capture(string executable, IEnumerable<string> arguments)
+static ProcessResult Capture(string executable, IEnumerable<string> arguments, TimeSpan timeout)
 {
     using Process process = new();
     process.StartInfo = new ProcessStartInfo(executable)
     {
         UseShellExecute = false,
         RedirectStandardOutput = true,
-        RedirectStandardError = true
+        RedirectStandardError = true,
+        CreateNoWindow = true
     };
     foreach (string argument in arguments) process.StartInfo.ArgumentList.Add(argument);
-    process.Start();
-    string output = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
+
+    StringBuilder output = new();
+    process.OutputDataReceived += (_, eventArgs) => { if (eventArgs.Data is not null) output.AppendLine(eventArgs.Data); };
+    process.ErrorDataReceived += (_, eventArgs) => { if (eventArgs.Data is not null) output.AppendLine(eventArgs.Data); };
+
+    if (!process.Start()) return new ProcessResult(-1, string.Empty, false);
+    process.BeginOutputReadLine();
+    process.BeginErrorReadLine();
+
+    bool exited = process.WaitForExit((int)Math.Min(timeout.TotalMilliseconds, int.MaxValue));
+    if (!exited)
+    {
+        try { process.Kill(entireProcessTree: true); } catch { }
+        process.WaitForExit();
+        return new ProcessResult(-2, output.ToString(), true);
+    }
+
     process.WaitForExit();
-    return (process.ExitCode, output);
+    return new ProcessResult(process.ExitCode, output.ToString(), false);
 }
 
 static string Quote(string value) => value.Any(char.IsWhiteSpace) ? $"\"{value.Replace("\"", "\\\"")}\"" : value;
 static bool HasOption(string[] args, string option) => args.Any(value => string.Equals(value, option, StringComparison.OrdinalIgnoreCase));
 static string? GetOption(string[] args, string name) { for (int i = 0; i + 1 < args.Length; i++) if (string.Equals(args[i], name, StringComparison.OrdinalIgnoreCase)) return args[i + 1]; return null; }
 static int Fail(string message) { Console.Error.WriteLine($"[FAIL] {message}"); return 1; }
+
+readonly record struct ProcessResult(int ExitCode, string Output, bool TimedOut);

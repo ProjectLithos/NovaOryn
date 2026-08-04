@@ -1,20 +1,20 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.17",
+  "version": "0.0.18",
   "changedFiles": [
-    "Build-NovaOryn.ps1",
     "Directory.Build.props",
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
-    "docs/Release-0.0.17.md",
+    "docs/Release-0.0.18.md",
     "src/NovaOryn.Kernel.Sample/Kernel.cs",
-    "src/NovaOryn.Kernel.Sample/NovaOryn.Kernel.Sample.csproj",
     "src/NovaOryn.Linker/Program.cs",
     "src/NovaOryn.ManagedCompiler/Program.cs",
     "src/NovaOryn.ProjectModel/NovaOrynProject.cs",
     "toolchain/NovaOryn.Toolchain.json"
   ],
-  "deletedFiles": [],
+  "deletedFiles": [
+    "docs/Release-0.0.17.md"
+  ],
   "renamedFiles": []
 }
