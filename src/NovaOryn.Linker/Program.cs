@@ -27,6 +27,12 @@ static int MainEntry(string[] args)
     using JsonDocument document = JsonDocument.Parse(File.ReadAllText(compileManifest));
     string nativeLibrary = document.RootElement.GetProperty("nativeLibrary").GetString() ?? string.Empty;
     if (!File.Exists(nativeLibrary)) return Fail($"NativeAOT library not found: {nativeLibrary}");
+    string[] runtimeLibraries = document.RootElement.TryGetProperty("runtimeLibraries", out JsonElement runtimeElement)
+        ? runtimeElement.EnumerateArray().Select(value => value.GetString() ?? string.Empty).Where(File.Exists).ToArray()
+        : [];
+    if (runtimeLibraries.Length == 0)
+        return Fail("The compilation manifest contains no NativeAOT runtime libraries. Re-run NovaOryn.ManagedCompiler with version 0.0.19 or newer.");
+    Console.WriteLine($"[ OK ] NativeAOT runtime libraries: {runtimeLibraries.Length}");
 
     Console.WriteLine("[INFO] Verifying that the ILC output exports NovaOrynManagedEntry for managed KMain.");
     if (!HasOption(args, "--dry-run"))
@@ -52,7 +58,7 @@ static int MainEntry(string[] args)
 
     if (HasOption(args, "--dry-run"))
     {
-        string[] dryArguments = CreateLinkArguments(efi, map, [entryObject, cpuObject, runtimeObject, nativeLibrary]);
+        string[] dryArguments = CreateLinkArguments(efi, map, [entryObject, cpuObject, runtimeObject, .. runtimeLibraries, nativeLibrary]);
         Console.WriteLine($"[INFO] {lld} {string.Join(" ", dryArguments.Select(Quote))}");
         return 0;
     }
@@ -70,6 +76,7 @@ static int MainEntry(string[] args)
             if (nasmExit != 0) return Fail($"NASM failed while generating NativeAOT platform stubs with exit code {nasmExit}.");
             inputs.Add(shimObject);
         }
+        inputs.AddRange(runtimeLibraries);
         inputs.Add(nativeLibrary);
 
         string[] linkArguments = CreateLinkArguments(efi, map, inputs);
@@ -150,18 +157,78 @@ static bool IsSupportedPlatformImport(string symbol)
 
 static void WritePlatformStubAssembly(string path, IEnumerable<string> symbols)
 {
+    string[] allSymbols = symbols.Distinct(StringComparer.Ordinal).ToArray();
+    HashSet<string> dataSymbols = new(StringComparer.Ordinal)
+    {
+        "__security_cookie", "_tls_index", "g_cpuFeatures"
+    };
+
     StringBuilder source = new();
     source.AppendLine("bits 64");
     source.AppendLine("default rel");
+    source.AppendLine("section .data");
+    foreach (string symbol in allSymbols.Where(dataSymbols.Contains))
+    {
+        source.Append("global ").AppendLine(symbol);
+        source.Append(symbol).AppendLine(": dq 0");
+    }
+
     source.AppendLine("section .text");
-    source.AppendLine();
-    foreach (string symbol in symbols)
+    if (allSymbols.Contains("memset", StringComparer.Ordinal))
+    {
+        source.AppendLine("global memset");
+        source.AppendLine("memset:");
+        source.AppendLine("    mov rax, rcx");
+        source.AppendLine("    mov rcx, r8");
+        source.AppendLine("    mov r8b, dl");
+        source.AppendLine(".memset_loop:");
+        source.AppendLine("    test rcx, rcx");
+        source.AppendLine("    jz .memset_done");
+        source.AppendLine("    mov [rax + rcx - 1], r8b");
+        source.AppendLine("    dec rcx");
+        source.AppendLine("    jmp .memset_loop");
+        source.AppendLine(".memset_done:");
+        source.AppendLine("    ret");
+    }
+
+    if (allSymbols.Contains("memmove", StringComparer.Ordinal))
+    {
+        source.AppendLine("global memmove");
+        source.AppendLine("memmove:");
+        source.AppendLine("    mov rax, rcx");
+        source.AppendLine("    test r8, r8");
+        source.AppendLine("    jz .memmove_done");
+        source.AppendLine("    cmp rcx, rdx");
+        source.AppendLine("    jb .memmove_forward");
+        source.AppendLine("    lea r9, [rdx + r8]");
+        source.AppendLine("    cmp rcx, r9");
+        source.AppendLine("    jae .memmove_forward");
+        source.AppendLine(".memmove_backward:");
+        source.AppendLine("    dec r8");
+        source.AppendLine("    mov r9b, [rdx + r8]");
+        source.AppendLine("    mov [rcx + r8], r9b");
+        source.AppendLine("    test r8, r8");
+        source.AppendLine("    jnz .memmove_backward");
+        source.AppendLine("    jmp .memmove_done");
+        source.AppendLine(".memmove_forward:");
+        source.AppendLine("    xor r9, r9");
+        source.AppendLine(".memmove_forward_loop:");
+        source.AppendLine("    cmp r9, r8");
+        source.AppendLine("    jae .memmove_done");
+        source.AppendLine("    mov r10b, [rdx + r9]");
+        source.AppendLine("    mov [rcx + r9], r10b");
+        source.AppendLine("    inc r9");
+        source.AppendLine("    jmp .memmove_forward_loop");
+        source.AppendLine(".memmove_done:");
+        source.AppendLine("    ret");
+    }
+
+    foreach (string symbol in allSymbols.Where(symbol => !dataSymbols.Contains(symbol) && symbol is not "memset" and not "memmove"))
     {
         source.Append("global ").AppendLine(symbol);
         source.Append(symbol).AppendLine(":");
         source.AppendLine("    xor eax, eax");
         source.AppendLine("    ret");
-        source.AppendLine();
     }
     File.WriteAllText(path, source.ToString(), new UTF8Encoding(false));
 }
