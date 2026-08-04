@@ -1,5 +1,6 @@
 using NovaOryn.Boot.Contracts;
 using NovaOryn.Console.Contracts;
+using BootFramebuffer = NovaOryn.Boot.Contracts.Framebuffer;
 
 namespace NovaOryn.Console.Framebuffer;
 
@@ -43,7 +44,7 @@ public readonly struct FramebufferConfiguration
 public sealed unsafe class FramebufferConsole : IConsole
 {
     private FramebufferConfiguration _configuration;
-    private Framebuffer _framebuffer;
+    private BootFramebuffer _framebuffer;
     private uint _cursorX;
     private uint _cursorY;
     private uint _foreground;
@@ -60,7 +61,7 @@ public sealed unsafe class FramebufferConsole : IConsole
 
     public bool Initialize(BootContext boot)
     {
-        if (!boot.TryGetFramebuffer(out Framebuffer framebuffer)) return false;
+        if (!boot.TryGetFramebuffer(out BootFramebuffer framebuffer)) return false;
         if (_configuration.Scale == 0 && !Configure(FramebufferConfiguration.Default())) return false;
         _framebuffer = framebuffer;
         if (_configuration.Margin >= framebuffer.Width || _configuration.Margin >= framebuffer.Height) return false;
