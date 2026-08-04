@@ -14,17 +14,17 @@ public static class Kernel
         SerialConsole console = new();
         if (!console.Configure(SerialConfiguration.Com1())) return false;
         if (!console.Initialize(boot)) return false;
-        if (!console.WriteLine("NovaOryn 0.0.16 KMain started.")) return false;
+        if (!console.WriteLine("NovaOryn 0.0.17 KMain started.")) return false;
         if (!console.WriteLine("KMain was compiled by the real NativeAOT ILC pipeline.")) return false;
         return CPU.Halt();
     }
 
     [UnmanagedCallersOnly(EntryPoint = "NovaOrynManagedEntry")]
-    public static byte NativeEntry(nint bootContextAddress)
+    public static unsafe byte NativeEntry(nint bootContextAddress)
     {
         BootContext boot = bootContextAddress == 0
             ? default
-            : Marshal.PtrToStructure<BootContext>(bootContextAddress);
+            : *(BootContext*)bootContextAddress;
         return KMain(boot) ? (byte)1 : (byte)0;
     }
 }

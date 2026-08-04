@@ -111,7 +111,7 @@ if ($DryRun) { $dry = @("--dry-run") }
 & $dotnet $compiler compile $projectManifest --dotnet $dotnet --configuration $Configuration @dry
 if ($LASTEXITCODE -ne 0) { throw "Managed compilation failed with exit code $LASTEXITCODE." }
 
-& $dotnet $linker link $projectManifest --lld-link $lldLink --llvm-nm $llvmNm --native-root $nativeOutput @dry
+& $dotnet $linker link $projectManifest --lld-link $lldLink --llvm-nm $llvmNm --nasm $nasm --native-root $nativeOutput @dry
 if ($LASTEXITCODE -ne 0) { throw "Native link failed with exit code $LASTEXITCODE." }
 
 Write-Host "[ OK ] NovaOryn x64 NativeAOT build completed."
