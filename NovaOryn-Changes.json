@@ -1,6 +1,6 @@
 {
-  "version": "0.0.14",
-  "baseVersion": "0.0.13",
+  "version": "0.0.15",
+  "baseVersion": "0.0.14",
   "deletedFiles": [],
   "renamedFiles": [],
   "changedFiles": [
@@ -9,7 +9,7 @@
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
-    "docs/Release-0.0.14.md",
+    "docs/Release-0.0.15.md",
     "src/NovaOryn.Kernel.Sample/Kernel.cs",
     "src/NovaOryn.ManagedCompiler/Program.cs",
     "src/NovaOryn.ProjectModel/NovaOrynProject.cs",

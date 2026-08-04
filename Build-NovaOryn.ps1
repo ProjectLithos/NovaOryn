@@ -11,18 +11,21 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 function Find-Executable {
     param(
         [Parameter(Mandatory = $true)][string]$DisplayName,
-        [Parameter(Mandatory = $true)][string[]]$Candidates
+        [AllowNull()][AllowEmptyCollection()][string[]]$Candidates
     )
 
-    foreach ($candidate in $Candidates) {
-        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+    $usableCandidates = @($Candidates | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
+    foreach ($candidate in $usableCandidates) {
         $expanded = [Environment]::ExpandEnvironmentVariables($candidate)
         if (Test-Path -LiteralPath $expanded -PathType Leaf) {
             return (Resolve-Path -LiteralPath $expanded).Path
         }
     }
 
-    throw "Required build tool is unavailable: $DisplayName. Checked: $($Candidates -join ', ')"
+    if ($usableCandidates.Count -eq 0) {
+        throw "Required build tool is unavailable: $DisplayName. No usable candidate paths were supplied."
+    }
+    throw "Required build tool is unavailable: $DisplayName. Checked: $($usableCandidates -join ', ')"
 }
 
 $dotnet = Find-Executable -DisplayName ".NET SDK dotnet.exe" -Candidates @(
