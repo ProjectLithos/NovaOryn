@@ -90,9 +90,11 @@ Write-Host "[INFO] Assembling x64 UEFI entry objects."
 if ($LASTEXITCODE -ne 0) { throw "NASM failed for Entry.asm with exit code $LASTEXITCODE." }
 & $nasm -f win64 (Join-Path $root "native\x64\Cpu.asm") -o (Join-Path $nativeOutput "Cpu.obj")
 if ($LASTEXITCODE -ne 0) { throw "NASM failed for Cpu.asm with exit code $LASTEXITCODE." }
+& $nasm -f win64 (Join-Path $root "native\x64\Runtime.asm") -o (Join-Path $nativeOutput "Runtime.obj")
+if ($LASTEXITCODE -ne 0) { throw "NASM failed for Runtime.asm with exit code $LASTEXITCODE." }
 
 Write-Host "[INFO] Building NovaOryn executable tools."
-& $dotnet build (Join-Path $root "NovaOryn.sln") --configuration $Configuration --nologo
+& $dotnet build (Join-Path $root "NovaOryn.sln") --configuration $Configuration --property:Platform="Any CPU" --nologo
 if ($LASTEXITCODE -ne 0) { throw "NovaOryn solution build failed with exit code $LASTEXITCODE." }
 
 $compiler = Join-Path $root "src\NovaOryn.ManagedCompiler\bin\$Configuration\net10.0\NovaOryn.ManagedCompiler.dll"

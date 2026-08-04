@@ -31,16 +31,17 @@ static int MainEntry(string[] args)
     string nativeRoot = Path.GetFullPath(GetOption(args, "--native-root") ?? Path.Combine(AppContext.BaseDirectory, "native", "x64"));
     string entryObject = Path.Combine(nativeRoot, "Entry.obj");
     string cpuObject = Path.Combine(nativeRoot, "Cpu.obj");
+    string runtimeObject = Path.Combine(nativeRoot, "Runtime.obj");
     string efi = Path.Combine(output, project.Name + ".efi");
     string map = Path.Combine(output, project.Name + ".map");
     string[] linkArguments =
     [
         "/nologo", "/subsystem:efi_application", "/machine:x64", "/nodefaultlib", "/entry:NovaOrynUefiEntry",
-        $"/out:{efi}", $"/map:{map}", entryObject, cpuObject, nativeLibrary
+        $"/out:{efi}", $"/map:{map}", entryObject, cpuObject, runtimeObject, nativeLibrary
     ];
     Console.WriteLine($"[INFO] {lld} {string.Join(" ", linkArguments.Select(Quote))}");
     if (HasOption(args, "--dry-run")) return 0;
-    if (!File.Exists(entryObject) || !File.Exists(cpuObject)) return Fail("Native entry objects are missing. Run Build-NovaOryn before linking.");
+    if (!File.Exists(entryObject) || !File.Exists(cpuObject) || !File.Exists(runtimeObject)) return Fail("Native entry or runtime objects are missing. Run Build-NovaOryn before linking.");
     int exitCode = Run(lld, linkArguments);
     if (exitCode != 0) return Fail($"LLD failed with exit code {exitCode}.");
     Console.WriteLine($"[ OK ] EFI application linked: {efi}");

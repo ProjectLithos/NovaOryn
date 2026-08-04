@@ -8,5 +8,5 @@ public sealed class DoesNotReturnAttribute : Attribute;
 
 public readonly record struct VersionInfo(ushort Major, ushort Minor, ushort Patch)
 {
-    public static VersionInfo Current => new(0, 0, 1);
+    public static VersionInfo Current => new(0, 0, 16);
 }

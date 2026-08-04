@@ -1,18 +1,23 @@
 {
-  "version": "0.0.15",
-  "baseVersion": "0.0.14",
-  "deletedFiles": [],
-  "renamedFiles": [],
+  "schemaVersion": 1,
+  "version": "0.0.16",
   "changedFiles": [
     "Build-NovaOryn.ps1",
     "Directory.Build.props",
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
-    "docs/Release-0.0.15.md",
+    "docs/Release-0.0.16.md",
+    "examples/MinimalKernel/NovaOrynProject.json",
+    "native/x64/Runtime.asm",
+    "src/NovaOryn.Core/KernelAttributes.cs",
     "src/NovaOryn.Kernel.Sample/Kernel.cs",
+    "src/NovaOryn.Linker/Program.cs",
     "src/NovaOryn.ManagedCompiler/Program.cs",
     "src/NovaOryn.ProjectModel/NovaOrynProject.cs",
-    "toolchain/NovaOryn.Toolchain.json"
-  ]
+    "src/NovaOryn.QemuLauncher/Program.cs",
+    "tests/NovaOryn.SourcePolicy.Tests/Program.cs"
+  ],
+  "deletedFiles": [],
+  "renamedFiles": []
 }

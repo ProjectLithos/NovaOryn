@@ -47,7 +47,7 @@ static int MainEntry(string[] args)
     File.WriteAllText(compileManifest, JsonSerializer.Serialize(new
     {
         schemaVersion = 1,
-        productVersion = "0.0.15",
+        productVersion = "0.0.16",
         project = project.Name,
         kernelEntry = project.KernelEntry,
         architecture = project.TargetArchitecture,

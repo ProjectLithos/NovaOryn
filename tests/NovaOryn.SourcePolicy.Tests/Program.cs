@@ -12,6 +12,14 @@ string kernel = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Samp
 if (!Regex.IsMatch(kernel, @"public\s+static\s+bool\s+KMain\s*\(")) failures.Add("KMain must be public static bool.");
 string cpu = File.ReadAllText(Path.Combine(root, "native", "x64", "Cpu.S"));
 if (!cpu.Contains("cli", StringComparison.Ordinal) || !cpu.Contains("hlt", StringComparison.Ordinal) || !cpu.Contains("jmp .LNovaOrynHaltForever", StringComparison.Ordinal)) failures.Add("Native halt loop is incomplete.");
+
+string solution = File.ReadAllText(Path.Combine(root, "NovaOryn.sln"));
+if (!solution.Contains("Release|Any CPU", StringComparison.Ordinal)) failures.Add("Solution must define Release|Any CPU.");
+string buildScript = File.ReadAllText(Path.Combine(root, "Build-NovaOryn.ps1"));
+if (!buildScript.Contains("--property:Platform=\"Any CPU\"", StringComparison.Ordinal)) failures.Add("Build script must explicitly select Any CPU for managed solution projects.");
+string projectManifest = File.ReadAllText(Path.Combine(root, "examples", "MinimalKernel", "NovaOrynProject.json"));
+if (!projectManifest.Contains("../../src/NovaOryn.Kernel.Sample", StringComparison.Ordinal)) failures.Add("Minimal kernel manifest must resolve the sample project from its own directory.");
+
 if (failures.Count != 0)
 {
     foreach (string failure in failures) Console.Error.WriteLine($"[FAIL] {failure}");
