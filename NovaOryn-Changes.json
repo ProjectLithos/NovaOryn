@@ -1,8 +1,8 @@
 {
   "product": "Nova Oryn OS SDK",
   "shortName": "NovaOryn",
-  "version": "0.0.11",
-  "baseVersion": "0.0.10",
+  "version": "0.0.12",
+  "baseVersion": "0.0.11",
   "repositoryWasEmpty": false,
   "toolchainDownloadAllowedAfterSourceCommitAndPush": true,
   "deletedFiles": [],
@@ -13,12 +13,12 @@
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
-    "docs/Release-0.0.11.md",
+    "docs/Release-0.0.12.md",
     "toolchain/NovaOryn.Toolchain.json"
   ],
   "notes": [
-    "Makes llvm-mc.exe optional because NASM is the required assembler.",
-    "Keeps LLD and selected LLVM binary utilities mandatory.",
-    "Reuses already-installed valid toolchain components."
+    "Finds QEMU in standard Windows installation locations after winget installation.",
+    "Persists resolved tool paths under .toolchain.",
+    "Applies robust path discovery to NASM as well."
   ]
 }

@@ -112,9 +112,62 @@ function Install-LlvmTools([string]$RepositoryRoot, [pscustomobject]$Manifest) {
     Write-Ok 'LLD and required LLVM utilities installed.'
 }
 
-function Ensure-WingetTool([string]$DisplayName, [string]$CommandName, [string]$WingetId) {
-    $existing = Get-CommandPath $CommandName
-    if ($null -ne $existing) { Write-Ok "$DisplayName already exists: $existing"; return }
+function Find-InstalledExecutable([string]$CommandName, [string[]]$CandidatePaths) {
+    $commandPath = Get-CommandPath $CommandName
+    if ($null -ne $commandPath) { return $commandPath }
+
+    foreach ($candidate in $CandidatePaths) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        $expanded = [Environment]::ExpandEnvironmentVariables($candidate)
+        if (Test-Path -LiteralPath $expanded -PathType Leaf) { return $expanded }
+    }
+
+    return $null
+}
+
+function Save-ResolvedToolPath([string]$RepositoryRoot, [string]$Name, [string]$ExecutablePath) {
+    $statePath = Join-Path $RepositoryRoot '.toolchain\NovaOryn.ToolPaths.json'
+    $state = @{}
+    if (Test-Path -LiteralPath $statePath -PathType Leaf) {
+        try {
+            $existing = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
+            foreach ($property in $existing.PSObject.Properties) { $state[$property.Name] = $property.Value }
+        } catch { $state = @{} }
+    }
+    $state[$Name] = $ExecutablePath
+    $state | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
+}
+
+function Ensure-Qemu([string]$RepositoryRoot, [pscustomobject]$Manifest) {
+    $candidates = @(
+        '%ProgramFiles%\qemu\qemu-system-x86_64.exe',
+        '%ProgramFiles(x86)%\qemu\qemu-system-x86_64.exe',
+        '%LOCALAPPDATA%\Programs\qemu\qemu-system-x86_64.exe',
+        '%LOCALAPPDATA%\Microsoft\WinGet\Links\qemu-system-x86_64.exe'
+    )
+    $qemu = Find-InstalledExecutable 'qemu-system-x86_64.exe' $candidates
+    if ($null -eq $qemu) {
+        $winget = Get-CommandPath 'winget.exe'
+        if ($null -eq $winget) { Fail 'QEMU is missing and winget.exe is unavailable.' }
+        Write-Step 'Installing QEMU with winget.'
+        Invoke-Checked $winget @('install', '--id', $Manifest.qemu.wingetId, '--exact', '--accept-package-agreements', '--accept-source-agreements', '--silent')
+        $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+        $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+        $env:Path = "$machinePath;$userPath"
+        $qemu = Find-InstalledExecutable 'qemu-system-x86_64.exe' $candidates
+    }
+    if ($null -eq $qemu) { Fail 'QEMU was installed but qemu-system-x86_64.exe could not be found in PATH or standard installation locations.' }
+    Save-ResolvedToolPath $RepositoryRoot 'qemuSystemX64' $qemu
+    Write-Ok "QEMU is available: $qemu"
+}
+
+function Ensure-WingetTool([string]$RepositoryRoot, [string]$DisplayName, [string]$CommandName, [string]$WingetId, [string[]]$CandidatePaths) {
+    $existing = Find-InstalledExecutable $CommandName $CandidatePaths
+    if ($null -ne $existing) {
+        Save-ResolvedToolPath $RepositoryRoot $CommandName $existing
+        Write-Ok "$DisplayName already exists: $existing"
+        return
+    }
     $winget = Get-CommandPath 'winget.exe'
     if ($null -eq $winget) { Fail "$DisplayName is missing and winget.exe is unavailable." }
     Write-Step "Installing $DisplayName with winget."
@@ -122,8 +175,10 @@ function Ensure-WingetTool([string]$DisplayName, [string]$CommandName, [string]$
     $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
     $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
     $env:Path = "$machinePath;$userPath"
-    if ($null -eq (Get-CommandPath $CommandName)) { Fail "$DisplayName was installed but $CommandName is not discoverable." }
-    Write-Ok "$DisplayName installed."
+    $existing = Find-InstalledExecutable $CommandName $CandidatePaths
+    if ($null -eq $existing) { Fail "$DisplayName was installed but $CommandName could not be found." }
+    Save-ResolvedToolPath $RepositoryRoot $CommandName $existing
+    Write-Ok "$DisplayName installed: $existing"
 }
 
 try {
@@ -142,8 +197,13 @@ try {
     $dotnet = Join-Path (Join-Path $repositoryRoot $manifest.dotNetSdk.installDirectory) 'dotnet.exe'
     Install-NativeAot $repositoryRoot $dotnet $manifest
     Install-LlvmTools $repositoryRoot $manifest
-    Ensure-WingetTool 'QEMU' 'qemu-system-x86_64.exe' $manifest.qemu.wingetId
-    Ensure-WingetTool 'NASM' 'nasm.exe' $manifest.nasm.wingetId
+    Ensure-Qemu $repositoryRoot $manifest
+    Ensure-WingetTool $repositoryRoot 'NASM' 'nasm.exe' $manifest.nasm.wingetId @(
+        '%LOCALAPPDATA%\bin\NASM\nasm.exe',
+        '%ProgramFiles%\NASM\nasm.exe',
+        '%ProgramFiles(x86)%\NASM\nasm.exe',
+        '%LOCALAPPDATA%\Microsoft\WinGet\Links\nasm.exe'
+    )
     Write-Ok 'NovaOryn toolchain validation completed.'
     exit 0
 } catch {
