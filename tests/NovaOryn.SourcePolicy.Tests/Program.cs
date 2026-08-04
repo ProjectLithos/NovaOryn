@@ -19,6 +19,9 @@ string buildScript = File.ReadAllText(Path.Combine(root, "Build-NovaOryn.ps1"));
 if (!buildScript.Contains("--property:Platform=\"Any CPU\"", StringComparison.Ordinal)) failures.Add("Build script must explicitly select Any CPU for managed solution projects.");
 string projectManifest = File.ReadAllText(Path.Combine(root, "examples", "MinimalKernel", "NovaOrynProject.json"));
 if (!projectManifest.Contains("../../src/NovaOryn.Kernel.Sample", StringComparison.Ordinal)) failures.Add("Minimal kernel manifest must resolve the sample project from its own directory.");
+string bootstrapProject = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "NovaOryn.Kernel.Bootstrap.csproj"));
+if (!bootstrapProject.Contains("<ImplicitUsings>disable</ImplicitUsings>", StringComparison.Ordinal)) failures.Add("Freestanding bootstrap must disable generated global usings.");
+if (!bootstrapProject.Contains("<Nullable>disable</Nullable>", StringComparison.Ordinal)) failures.Add("Freestanding bootstrap must disable nullable metadata generation.");
 
 if (failures.Count != 0)
 {

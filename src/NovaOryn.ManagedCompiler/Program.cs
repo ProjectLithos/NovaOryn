@@ -43,6 +43,7 @@ static int MainEntry(string[] args)
 
     Console.WriteLine($"[INFO] Compiling {project.Name} with NovaOryn.RuntimePack.X64.Bootstrap.");
     Console.WriteLine("[INFO] The stock Windows CoreLib and NativeAOT runtime libraries are intentionally excluded.");
+    Console.WriteLine("[INFO] RID win-x64 selects Microsoft x64 ILC compiler assets only; it is not the NovaOryn runtime target.");
     if (dryRun) return 0;
     int exitCode = Run(dotnet, publishArguments, Path.GetDirectoryName(project.ProjectFile)!);
     if (exitCode != 0) return Fail($"NovaOryn bootstrap ILC publish failed with exit code {exitCode}.");
@@ -56,7 +57,7 @@ static int MainEntry(string[] args)
     File.WriteAllText(compileManifest, JsonSerializer.Serialize(new
     {
         schemaVersion = 3,
-        productVersion = "0.0.20",
+        productVersion = "0.0.21",
         project = project.Name,
         kernelEntry = project.KernelEntry,
         architecture = project.TargetArchitecture,
