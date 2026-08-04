@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <VSTemplate Version="3.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name>NovaOryn Kernel 0.0.35</Name>
+    <Name>NovaOryn Kernel 0.0.38</Name>
     <Description>Create a freestanding C# NovaOryn x64 UEFI kernel that builds and runs in QEMU from Visual Studio.</Description>
     <Icon>NovaOrynKernel.ico</Icon>
     <ProjectType>CSharp</ProjectType>
@@ -15,7 +15,7 @@
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>
   <TemplateContent>
-    <Project File="NovaOrynKernel.csproj" ReplaceParameters="true" TargetFileName="$safeprojectname$.csproj">
+    <Project File="NovaOrynKernel.csproj" ReplaceParameters="true">
       <ProjectItem ReplaceParameters="true">Kernel.cs</ProjectItem>
       <ProjectItem ReplaceParameters="true">CoreLib.cs</ProjectItem>
       <ProjectItem ReplaceParameters="true">BootContext.cs</ProjectItem>

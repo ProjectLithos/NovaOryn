@@ -9,7 +9,27 @@ $project = Join-Path $root "src\NovaOryn.VisualStudio\NovaOryn.VisualStudio.cspr
 if ($LASTEXITCODE -ne 0) { throw "NovaOryn VSIX build failed with exit code $LASTEXITCODE." }
 $vsix = Join-Path $root "src\NovaOryn.VisualStudio\bin\$Configuration\NovaOryn.VisualStudio.vsix"
 if (-not (Test-Path -LiteralPath $vsix -PathType Leaf)) { throw "NovaOryn VSIX was not produced: $vsix" }
-$artifact = Join-Path $root "Artifacts\VisualStudio\NovaOryn.VisualStudio-0.0.35.vsix"
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$archive = [IO.Compression.ZipFile]::OpenRead($vsix)
+try {
+    $requiredTemplateEntries = @(
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.vstemplate",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.csproj",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Kernel.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/CoreLib.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/BootContext.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/FramebufferConsole.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/BitmapFont.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynProject.json"
+    )
+    $entryNames = @($archive.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
+    foreach ($requiredEntry in $requiredTemplateEntries) {
+        if ($entryNames -notcontains $requiredEntry) { throw "NovaOryn VSIX is missing project-template content: $requiredEntry" }
+    }
+} finally {
+    $archive.Dispose()
+}
+$artifact = Join-Path $root "Artifacts\VisualStudio\NovaOryn.VisualStudio-0.0.38.vsix"
 New-Item -ItemType Directory -Path (Split-Path -Parent $artifact) -Force | Out-Null
 Copy-Item -LiteralPath $vsix -Destination $artifact -Force
 Write-Host "[ OK ] NovaOryn VSIX: $artifact"

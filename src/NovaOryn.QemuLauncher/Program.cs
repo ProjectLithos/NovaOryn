@@ -125,7 +125,7 @@ static int MainEntry(string[] args)
                 File.WriteAllText(runManifest, JsonSerializer.Serialize(new
                 {
                     schemaVersion = 1,
-                    productVersion = "0.0.30",
+                    productVersion = "0.0.38",
                     project = project.Name,
                     qemuProcessId = process.Id,
                     qemuExecutable = qemu,
@@ -171,6 +171,7 @@ static string[] BuildArguments(string ovmfCode, string variableStore, string run
         "-cpu", "max",
         "-smp", "1",
         "-m", "512M",
+        "-display", "sdl",
         "-drive", $"if=pflash,format=raw,unit=0,readonly=on,file={EscapeDriveValue(ovmfCode)}",
         "-drive", $"if=pflash,format=raw,unit=1,file={EscapeDriveValue(variableStore)}",
         "-drive", $"if=none,format=raw,readonly=on,file={EscapeDriveValue(runImage)},id=boot",

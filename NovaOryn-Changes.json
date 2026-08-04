@@ -1,22 +1,26 @@
 {
   "schemaVersion": 2,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.35",
-  "baseVersion": "0.0.34",
+  "version": "0.0.38",
+  "baseVersion": "0.0.37",
   "changedFiles": [
+    "Build-NovaOryn.ps1",
     "Build-NovaOrynVSIX.ps1",
     "Directory.Build.props",
     "Install-NovaOrynVSIX.bat",
+    "NovaOryn-Changes.json",
+    "NovaOryn-SourceManifest.json",
     "README.md",
-    "docs/Release-0.0.35.md",
+    "docs/Release-0.0.38.md",
+    "src/NovaOryn.QemuLauncher/Program.cs",
+    "src/NovaOryn.VisualStudio/NovaOrynLaunchService.cs",
     "src/NovaOryn.VisualStudio/NovaOrynPackage.cs",
+    "src/NovaOryn.VisualStudio/ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.csproj",
     "src/NovaOryn.VisualStudio/ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.vstemplate",
     "src/NovaOryn.VisualStudio/ProjectTemplates/NovaOryn.VisualStudio.Project.vstman",
     "src/NovaOryn.VisualStudio/Properties/AssemblyInfo.cs",
     "src/NovaOryn.VisualStudio/source.extension.vsixmanifest",
-    "toolchain/NovaOryn.Toolchain.json",
-    "NovaOryn-Changes.json",
-    "NovaOryn-SourceManifest.json"
+    "toolchain/NovaOryn.Toolchain.json"
   ],
   "deletedFiles": [],
   "renamedFiles": []

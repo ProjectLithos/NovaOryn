@@ -37,7 +37,7 @@ internal sealed class NovaOrynLaunchService
         string manifest = Path.Combine(Path.GetDirectoryName(projectFile) ?? string.Empty, "NovaOrynProject.json");
         string script = Path.Combine(sdkRoot, "Build-NovaOryn.ps1");
         string configuration = ResolveConfiguration(dte);
-        string arguments = $"-NoProfile -ExecutionPolicy Bypass -File {Quote(script)} -Project {Quote(manifest)} -Configuration {configuration}" + (buildOnly ? " -NoRun" : string.Empty);
+        string arguments = $"-NoProfile -ExecutionPolicy Bypass -File {Quote(script)} -Project {Quote(manifest)} -Configuration {configuration}" + (buildOnly ? string.Empty : " -Run");
         _package.Output.WriteLine($"[INFO] NovaOryn {(buildOnly ? "Build" : "Run")}: {Path.GetFileName(projectFile)} ({configuration}).");
         using var process = new System.Diagnostics.Process { StartInfo = new System.Diagnostics.ProcessStartInfo("powershell.exe", arguments) { WorkingDirectory = sdkRoot, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true }, EnableRaisingEvents = true };
         process.OutputDataReceived += (_, e) => WriteLine(e.Data); process.ErrorDataReceived += (_, e) => WriteLine(e.Data);

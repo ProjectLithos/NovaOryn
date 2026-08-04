@@ -13,10 +13,19 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <AssemblyName>NovaOryn.Kernel.Bootstrap</AssemblyName>
     <RootNamespace>$safeprojectname$</RootNamespace>
+    <EnableDefaultItems>false</EnableDefaultItems>
     <NovaOrynProject>true</NovaOrynProject>
     <NovaOrynSdkRoot Condition="'$(NovaOrynSdkRoot)' == '' and '$(NOVAORYN_SDK_ROOT)' != ''">$(NOVAORYN_SDK_ROOT)</NovaOrynSdkRoot>
     <NovaOrynSdkRoot Condition="'$(NovaOrynSdkRoot)' == ''">C:\NovaOryn</NovaOrynSdkRoot>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Kernel.cs" />
+    <Compile Include="CoreLib.cs" />
+    <Compile Include="BootContext.cs" />
+    <Compile Include="FramebufferConsole.cs" />
+    <Compile Include="BitmapFont.cs" />
+    <None Include="NovaOrynProject.json" />
+  </ItemGroup>
   <Target Name="CustomizeReferences" BeforeTargets="BeforeCompile" AfterTargets="FindReferenceAssembliesForReferences">
     <ItemGroup>
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" />

@@ -3,6 +3,7 @@ param(
     [string]$Project = "",
     [ValidateSet("Debug", "Release")][string]$Configuration = "Release",
     [ValidateRange(5, 300)][int]$BootTimeoutSeconds = 30,
+    [switch]$Run,
     [switch]$NoRun,
     [switch]$DryRun
 )
@@ -213,9 +214,13 @@ if ($LASTEXITCODE -ne 0) { throw "Native link failed with exit code $LASTEXITCOD
 & $dotnet $imageBuilder create $projectManifest --output $imagePath @dry
 if ($LASTEXITCODE -ne 0) { throw "Bootable EFI image creation failed with exit code $LASTEXITCODE." }
 
-if ($NoRun) {
+if ($NoRun -or -not $Run) {
     Write-Host "[ OK ] NovaOryn x64 NativeAOT build and FAT32 image creation completed."
-    Write-Host "[INFO] QEMU launch was skipped because -NoRun was supplied."
+    if ($NoRun) {
+        Write-Host "[INFO] QEMU launch was skipped because -NoRun was supplied."
+    } else {
+        Write-Host "[INFO] QEMU launch is disabled for a normal build. Supply -Run or use the Visual Studio Run command to launch it."
+    }
     exit 0
 }
 

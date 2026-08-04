@@ -1,10 +1,12 @@
-# Nova Oryn OS SDK 0.0.35
+# Nova Oryn OS SDK 0.0.38
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.35
+## Release 0.0.38
 
-Release 0.0.35 corrects the Visual Studio launch-service compilation. It removes the `Process` ambiguity between `System.Diagnostics.Process` and `EnvDTE.Process`, and ensures the DTE service variable is definitely assigned before configuration resolution.
+Release 0.0.38 corrects project instantiation and separates build from run. The Visual Studio template now follows the proven Oryn project-item model: every C# source file and `NovaOrynProject.json` are explicitly declared in both the `.vstemplate` and generated `.csproj`. The VSIX builder also opens the completed VSIX and refuses the release when any required template file is absent.
+
+`Build-NovaOryn.bat` now stops after managed compilation, native linking and EFI image creation. QEMU is launched only by `Build-NovaOryn.bat -Run`, `Build-NovaOryn.ps1 -Run`, or the Visual Studio Run/F5 command.
 
 ## External C# kernel project
 
@@ -86,7 +88,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.35.md` for this release.
+See `docs/Release-0.0.38.md` for this release.
 
 
 ## 0.0.22 build
@@ -158,4 +160,4 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.35** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.38** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.

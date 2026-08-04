@@ -42,8 +42,6 @@
     <UseCodebase>true</UseCodebase>
 
     <TargetVsixContainerName>NovaOryn.VisualStudio.vsix</TargetVsixContainerName>
-    <NovaOrynProjectTemplateArchiveName>NovaOrynKernel-Template-$(Version).zip</NovaOrynProjectTemplateArchiveName>
-    <NovaOrynProjectTemplateArchivePath>$(MSBuildProjectDirectory)\$(NovaOrynProjectTemplateArchiveName)</NovaOrynProjectTemplateArchivePath>
     <NovaOrynProjectTemplateSourcePath>$(MSBuildProjectDirectory)\ProjectTemplates\CSharp\1033\NovaOrynKernel</NovaOrynProjectTemplateSourcePath>
     <NovaOrynProjectTemplateManifestPath>$(MSBuildProjectDirectory)\ProjectTemplates\NovaOryn.VisualStudio.Project.vstman</NovaOrynProjectTemplateManifestPath>
   </PropertyGroup>
@@ -128,7 +126,6 @@
     <Compile Remove="ProjectTemplates\**\*.cs" />
     <None Remove="NovaOrynCommands.vsct" />
     <None Remove="ProjectTemplates\**\*" />
-    <None Remove="$(NovaOrynProjectTemplateArchiveName)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -144,6 +141,7 @@
     <Content Include="ProjectTemplates\**\*">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+
   </ItemGroup>
 
   <!-- Finish the standard SDK build pipeline first. PackageReference-generated
@@ -203,18 +201,7 @@
            Text="The NovaOryn project-template icon is missing from the ProjectTemplates tree." />
   </Target>
 
-  <Target Name="CreateNovaOrynProjectTemplateArchive"
-          BeforeTargets="GetVsixSourceItems;CreateVsixContainer">
-    <Delete Files="$(NovaOrynProjectTemplateArchivePath)"
-            Condition="Exists('$(NovaOrynProjectTemplateArchivePath)')" />
-    <ZipDirectory SourceDirectory="$(NovaOrynProjectTemplateSourcePath)"
-                  DestinationFile="$(NovaOrynProjectTemplateArchivePath)"
-                  Overwrite="true" />
-    <Error Condition="!Exists('$(NovaOrynProjectTemplateArchivePath)')"
-           Text="The NovaOryn project-template archive was not generated. Expected: $(NovaOrynProjectTemplateArchivePath)" />
-    <Message Importance="high"
-             Text="[ OK ] NovaOryn project template generated: $(NovaOrynProjectTemplateArchivePath)" />
-  </Target>
+
 
   <Target Name="EnsureOrynVsixWasCreated"
           AfterTargets="Build"
