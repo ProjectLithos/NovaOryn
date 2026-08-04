@@ -67,7 +67,7 @@ public static class Kernel
         if (!Write((Byte)'0')) return false;
         if (!Write((Byte)'.')) return false;
         if (!Write((Byte)'2')) return false;
-        if (!Write((Byte)'0')) return false;
+        if (!Write((Byte)'2')) return false;
         if (!Write((Byte)'\r')) return false;
         return Write((Byte)'\n');
     }

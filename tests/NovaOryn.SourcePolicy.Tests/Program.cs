@@ -22,6 +22,13 @@ if (!projectManifest.Contains("../../src/NovaOryn.Kernel.Sample", StringComparis
 string bootstrapProject = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "NovaOryn.Kernel.Bootstrap.csproj"));
 if (!bootstrapProject.Contains("<ImplicitUsings>disable</ImplicitUsings>", StringComparison.Ordinal)) failures.Add("Freestanding bootstrap must disable generated global usings.");
 if (!bootstrapProject.Contains("<Nullable>disable</Nullable>", StringComparison.Ordinal)) failures.Add("Freestanding bootstrap must disable nullable metadata generation.");
+string bootstrapCoreLib = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "CoreLib.cs"));
+if (!bootstrapCoreLib.Contains("#pragma warning disable CS0169", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("private IntPtr _methodTable;", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("#pragma warning restore CS0169", StringComparison.Ordinal))
+{
+    failures.Add("Freestanding Object must retain its NativeAOT method-table field with a narrowly scoped CS0169 suppression.");
+}
 
 if (failures.Count != 0)
 {

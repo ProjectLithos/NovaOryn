@@ -1,6 +1,11 @@
 namespace System
 {
-    public class Object { private IntPtr _methodTable; }
+    public class Object
+    {
+#pragma warning disable CS0169 // The NativeAOT object header is consumed by generated code, not referenced by C# source.
+        private IntPtr _methodTable;
+#pragma warning restore CS0169
+    }
     public struct Void { }
     public struct Boolean { }
     public struct Char { }

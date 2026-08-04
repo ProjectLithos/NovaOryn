@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.21
+# Nova Oryn OS SDK 0.0.22
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.21
+## Release 0.0.22
 
-This release fixes NativeAOT acquisition by allowing the .NET SDK to resolve its `DotnetPlatform` runtime packs instead of directly referencing them as ordinary NuGet packages.
+This release fixes the custom no-CoreLib bootstrap compilation by retaining the NativeAOT object-header field while narrowly suppressing the expected `CS0169` warning for that compiler-consumed field.
 
 ## Source update workflow
 
@@ -74,22 +74,26 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.21.md` for this release.
+See `docs/Release-0.0.22.md` for this release.
 
 
-## 0.0.21 build
+## 0.0.22 build
 
 Run `Build-NovaOryn.bat` after the source update and toolchain installation. It invokes the real NativeAOT/ILC static-library pipeline and then the NovaOryn native linker.
 
-## 0.0.21 build correction
+## 0.0.22 build correction
 
 Managed solution projects build as `Any CPU`; x64 is selected only for the NativeAOT kernel and native toolchain stages.
 
 
-## 0.0.21 runtime boundary
+## 0.0.22 runtime boundary
 
 The minimal kernel now uses `NovaOryn.RuntimePack.X64.Bootstrap`, a NovaOryn-owned no-standard-library NativeAOT system module. The build does not link the stock Windows CoreLib or Windows NativeAOT runtime libraries.
 
 ## NativeAOT compiler RID
 
 The dedicated bootstrap publish currently uses `win-x64` only to select the Microsoft .NET SDK's x64 ILC compiler assets on the Windows build host. The ordinary kernel sample no longer carries a runtime identifier. The produced EFI image does not link Windows CoreLib or Windows platform runtime libraries.
+## 0.0.22 custom CoreLib correction
+
+`System.Object._methodTable` is part of the minimal NativeAOT object layout. Generated native code consumes it even though ordinary C# source does not, so the field now has a local `CS0169` suppression instead of weakening repository-wide warning checks.
+
