@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.29
+# Nova Oryn OS SDK 0.0.30
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.29
+## Release 0.0.30
 
-Release 0.0.29 moves the editable C# kernel project out of the SDK repository and into the current Windows user's Visual Studio source directory.
+Release 0.0.30 corrects managed bootstrap output discovery. The compiler now reads the `<AssemblyName>` declared by the external kernel project instead of assuming that the DLL name matches the `.csproj` filename. This allows `NovaOrynKernel.csproj` to correctly produce and pass `NovaOryn.Kernel.Bootstrap.dll` to ILC.
 
 ## External C# kernel project
 
@@ -86,7 +86,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.29.md` for this release.
+See `docs/Release-0.0.30.md` for this release.
 
 
 ## 0.0.22 build
@@ -143,9 +143,9 @@ EFI\BOOT\BOOTX64.EFI
 
 `NovaOryn.QemuLauncher.exe` copies the boot image and OVMF variable store into a unique run directory, starts QEMU immediately without `-S`, watches the serial log for both acceptance lines, confirms the QEMU process remains alive, writes `NovaOryn.Run.json`, and returns without terminating the VM.
 
-## 0.0.29 framebuffer build correction
+## 0.0.30 framebuffer build correction
 
-Release 0.0.29 corrects the C# namespace/type collision in `NovaOryn.Console.Framebuffer`. The framebuffer contract type is now referenced through the explicit `BootFramebuffer` alias, allowing the managed framebuffer assembly to compile without changing its public namespace or API.
+Release 0.0.30 corrects the C# namespace/type collision in `NovaOryn.Console.Framebuffer`. The framebuffer contract type is now referenced through the explicit `BootFramebuffer` alias, allowing the managed framebuffer assembly to compile without changing its public namespace or API.
 
 ## 0.0.27 managed framebuffer console
 

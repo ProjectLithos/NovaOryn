@@ -41,8 +41,8 @@ public sealed record NovaOrynProject(
     {
         if (string.IsNullOrWhiteSpace(Name)) { error = "Name is required."; return false; }
         if (!File.Exists(ProjectFile)) { error = $"Kernel project was not found: {ProjectFile}"; return false; }
-        if (!string.Equals(TargetArchitecture, "x64", StringComparison.OrdinalIgnoreCase)) { error = "NovaOryn 0.0.29 supports x64 only."; return false; }
-        if (!string.Equals(BootProtocol, "Uefi", StringComparison.OrdinalIgnoreCase)) { error = "NovaOryn 0.0.29 supports UEFI only."; return false; }
+        if (!string.Equals(TargetArchitecture, "x64", StringComparison.OrdinalIgnoreCase)) { error = "NovaOryn 0.0.30 supports x64 only."; return false; }
+        if (!string.Equals(BootProtocol, "Uefi", StringComparison.OrdinalIgnoreCase)) { error = "NovaOryn 0.0.30 supports UEFI only."; return false; }
         if (!string.Equals(KernelEntry, "KMain", StringComparison.Ordinal)) { error = "KernelEntry must be KMain."; return false; }
         error = string.Empty;
         return true;

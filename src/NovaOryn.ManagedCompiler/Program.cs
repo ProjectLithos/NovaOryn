@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Xml.Linq;
 using NovaOryn.ProjectModel;
 
 return MainEntry(args);
@@ -51,7 +52,7 @@ static int MainEntry(string[] args)
         return Fail($"NovaOryn bootstrap C# compilation failed with exit code {exitCode}.");
     }
 
-    string assemblyName = Path.GetFileNameWithoutExtension(project.ProjectFile);
+    string assemblyName = GetAssemblyName(project.ProjectFile);
     string managedAssembly = Path.Combine(managedOutput, assemblyName + ".dll");
     if (!File.Exists(managedAssembly))
     {
@@ -92,7 +93,7 @@ static int MainEntry(string[] args)
     File.WriteAllText(compileManifest, JsonSerializer.Serialize(new
     {
         schemaVersion = 5,
-        productVersion = "0.0.29",
+        productVersion = "0.0.30",
         project = project.Name,
         kernelEntry = project.KernelEntry,
         architecture = project.TargetArchitecture,
@@ -114,6 +115,21 @@ static int MainEntry(string[] args)
     Console.WriteLine("[ OK ] Windows CoreLib/runtime libraries linked: 0");
     Console.WriteLine($"[ OK ] Compilation manifest: {compileManifest}");
     return 0;
+}
+
+
+static string GetAssemblyName(string projectFile)
+{
+    XDocument project = XDocument.Load(projectFile, LoadOptions.None);
+    string? configuredName = project
+        .Descendants()
+        .FirstOrDefault(element => string.Equals(element.Name.LocalName, "AssemblyName", StringComparison.Ordinal))
+        ?.Value
+        .Trim();
+
+    return string.IsNullOrWhiteSpace(configuredName)
+        ? Path.GetFileNameWithoutExtension(projectFile)
+        : configuredName;
 }
 
 static string FindIlc(string repositoryRoot)
