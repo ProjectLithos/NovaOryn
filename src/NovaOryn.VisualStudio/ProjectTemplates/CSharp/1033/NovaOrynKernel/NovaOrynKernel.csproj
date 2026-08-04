@@ -19,11 +19,11 @@
     <NovaOrynSdkRoot Condition="'$(NovaOrynSdkRoot)' == ''">C:\NovaOryn</NovaOrynSdkRoot>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Kernel.cs" />
-    <Compile Include="CoreLib.cs" />
-    <Compile Include="BootContext.cs" />
-    <Compile Include="FramebufferConsole.cs" />
-    <Compile Include="BitmapFont.cs" />
+    <Compile Include="Kernel\Kernel.cs" />
+    <Compile Include="Runtime\CoreLib.cs" />
+    <Compile Include="Boot\BootContext.cs" />
+    <Compile Include="Console\FramebufferConsole.cs" />
+    <Compile Include="Console\BitmapFont.cs" />
     <None Include="NovaOrynProject.json" />
   </ItemGroup>
   <Target Name="CustomizeReferences" BeforeTargets="BeforeCompile" AfterTargets="FindReferenceAssembliesForReferences">

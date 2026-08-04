@@ -13,7 +13,16 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <AssemblyName>NovaOryn.Kernel.Bootstrap</AssemblyName>
     <RootNamespace>NovaOryn.Kernel.Bootstrap</RootNamespace>
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Kernel\Kernel.cs" />
+    <Compile Include="Runtime\CoreLib.cs" />
+    <Compile Include="Boot\BootContext.cs" />
+    <Compile Include="Console\FramebufferConsole.cs" />
+    <Compile Include="Console\BitmapFont.cs" />
+    <None Include="NovaOrynProject.json" />
+  </ItemGroup>
   <Target Name="CustomizeReferences" BeforeTargets="BeforeCompile" AfterTargets="FindReferenceAssembliesForReferences">
     <ItemGroup>
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" />
