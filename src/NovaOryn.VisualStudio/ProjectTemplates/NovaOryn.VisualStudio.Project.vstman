@@ -5,7 +5,7 @@
     <TemplateFileName>NovaOrynKernel.vstemplate</TemplateFileName>
     <VSTemplateHeader>
       <TemplateData xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
-        <Name>NovaOryn Kernel 0.0.34</Name>
+        <Name>NovaOryn Kernel 0.0.35</Name>
         <Description>Create a freestanding C# NovaOryn x64 UEFI kernel and run it in QEMU from Visual Studio.</Description>
         <Icon>NovaOrynKernel.ico</Icon><ProjectType>CSharp</ProjectType><LanguageTag>csharp</LanguageTag>
         <PlatformTag>other</PlatformTag><ProjectTypeTag>other</ProjectTypeTag>
