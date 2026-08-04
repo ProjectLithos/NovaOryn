@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 namespace NovaOryn.VisualStudio;
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-[InstalledProductRegistration("NovaOryn OS SDK", "Visual Studio integration for NovaOryn kernels", "0.0.32")]
+[InstalledProductRegistration("NovaOryn OS SDK", "Visual Studio integration for NovaOryn kernels", "0.0.33")]
 [ProvideMenuResource("Menus.ctmenu", 1)]
 [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
 [Guid(PackageIds.PackageGuidString)]
@@ -26,7 +26,7 @@ public sealed class NovaOrynPackage : AsyncPackage
             ?? throw new InvalidOperationException("Visual Studio priority command service is unavailable.");
         _target = new NovaOrynPriorityLaunchCommandTarget(new NovaOrynLaunchService(this));
         ErrorHandler.ThrowOnFailure(_registration.RegisterPriorityCommandTarget(0, _target, out _cookie));
-        Output.WriteLine("[ OK ] NovaOryn Visual Studio extension 0.0.32 loaded.");
+        Output.WriteLine("[ OK ] NovaOryn Visual Studio extension 0.0.33 loaded.");
     }
     protected override void Dispose(bool disposing)
     {

@@ -2,6 +2,6 @@
 setlocal
 call "%~dp0Build-NovaOrynVSIX.bat" Release
 if errorlevel 1 exit /b %ERRORLEVEL%
-set "VSIX=%~dp0Artifacts\VisualStudio\NovaOryn.VisualStudio-0.0.32.vsix"
+set "VSIX=%~dp0Artifacts\VisualStudio\NovaOryn.VisualStudio-0.0.33.vsix"
 start "" "%VSIX%"
 exit /b 0

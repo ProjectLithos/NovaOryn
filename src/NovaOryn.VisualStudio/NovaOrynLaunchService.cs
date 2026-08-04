@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -33,13 +32,14 @@ internal sealed class NovaOrynLaunchService
         await _package.JoinableTaskFactory.SwitchToMainThreadAsync(token); _package.Output.Activate();
         if (!TryGetActiveProject(out string projectFile)) { _package.Output.WriteLine("[FAIL] The startup project is not a NovaOryn kernel project."); return; }
         if (!SdkInstallationDetector.IsInstalled(out string sdkRoot)) { _package.Output.WriteLine($"[FAIL] NovaOryn SDK was not found at {sdkRoot}."); return; }
-        if (await _package.GetServiceAsync(typeof(DTE)) is DTE dte) dte.ExecuteCommand("File.SaveAll");
+        DTE dte = await _package.GetServiceAsync(typeof(DTE)) as DTE;
+        if (dte != null) dte.ExecuteCommand("File.SaveAll");
         string manifest = Path.Combine(Path.GetDirectoryName(projectFile) ?? string.Empty, "NovaOrynProject.json");
         string script = Path.Combine(sdkRoot, "Build-NovaOryn.ps1");
         string configuration = ResolveConfiguration(dte);
         string arguments = $"-NoProfile -ExecutionPolicy Bypass -File {Quote(script)} -Project {Quote(manifest)} -Configuration {configuration}" + (buildOnly ? " -NoRun" : string.Empty);
         _package.Output.WriteLine($"[INFO] NovaOryn {(buildOnly ? "Build" : "Run")}: {Path.GetFileName(projectFile)} ({configuration}).");
-        using var process = new Process { StartInfo = new ProcessStartInfo("powershell.exe", arguments) { WorkingDirectory = sdkRoot, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true }, EnableRaisingEvents = true };
+        using var process = new System.Diagnostics.Process { StartInfo = new System.Diagnostics.ProcessStartInfo("powershell.exe", arguments) { WorkingDirectory = sdkRoot, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true }, EnableRaisingEvents = true };
         process.OutputDataReceived += (_, e) => WriteLine(e.Data); process.ErrorDataReceived += (_, e) => WriteLine(e.Data);
         if (!process.Start()) { _package.Output.WriteLine("[FAIL] NovaOryn build process did not start."); return; }
         process.BeginOutputReadLine(); process.BeginErrorReadLine(); await Task.Run(() => process.WaitForExit(), token);
