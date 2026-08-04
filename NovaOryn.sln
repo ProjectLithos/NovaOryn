@@ -34,12 +34,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Kernel.Sample", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.SourcePolicy.Tests", "tests\NovaOryn.SourcePolicy.Tests\NovaOryn.SourcePolicy.Tests.csproj", "{4C122A3A-B96E-547D-BFDD-F22F2E839B58}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.ProjectCreator", "src\NovaOryn.ProjectCreator\NovaOryn.ProjectCreator.csproj", "{4C715C31-14DA-4AA4-A9F7-8F4E536C1229}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C715C31-14DA-4AA4-A9F7-8F4E536C1229}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C715C31-14DA-4AA4-A9F7-8F4E536C1229}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C715C31-14DA-4AA4-A9F7-8F4E536C1229}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C715C31-14DA-4AA4-A9F7-8F4E536C1229}.Release|Any CPU.Build.0 = Release|Any CPU
 		{601E227F-F6A9-5B36-AD52-BFD56760741A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{601E227F-F6A9-5B36-AD52-BFD56760741A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{601E227F-F6A9-5B36-AD52-BFD56760741A}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -42,7 +42,7 @@ if (!buildScript.Contains("NovaOryn.SourcePolicy.Tests", StringComparison.Ordina
 }
 
 string projectManifest = File.ReadAllText(Path.Combine(root, "examples", "MinimalKernel", "NovaOrynProject.json"));
-if (!projectManifest.Contains("../../src/NovaOryn.Kernel.Bootstrap", StringComparison.Ordinal))
+if (!projectManifest.Contains("NovaOryn.Kernel.Bootstrap", StringComparison.Ordinal))
 {
     failures.Add("Minimal kernel manifest must select the NovaOryn bootstrap system module.");
 }
@@ -248,6 +248,21 @@ if (!buildScript.Contains("NovaOryn.ImageBuilder", StringComparison.Ordinal) ||
     !buildScript.Contains("--ovmf-vars", StringComparison.Ordinal))
 {
     failures.Add("Build script must create the FAT32 image and execute OVMF/QEMU runtime acceptance.");
+}
+
+string projectCreator = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ProjectCreator", "Program.cs"));
+if (!projectCreator.Contains("Source", StringComparison.Ordinal) || !projectCreator.Contains("Repos", StringComparison.Ordinal) || !projectCreator.Contains("NovaOrynKernel", StringComparison.Ordinal))
+{
+    failures.Add("Project creator must default to the user Source\\Repos\\NovaOrynKernel directory.");
+}
+if (!buildScript.Contains("Source\\Repos\\NovaOrynKernel", StringComparison.Ordinal) || !buildScript.Contains("NovaOryn.ProjectCreator", StringComparison.Ordinal))
+{
+    failures.Add("Build script must create and consume the external C# kernel project.");
+}
+string kernelTemplate = Path.Combine(root, "templates", "NovaOrynKernel", "Kernel.cs");
+if (!File.Exists(kernelTemplate))
+{
+    failures.Add("External C# kernel project template is missing Kernel.cs.");
 }
 
 if (failures.Count != 0)

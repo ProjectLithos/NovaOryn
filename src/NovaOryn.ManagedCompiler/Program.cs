@@ -8,7 +8,7 @@ static int MainEntry(string[] args)
 {
     if (args.Length < 2 || !string.Equals(args[0], "compile", StringComparison.OrdinalIgnoreCase))
     {
-        return Fail("Usage: NovaOryn.ManagedCompiler compile <NovaOrynProject.json> [--dotnet <path>] [--ilc <path>] [--configuration Debug|Release] [--dry-run]");
+        return Fail("Usage: NovaOryn.ManagedCompiler compile <NovaOrynProject.json> [--dotnet <path>] [--ilc <path>] [--configuration Debug|Release] [--sdk-root <path>] [--dry-run]");
     }
 
     if (!NovaOrynProject.TryLoad(args[1], out NovaOrynProject? project, out string error) || project is null)
@@ -19,7 +19,7 @@ static int MainEntry(string[] args)
     string dotnet = GetOption(args, "--dotnet") ?? "dotnet";
     string configuration = GetOption(args, "--configuration") ?? "Release";
     bool dryRun = HasOption(args, "--dry-run");
-    string repositoryRoot = FindRepositoryRoot(Path.GetDirectoryName(project.ProjectFile)!);
+    string repositoryRoot = Path.GetFullPath(GetOption(args, "--sdk-root") ?? FindRepositoryRoot(Path.GetDirectoryName(project.ProjectFile)!));
     string ilc = GetOption(args, "--ilc") ?? FindIlc(repositoryRoot);
 
     string managedOutput = Path.Combine(project.OutputDirectory, "ManagedIL");
@@ -92,7 +92,7 @@ static int MainEntry(string[] args)
     File.WriteAllText(compileManifest, JsonSerializer.Serialize(new
     {
         schemaVersion = 5,
-        productVersion = "0.0.28",
+        productVersion = "0.0.29",
         project = project.Name,
         kernelEntry = project.KernelEntry,
         architecture = project.TargetArchitecture,

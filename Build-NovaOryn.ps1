@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Project = "examples\MinimalKernel\NovaOrynProject.json",
+    [string]$Project = "",
     [ValidateSet("Debug", "Release")][string]$Configuration = "Release",
     [ValidateRange(5, 300)][int]$BootTimeoutSeconds = 30,
     [switch]$NoRun,
@@ -132,23 +132,6 @@ Write-Host "[ OK ] llvm-nm: $llvmNm"
 Write-Host "[ OK ] nasm    : $nasm"
 Write-Host "[ OK ] ilc     : $ilc"
 
-$projectManifest = if ([IO.Path]::IsPathRooted($Project)) {
-    [IO.Path]::GetFullPath($Project)
-} else {
-    [IO.Path]::GetFullPath((Join-Path $root $Project))
-}
-if (-not (Test-Path -LiteralPath $projectManifest -PathType Leaf)) {
-    throw "NovaOryn project manifest was not found: $projectManifest"
-}
-$projectData = Get-Content -LiteralPath $projectManifest -Raw | ConvertFrom-Json
-$projectDirectory = Split-Path -Parent $projectManifest
-$outputDirectory = if ([IO.Path]::IsPathRooted([string]$projectData.OutputDirectory)) {
-    [IO.Path]::GetFullPath([string]$projectData.OutputDirectory)
-} else {
-    [IO.Path]::GetFullPath((Join-Path $projectDirectory ([string]$projectData.OutputDirectory)))
-}
-$imagePath = Join-Path $outputDirectory (([string]$projectData.Name) + ".img")
-
 $nativeOutput = Join-Path $root "Artifacts\Native\x64"
 New-Item -ItemType Directory -Path $nativeOutput -Force | Out-Null
 
@@ -185,10 +168,43 @@ foreach ($tool in @(
     }
 }
 
+$projectCreator = Join-Path $root "src\NovaOryn.ProjectCreator\bin\$Configuration\net10.0\NovaOryn.ProjectCreator.dll"
+if (-not (Test-Path -LiteralPath $projectCreator -PathType Leaf)) {
+    throw "NovaOryn.ProjectCreator was not produced: $projectCreator"
+}
+
+$defaultKernelDirectory = Join-Path $env:USERPROFILE "Source\Repos\NovaOrynKernel"
+$projectManifest = if ([string]::IsNullOrWhiteSpace($Project)) {
+    Join-Path $defaultKernelDirectory "NovaOrynProject.json"
+} elseif ([IO.Path]::IsPathRooted($Project)) {
+    [IO.Path]::GetFullPath($Project)
+} else {
+    [IO.Path]::GetFullPath((Join-Path $root $Project))
+}
+
+if (-not (Test-Path -LiteralPath $projectManifest -PathType Leaf)) {
+    Write-Host "[INFO] Creating the C# kernel project at $defaultKernelDirectory"
+    & $dotnet $projectCreator create --output $defaultKernelDirectory --sdk-root $root
+    if ($LASTEXITCODE -ne 0) { throw "C# kernel project creation failed with exit code $LASTEXITCODE." }
+}
+if (-not (Test-Path -LiteralPath $projectManifest -PathType Leaf)) {
+    throw "NovaOryn project manifest was not found: $projectManifest"
+}
+Write-Host "[ OK ] C# kernel project manifest: $projectManifest"
+
+$projectData = Get-Content -LiteralPath $projectManifest -Raw | ConvertFrom-Json
+$projectDirectory = Split-Path -Parent $projectManifest
+$outputDirectory = if ([IO.Path]::IsPathRooted([string]$projectData.OutputDirectory)) {
+    [IO.Path]::GetFullPath([string]$projectData.OutputDirectory)
+} else {
+    [IO.Path]::GetFullPath((Join-Path $projectDirectory ([string]$projectData.OutputDirectory)))
+}
+$imagePath = Join-Path $outputDirectory (([string]$projectData.Name) + ".img")
+
 $dry = @()
 if ($DryRun) { $dry = @("--dry-run") }
 
-& $dotnet $compiler compile $projectManifest --dotnet $dotnet --ilc $ilc --configuration $Configuration @dry
+& $dotnet $compiler compile $projectManifest --dotnet $dotnet --ilc $ilc --configuration $Configuration --sdk-root $root @dry
 if ($LASTEXITCODE -ne 0) { throw "Managed compilation failed with exit code $LASTEXITCODE." }
 
 & $dotnet $linker link $projectManifest --lld-link $lldLink --llvm-nm $llvmNm --nasm $nasm --native-root $nativeOutput @dry

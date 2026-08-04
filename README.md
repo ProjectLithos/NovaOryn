@@ -1,19 +1,22 @@
-# Nova Oryn OS SDK 0.0.28
+# Nova Oryn OS SDK 0.0.29
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.28
+## Release 0.0.29
 
-This release implements the first managed framebuffer console. The x64 UEFI entry locates the Graphics Output Protocol, captures the active framebuffer address, size, resolution, pixels-per-scan-line pitch, pixel format, and channel masks, and passes a native boot context to the freestanding managed bootstrap.
+Release 0.0.29 moves the editable C# kernel project out of the SDK repository and into the current Windows user's Visual Studio source directory.
 
-Managed code validates the framebuffer, clears the display, renders a built-in 5x7 bitmap font, mirrors every acceptance character to COM1 and the framebuffer, and then enters the existing non-returning `CPU.Halt()` loop. The QEMU window now displays:
+## External C# kernel project
+
+The editable C# kernel project is created automatically at:
 
 ```text
-NovaOryn KMain started.
-CPU halted.
+C:\Users\<UserName>\Source\Repos\NovaOrynKernel
 ```
 
-The same exact lines remain in `Artifacts\MinimalKernel\serial.log`, and the runtime launcher still confirms that QEMU remains open after the halt.
+`Build-NovaOryn.bat` creates it through the compiled `NovaOryn.ProjectCreator` tool when it does not already exist. The SDK remains in `C:\NovaOryn`; generated EFI, image and run artifacts remain under `C:\NovaOryn\Artifacts`. Existing kernel files are not overwritten.
+
+Open `NovaOrynKernel.sln` in Visual Studio to edit `Kernel.cs`. The default build consumes `NovaOrynProject.json` from this external project directory while preserving the framebuffer, serial and halt behaviour completed in the preceding releases.
 
 ## Source update workflow
 
@@ -83,7 +86,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.28.md` for this release.
+See `docs/Release-0.0.29.md` for this release.
 
 
 ## 0.0.22 build
@@ -140,9 +143,9 @@ EFI\BOOT\BOOTX64.EFI
 
 `NovaOryn.QemuLauncher.exe` copies the boot image and OVMF variable store into a unique run directory, starts QEMU immediately without `-S`, watches the serial log for both acceptance lines, confirms the QEMU process remains alive, writes `NovaOryn.Run.json`, and returns without terminating the VM.
 
-## 0.0.28 framebuffer build correction
+## 0.0.29 framebuffer build correction
 
-Release 0.0.28 corrects the C# namespace/type collision in `NovaOryn.Console.Framebuffer`. The framebuffer contract type is now referenced through the explicit `BootFramebuffer` alias, allowing the managed framebuffer assembly to compile without changing its public namespace or API.
+Release 0.0.29 corrects the C# namespace/type collision in `NovaOryn.Console.Framebuffer`. The framebuffer contract type is now referenced through the explicit `BootFramebuffer` alias, allowing the managed framebuffer assembly to compile without changing its public namespace or API.
 
 ## 0.0.27 managed framebuffer console
 
