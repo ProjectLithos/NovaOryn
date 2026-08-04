@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplateManifest Version="1.0" Locale="1033" xmlns="http://schemas.microsoft.com/developer/vstemplatemanifest/2015">
+  <VSTemplateContainer TemplateType="Project">
+    <RelativePathOnDisk>CSharp\1033\NovaOrynKernel</RelativePathOnDisk>
+    <TemplateFileName>NovaOrynKernel.vstemplate</TemplateFileName>
+    <VSTemplateHeader>
+      <TemplateData xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+        <Name>NovaOryn Kernel 0.0.31</Name>
+        <Description>Create a freestanding C# NovaOryn x64 UEFI kernel and run it in QEMU from Visual Studio.</Description>
+        <Icon>NovaOrynKernel.ico</Icon><ProjectType>CSharp</ProjectType><LanguageTag>csharp</LanguageTag>
+        <PlatformTag>other</PlatformTag><ProjectTypeTag>other</ProjectTypeTag>
+        <TemplateID>NovaOryn.Kernel.Project</TemplateID><DefaultName>NovaOrynKernel</DefaultName>
+        <SortOrder>1</SortOrder><CreateNewFolder>true</CreateNewFolder><ProvideDefaultName>true</ProvideDefaultName>
+      </TemplateData>
+    </VSTemplateHeader>
+  </VSTemplateContainer>
+</VSTemplateManifest>
