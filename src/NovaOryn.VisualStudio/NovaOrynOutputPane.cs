@@ -19,6 +19,14 @@ internal sealed class NovaOrynOutputPane
         output.GetPane(ref guid, out IVsOutputWindowPane pane);
         return new NovaOrynOutputPane(pane ?? throw new InvalidOperationException("NovaOryn output pane was not created."));
     }
-    public void WriteLine(string message) { ThreadHelper.ThrowIfNotOnUIThread(); _pane.OutputStringThreadSafe((message ?? string.Empty) + Environment.NewLine); }
-    public void Activate() { ThreadHelper.ThrowIfNotOnUIThread(); _pane.Activate(); }
+    public bool WriteLine(string message)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return _pane.OutputStringThreadSafe((message ?? string.Empty) + Environment.NewLine) >= 0;
+    }
+    public bool Activate()
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return _pane.Activate() >= 0;
+    }
 }

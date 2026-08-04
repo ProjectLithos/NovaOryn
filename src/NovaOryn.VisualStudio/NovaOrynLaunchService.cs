@@ -22,10 +22,11 @@ internal sealed class NovaOrynLaunchService
         if (!NovaOrynProjectRecognizer.IsNovaOrynProject(candidate)) return false;
         projectFile = Path.GetFullPath(candidate); return true;
     }
-    public void QueueLaunch(bool buildOnly)
+    public bool QueueLaunch(bool buildOnly)
     {
         ThreadHelper.ThrowIfNotOnUIThread();
         _package.JoinableTaskFactory.RunAsync(async delegate { await LaunchAsync(buildOnly, CancellationToken.None); }).FileAndForget("NovaOryn/Launch");
+        return true;
     }
     private async Task LaunchAsync(bool buildOnly, CancellationToken token)
     {
