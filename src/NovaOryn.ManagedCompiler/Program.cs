@@ -70,11 +70,14 @@ static int MainEntry(string[] args)
         "--nativelib",
         "--directpinvoke:*",
         $"--map:{ilcMap}",
-        "-O"
+        "--noscan",
+        "--reflectiondata:none",
+        "--nopreinitstatics"
     ];
 
     Console.WriteLine($"[INFO] Compiling managed IL with the repository-pinned ILC host: {ilc}");
     Console.WriteLine("[INFO] targetos:win selects the PE/COFF ABI used by x64 UEFI; no Windows CoreLib or Windows runtime library is referenced.");
+    Console.WriteLine("[INFO] The IL scanner is disabled for the no-GC bootstrap so ILC resolves only helpers reachable from KMain.");
     exitCode = Run(ilc, ilcArguments, repositoryRoot);
     if (exitCode != 0)
     {
@@ -88,13 +91,15 @@ static int MainEntry(string[] args)
     string compileManifest = Path.Combine(project.OutputDirectory, "NovaOryn.Compile.json");
     File.WriteAllText(compileManifest, JsonSerializer.Serialize(new
     {
-        schemaVersion = 4,
-        productVersion = "0.0.23",
+        schemaVersion = 5,
+        productVersion = "0.0.24",
         project = project.Name,
         kernelEntry = project.KernelEntry,
         architecture = project.TargetArchitecture,
         runtimePack = "NovaOryn.RuntimePack.X64.Bootstrap",
         runtimeMode = "NoGcBootstrap",
+        ilScanner = "Disabled",
+        optimization = "BootstrapCorrectness",
         managedAssembly,
         nativeObject,
         ilcMap,

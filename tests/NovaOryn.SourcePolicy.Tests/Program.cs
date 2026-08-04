@@ -74,13 +74,22 @@ if (!bootstrapCoreLib.Contains("internal class Array<T> : Array", StringComparis
 {
     failures.Add("Freestanding CoreLib must provide the compiler-required generic array type.");
 }
+if (!bootstrapCoreLib.Contains("public static class Buffer", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("BulkMoveWithWriteBarrier", StringComparison.Ordinal))
+{
+    failures.Add("Freestanding CoreLib must provide the .NET 10 ILC System.Buffer helper contract.");
+}
 
 string managedCompiler = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ManagedCompiler", "Program.cs"));
 if (managedCompiler.Contains("\"publish\"", StringComparison.Ordinal))
 {
     failures.Add("NovaOryn.ManagedCompiler must not use dotnet publish for the no-CoreLib bootstrap.");
 }
-foreach (string required in new[] { "--systemmodule", "--targetos:win", "--targetarch:x64", "--nativelib", "--directpinvoke:*" })
+if (managedCompiler.Contains("\"-O\"", StringComparison.Ordinal))
+{
+    failures.Add("No-GC bootstrap ILC compilation must not enable -O because it implies the IL scanner.");
+}
+foreach (string required in new[] { "--systemmodule", "--targetos:win", "--targetarch:x64", "--nativelib", "--directpinvoke:*", "--noscan", "--reflectiondata:none", "--nopreinitstatics" })
 {
     if (!managedCompiler.Contains(required, StringComparison.Ordinal))
     {

@@ -25,6 +25,16 @@ namespace System
     public abstract class Enum : ValueType { }
     public abstract class Array { }
     internal class Array<T> : Array { }
+
+    // .NET 10 ILC recognizes this CoreLib type as the bulk-reference-copy helper owner.
+    // The bootstrap has no GC and must never perform a managed-reference bulk copy.
+    public static class Buffer
+    {
+        internal static void BulkMoveWithWriteBarrier(ref Byte destination, ref Byte source, UIntPtr byteCount)
+        {
+            while (true) { }
+        }
+    }
     public sealed class String { public readonly Int32 Length; }
     public abstract class Delegate { }
     public abstract class MulticastDelegate : Delegate { }

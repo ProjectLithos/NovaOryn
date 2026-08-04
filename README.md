@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.23
+# Nova Oryn OS SDK 0.0.24
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.23
+## Release 0.0.24
 
-This release removes the SDK NativeAOT `dotnet publish` path from the no-CoreLib kernel. NovaOryn now builds the bootstrap project as ordinary managed IL and invokes the pinned `ilc.exe` directly to produce one x64 COFF object for the UEFI linker.
+This release updates the direct ILC bootstrap for .NET 10. The no-GC kernel now compiles with the IL scanner disabled, so ILC resolves only helpers reachable from the user-owned `KMain` path instead of eagerly demanding the complete `System.Private.CoreLib` helper surface.
 
 ## Source update workflow
 
@@ -74,7 +74,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.23.md` for this release.
+See `docs/Release-0.0.24.md` for this release.
 
 
 ## 0.0.22 build
@@ -98,7 +98,7 @@ The dedicated bootstrap publish currently uses `win-x64` only to select the Micr
 `System.Object._methodTable` is part of the minimal NativeAOT object layout. Generated native code consumes it even though ordinary C# source does not, so the field now has a local `CS0169` suppression instead of weakening repository-wide warning checks.
 
 
-## 0.0.23 direct ILC correction
+## 0.0.24 direct ILC correction
 
 The `ResolvedILCompilerPack` failure is eliminated because the bootstrap project no longer imports NativeAOT publish targets. `NovaOryn.ManagedCompiler.exe` performs two explicit stages:
 
@@ -108,3 +108,8 @@ pinned ilc.exe -> MinimalKernel.obj
 ```
 
 The `win-x64` name now appears only in the path of the ILC executable that runs on the Windows development host. ILC is passed `--targetos:win` solely to produce PE/COFF code using the Microsoft x64 ABI required by UEFI. No Windows CoreLib or NativeAOT runtime library is linked.
+
+
+## 0.0.24 .NET 10 ILC scanner correction
+
+The direct bootstrap compiler now passes `--noscan`, `--reflectiondata:none`, and `--nopreinitstatics`. The previous `-O` switch implied the IL scanner, which eagerly requested `System.Buffer` and would subsequently request other full-CoreLib helpers that are outside the no-GC bootstrap contract. NovaOryn also defines the required `System.Buffer.BulkMoveWithWriteBarrier` fail-fast boundary so an accidental managed-reference bulk copy halts rather than corrupting memory.
