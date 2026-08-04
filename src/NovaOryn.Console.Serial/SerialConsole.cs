@@ -18,7 +18,6 @@ public sealed class SerialConsole : IConsole
     {
         if (configuration.Port == 0 || configuration.BaudRate == 0)
             throw new ArgumentOutOfRangeException(nameof(configuration));
-
         _configuration = configuration;
         return true;
     }
@@ -26,9 +25,7 @@ public sealed class SerialConsole : IConsole
     public bool Initialize(BootContext boot)
     {
         _ = boot;
-        if (_configuration.Port == 0 && !Configure(SerialConfiguration.Com1()))
-            return false;
-
+        if (_configuration.Port == 0 && !Configure(SerialConfiguration.Com1())) return false;
         ushort divisor = checked((ushort)(115200 / _configuration.BaudRate));
         ushort port = _configuration.Port;
         if (!Port.Write8((ushort)(port + 1), 0x00)) return false;
@@ -47,19 +44,16 @@ public sealed class SerialConsole : IConsole
         if (!_initialized) return false;
         foreach (char character in text)
         {
-            if (character > 0x7F) return false;
-            if (!WriteByte((byte)character)) return false;
+            if (character > 0x7F || !WriteByte((byte)character)) return false;
         }
         return true;
     }
 
     public bool WriteLine(ReadOnlySpan<char> text) => Write(text) && WriteLine();
-    public bool WriteLine() => Write("
-");
+    public bool WriteLine() => Write("\r\n");
 
     private bool WriteByte(byte value)
     {
-        // Early serial output is intentionally bounded polling. Interrupt-driven serial follows later.
         for (uint attempt = 0; attempt < 1_000_000; attempt++)
         {
             if (!Port.TryRead8((ushort)(_configuration.Port + 5), out byte status)) return false;

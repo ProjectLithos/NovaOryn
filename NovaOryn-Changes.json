@@ -1,24 +1,24 @@
 {
-  "product": "Nova Oryn OS SDK",
-  "shortName": "NovaOryn",
-  "version": "0.0.12",
-  "baseVersion": "0.0.11",
-  "repositoryWasEmpty": false,
-  "toolchainDownloadAllowedAfterSourceCommitAndPush": true,
+  "version": "0.0.13",
+  "baseVersion": "0.0.12",
   "deletedFiles": [],
   "renamedFiles": [],
   "changedFiles": [
+    "Build-NovaOryn.bat",
+    "Build-NovaOryn.ps1",
     "Directory.Build.props",
-    "Install-NovaOrynToolchain.ps1",
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
-    "docs/Release-0.0.12.md",
+    "docs/Release-0.0.13.md",
+    "native/x64/Cpu.asm",
+    "native/x64/Entry.asm",
+    "src/NovaOryn.Console.Serial/SerialConsole.cs",
+    "src/NovaOryn.Kernel.Sample/Kernel.cs",
+    "src/NovaOryn.Kernel.Sample/NovaOryn.Kernel.Sample.csproj",
+    "src/NovaOryn.Linker/Program.cs",
+    "src/NovaOryn.ManagedCompiler/Program.cs",
+    "src/NovaOryn.ProjectModel/NovaOrynProject.cs",
     "toolchain/NovaOryn.Toolchain.json"
-  ],
-  "notes": [
-    "Finds QEMU in standard Windows installation locations after winget installation.",
-    "Persists resolved tool paths under .toolchain.",
-    "Applies robust path discovery to NASM as well."
   ]
 }
