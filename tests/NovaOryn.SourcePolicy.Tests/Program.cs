@@ -127,6 +127,78 @@ if (!bootstrapKernel.Contains("WriteLineNovaOrynStarted", StringComparison.Ordin
     failures.Add("Freestanding bootstrap must emit both runtime acceptance lines before halting.");
 }
 
+string uefiEntry = File.ReadAllText(Path.Combine(root, "native", "x64", "Entry.asm"));
+foreach (string required in new[]
+{
+    "NovaOrynGraphicsOutputProtocolGuid",
+    "NovaOrynCaptureUefiFramebuffer",
+    "[rcx + 0x60]",
+    "[rax + 0x140]",
+    "NovaOrynBootContext + 0x08",
+    "NovaOrynBootContext + 0x24",
+    "lea rcx, [rel NovaOrynBootContext]"
+})
+{
+    if (!uefiEntry.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"x64 UEFI entry is missing GOP boot-context capture detail: {required}");
+    }
+}
+int captureCall = uefiEntry.IndexOf("call NovaOrynCaptureUefiFramebuffer", StringComparison.Ordinal);
+int interruptsDisabled = uefiEntry.IndexOf("    cli", StringComparison.Ordinal);
+if (captureCall < 0 || interruptsDisabled < captureCall)
+{
+    failures.Add("UEFI GOP discovery must complete before interrupts are disabled.");
+}
+
+string bootstrapBootContext = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "BootContext.cs"));
+foreach (string required in new[] { "FramebufferAddress", "FramebufferSize", "PixelsPerScanLine", "PixelFormat", "RedMask", "GreenMask", "BlueMask" })
+{
+    if (!bootstrapBootContext.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"Freestanding boot context is missing framebuffer field: {required}");
+    }
+}
+
+string bootstrapFramebuffer = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "FramebufferConsole.cs"));
+foreach (string required in new[]
+{
+    "context->PixelsPerScanLine < context->Width",
+    "context->FramebufferSize / bytesPerScanLine",
+    "context->PixelFormat > 2U",
+    "internal Boolean Clear()",
+    "BitmapFont.GetGlyph",
+    "PackColor",
+    "EncodeMask"
+})
+{
+    if (!bootstrapFramebuffer.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"Managed framebuffer bootstrap is missing validation/rendering contract: {required}");
+    }
+}
+if (!bootstrapKernel.Contains("framebuffer.Initialize(boot)", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("framebuffer.Clear()", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("Native.WritePort8(0x3F8, value)", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("framebuffer.Write(value)", StringComparison.Ordinal))
+{
+    failures.Add("KMain must initialize and clear the framebuffer and mirror each serial character to it.");
+}
+
+string framebufferProject = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Console.Framebuffer", "NovaOryn.Console.Framebuffer.csproj"));
+string framebufferAssembly = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Console.Framebuffer", "FramebufferConsole.cs"));
+if (!framebufferProject.Contains("<AssemblyName>NovaOryn.Console.Framebuffer</AssemblyName>", StringComparison.Ordinal) ||
+    !framebufferAssembly.Contains("public sealed unsafe class FramebufferConsole : IConsole", StringComparison.Ordinal))
+{
+    failures.Add("The reusable managed framebuffer console assembly is not present.");
+}
+if (!solution.Contains("NovaOryn.Console.Framebuffer", StringComparison.Ordinal) ||
+    !kernel.Contains("FramebufferConsole", StringComparison.Ordinal) ||
+    !kernel.Contains("WriteLine(serial, framebuffer", StringComparison.Ordinal))
+{
+    failures.Add("The solution and kernel sample must demonstrate serial/framebuffer mirroring.");
+}
+
 string imageBuilder = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ImageBuilder", "Program.cs"));
 string efiDiskImage = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ImageBuilder", "EfiDiskImage.cs"));
 foreach (string required in new[] { "BOOTX64.EFI", "GPT/FAT32 EFI System Partition", "NovaOryn.Image.json" })
@@ -191,6 +263,7 @@ Console.WriteLine("[ OK ] Kernel entry is KMain and returns bool.");
 Console.WriteLine("[ OK ] x64 halt executes CLI and a repeating HLT loop.");
 Console.WriteLine("[ OK ] No-CoreLib kernel compilation invokes ILC directly.");
 Console.WriteLine("[ OK ] Windows NativeAOT runtime-pack resolution is not used.");
+Console.WriteLine("[ OK ] UEFI GOP capture and managed framebuffer rendering are wired.");
 Console.WriteLine("[ OK ] GPT/FAT32 image creation and OVMF/QEMU runtime acceptance are wired.");
 return 0;
 

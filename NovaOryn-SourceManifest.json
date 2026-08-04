@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "files": [
     {
       "path": ".gitignore",
@@ -20,7 +20,7 @@
     },
     {
       "path": "Directory.Build.props",
-      "sha256": "00f5a5e5d2a80cc09a3ca604c37bb31aa92646a72f0d4d8fcbf2ba21c0f3c964",
+      "sha256": "157870c394a77c282ec7ffb7f58fa88f280871b2cc3297844a3a6f3a3f0e8351",
       "size": 692
     },
     {
@@ -40,18 +40,18 @@
     },
     {
       "path": "NovaOryn-Changes.json",
-      "sha256": "a2b78459455a9254223d35695e3910a05fb4a22ea12da55ab851d170a0b6e0cd",
-      "size": 800
+      "sha256": "a1b42dcc6aa14113a66ab1e678f094373b8d08d1f359640bec3f8c1b45807f06",
+      "size": 1232
     },
     {
       "path": "NovaOryn.sln",
-      "sha256": "146879550f8be01fc757b53b83c5565977572f8d8f45e70200e219bd2f828588",
-      "size": 8201
+      "sha256": "b0a04bfc69a18a2787e2b0e9f00488b66afdea906d2f6fa8c24ffba0cfb65a19",
+      "size": 8737
     },
     {
       "path": "README.md",
-      "sha256": "4790e84df38291476e5ec117fd76e76ab622cd0b6f81a82d10dfbded69d62857",
-      "size": 6566
+      "sha256": "d54fb5e9d8d8ad53d148ae4808347ea9a4ed38cca0b8a9f4b3500fe026b5c239",
+      "size": 7460
     },
     {
       "path": "Update-NovaOryn.bat",
@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/Architecture.md",
-      "sha256": "53aa1ceee4c6bd10abaad2d7c78df2ba804ed90a03af8d3216d452a9b4d45d81",
-      "size": 564
+      "sha256": "4ccb6bff4b8bdb897682c5be0206e6d58a88ca25fb784f5e86475f8e877265ad",
+      "size": 960
     },
     {
       "path": "docs/Public-API-Rules.md",
@@ -164,6 +164,11 @@
       "size": 2823
     },
     {
+      "path": "docs/Release-0.0.27.md",
+      "sha256": "3122ec9f2f8eef12423eaa6c5c3a617058b4ffafaacf6c0bf94170b03ab9db81",
+      "size": 2687
+    },
+    {
       "path": "docs/Release-0.0.3.md",
       "sha256": "7f31e8c5de4e803a19097c9d8a88010b9311c3587bcb061d5c76be760922fce9",
       "size": 433
@@ -225,8 +230,8 @@
     },
     {
       "path": "native/x64/Entry.asm",
-      "sha256": "644b18b23ecaf19a6c7f6db15d5f92f83e4497bc068f67684f5d14ce5e578907",
-      "size": 350
+      "sha256": "75be30841d1f913b1d7f7386659dc6e87bd3d3c91c2554740c2a798c58bc4335",
+      "size": 3369
     },
     {
       "path": "native/x64/Runtime.asm",
@@ -265,8 +270,8 @@
     },
     {
       "path": "src/NovaOryn.Boot.Contracts/BootContext.cs",
-      "sha256": "ad4d2ced5cc208529bd8eb2608a3e2f7cc6f660b71e0039efb9371b22656298a",
-      "size": 723
+      "sha256": "37db318616ad33ce2f3510b7d09f0625a29a660ac74a963deadf4638f0ed87e4",
+      "size": 3209
     },
     {
       "path": "src/NovaOryn.Boot.Contracts/NovaOryn.Boot.Contracts.csproj",
@@ -282,6 +287,21 @@
       "path": "src/NovaOryn.Console.Contracts/NovaOryn.Console.Contracts.csproj",
       "sha256": "93317e58c5a2d7565fc32f8cedc8519ff3fbef5c49567854899ae6618889e1ab",
       "size": 459
+    },
+    {
+      "path": "src/NovaOryn.Console.Framebuffer/BitmapFont.cs",
+      "sha256": "a6e445f33e71e9a03baadc53ba885111d46c918405b81fcd7b953a66f15fc019",
+      "size": 711
+    },
+    {
+      "path": "src/NovaOryn.Console.Framebuffer/FramebufferConsole.cs",
+      "sha256": "0ee4839dc19b002fdab8eff8b2b944ff293d004825de699fb7620d6ee0c096c9",
+      "size": 6364
+    },
+    {
+      "path": "src/NovaOryn.Console.Framebuffer/NovaOryn.Console.Framebuffer.csproj",
+      "sha256": "d7cf1714fc4e4f66d4b08c98fadf6cab38dba78c2c04609340a6b6119769ff88",
+      "size": 561
     },
     {
       "path": "src/NovaOryn.Console.Serial/NovaOryn.Console.Serial.csproj",
@@ -315,8 +335,18 @@
     },
     {
       "path": "src/NovaOryn.ImageBuilder/Program.cs",
-      "sha256": "d4feb345b3e69a19a98ba74cb74e4383e8b6310bb3f0830020018cb0db4d4cc5",
+      "sha256": "14c1691f3e890ca5f767e60d60f1cced1523cda8d871032818c3ffb3db5bdf5c",
       "size": 3719
+    },
+    {
+      "path": "src/NovaOryn.Kernel.Bootstrap/BitmapFont.cs",
+      "sha256": "ca6255b102dddcca62a948a65e6ce92ae16c4cc20fe4476141ae95358c9d4747",
+      "size": 1326
+    },
+    {
+      "path": "src/NovaOryn.Kernel.Bootstrap/BootContext.cs",
+      "sha256": "80b527fbddb71e68e36e7f6a4c7566e89f19f1d550af07fde15e5ddaf6d9e47a",
+      "size": 2107
     },
     {
       "path": "src/NovaOryn.Kernel.Bootstrap/CoreLib.cs",
@@ -324,9 +354,14 @@
       "size": 4121
     },
     {
+      "path": "src/NovaOryn.Kernel.Bootstrap/FramebufferConsole.cs",
+      "sha256": "0436f11a2644e0598e55654812c8b4bb534132c48d538bded99a930d33805b85",
+      "size": 6377
+    },
+    {
       "path": "src/NovaOryn.Kernel.Bootstrap/Kernel.cs",
-      "sha256": "1e88f4edfe0b7ecfb2a9339e065eca91252e566ccfcc25a6f72830d7534e6744",
-      "size": 3487
+      "sha256": "818608e25c14f61447971b50c34fad55c4d6aa5f136572431797eda4e9c206d3",
+      "size": 4506
     },
     {
       "path": "src/NovaOryn.Kernel.Bootstrap/NovaOryn.Kernel.Bootstrap.csproj",
@@ -335,13 +370,13 @@
     },
     {
       "path": "src/NovaOryn.Kernel.Sample/Kernel.cs",
-      "sha256": "8955164f604facc390d90ce09340eec098bcd1bf609b5e642189626dcb3afb3c",
-      "size": 939
+      "sha256": "eb9015ca0f1c10c5b9578fb9869845ef4f836bff57fa235a8c6205d6075986f9",
+      "size": 2585
     },
     {
       "path": "src/NovaOryn.Kernel.Sample/NovaOryn.Kernel.Sample.csproj",
-      "sha256": "1d9e8a8e67a6db50ed639d2d650ec94ea896a44e597563ba4f2ecdce42024d3b",
-      "size": 713
+      "sha256": "d56a9f5de6fd74fb9678c2240f6f8e3e1b3e67ce026169a2a7982385ebcb1951",
+      "size": 816
     },
     {
       "path": "src/NovaOryn.Linker/NovaOryn.Linker.csproj",
@@ -360,7 +395,7 @@
     },
     {
       "path": "src/NovaOryn.ManagedCompiler/Program.cs",
-      "sha256": "ea9bae10cc4ce96d2ccf0d30bf1f5a3bed723b6c548f57b23e0959466ae60acb",
+      "sha256": "2be90891211cd54490804d170dfcaea6d237c25a4016db94df5c515fe4e01e60",
       "size": 8071
     },
     {
@@ -380,7 +415,7 @@
     },
     {
       "path": "src/NovaOryn.ProjectModel/NovaOrynProject.cs",
-      "sha256": "40d106795952952746c4c3ac6b3500dcadb52916117bc810ea5ce8d13f1200b4",
+      "sha256": "d7c2e571d50ea64ebd95ad2c59d8dfc10e464b6dc9d47f63de7f49ce0c7d34a2",
       "size": 2366
     },
     {
@@ -390,7 +425,7 @@
     },
     {
       "path": "src/NovaOryn.QemuLauncher/Program.cs",
-      "sha256": "cb97b3e48f236289378dbf8dbd43863d4fccd6c37e1aafdf1f27f6ea8cb886d9",
+      "sha256": "db7e99ff6a94b2f766f5f4eb39414adf06ab3ad954e320ee9a17648a67cfc892",
       "size": 11249
     },
     {
@@ -410,8 +445,8 @@
     },
     {
       "path": "tests/NovaOryn.SourcePolicy.Tests/Program.cs",
-      "sha256": "6e4b6a6c1dc17a5f292e56cd32cd4010b7e0f50c4a1eb9382e143eff235d37f4",
-      "size": 9686
+      "sha256": "0df2279ab6b20adec296ab1b0fed3459dcce1f828e251764b6da615945868581",
+      "size": 13114
     },
     {
       "path": "toolchain/NovaOryn.NativeAot.Bootstrap.cs",
@@ -425,7 +460,7 @@
     },
     {
       "path": "toolchain/NovaOryn.Toolchain.json",
-      "sha256": "28bb96778e7f11b7865466ed5d99d2f7f67c6a1392238da7295abdf2dfd27054",
+      "sha256": "4c1e1b14991e9c2d5d021d135edf58fd67a4a1c1faf42161947bc7e3e8c84da9",
       "size": 1206
     }
   ]

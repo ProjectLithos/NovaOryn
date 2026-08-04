@@ -10,6 +10,7 @@
     <ProjectReference Include="..\NovaOryn.Architecture.X64\NovaOryn.Architecture.X64.csproj" />
     <ProjectReference Include="..\NovaOryn.Boot.Contracts\NovaOryn.Boot.Contracts.csproj" />
     <ProjectReference Include="..\NovaOryn.Console.Serial\NovaOryn.Console.Serial.csproj" />
+    <ProjectReference Include="..\NovaOryn.Console.Framebuffer\NovaOryn.Console.Framebuffer.csproj" />
     <ProjectReference Include="..\NovaOryn.Core\NovaOryn.Core.csproj" />
   </ItemGroup>
 </Project>

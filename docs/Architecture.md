@@ -1,19 +1,20 @@
-# NovaOryn architecture
+# NovaOryn Architecture
 
-The authoritative build path is:
+NovaOryn separates managed kernel policy from architecture, boot, console, runtime, compiler, linker, image, and launch concerns.
+
+The current x64 UEFI path is:
 
 ```text
-User C# + selected NovaOryn assemblies
-    -> Roslyn
-    -> managed IL
-    -> real ilc / NativeAOT
-    -> native objects
-    -> NovaOryn.Linker.exe
-    -> kernel ELF
-    -> NovaOryn.ImageBuilder.exe
-    -> bootable UEFI image
+UEFI firmware
+ -> native x64 EFI entry
+ -> Graphics Output Protocol discovery
+ -> native boot-context capture
+ -> NovaOryn-owned no-CoreLib NativeAOT bootstrap
+ -> managed serial/framebuffer console
+ -> managed KMain
+ -> repeating CLI/HLT loop
 ```
 
-`KMain` is the user-owned managed kernel entry point. The native entry object performs only machine and runtime transition work before calling the NativeAOT export that represents `KMain`.
+The native entry performs only the firmware ABI work that must occur before managed execution. Framebuffer validation, clearing, pixel-format conversion, bitmap-font rendering, cursor movement, and serial/framebuffer mirroring are managed C# responsibilities.
 
-The Oryn microkernel is not part of release 0.0.4 and will remain optional.
+The ordinary SDK surface exposes the same boot data through `NovaOryn.Boot.Contracts` and the reusable framebuffer implementation through `NovaOryn.Console.Framebuffer`. Architecture-specific CPU and port operations remain in `NovaOryn.Architecture.X64`.

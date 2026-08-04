@@ -4,11 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace NovaOryn.Kernel.Bootstrap;
 
-public readonly struct BootContext
-{
-    public readonly UInt64 Signature;
-}
-
 internal static class Native
 {
     [DllImport("*", EntryPoint = "NovaOrynX64WritePort8", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -23,14 +18,18 @@ public static class Kernel
     public static Boolean KMain(BootContext boot)
     {
         if (!InitializeSerial()) return false;
-        if (!WriteText()) return false;
+
+        FramebufferConsole framebuffer = default;
+        if (!framebuffer.Initialize(boot)) return false;
+        if (!framebuffer.Clear()) return false;
+        if (!WriteText(ref framebuffer)) return false;
         return Native.Halt();
     }
 
     [RuntimeExport("NovaOrynManagedEntry")]
-    private static Boolean NativeEntry(IntPtr bootContext)
+    private static Boolean NativeEntry(UInt64 bootContextAddress)
     {
-        BootContext context = default;
+        BootContext context = new BootContext(bootContextAddress);
         return KMain(context);
     }
 
@@ -45,57 +44,61 @@ public static class Kernel
         return Native.WritePort8(0x3FC, 0x0B);
     }
 
-    private static Boolean WriteText()
+    private static Boolean WriteText(ref FramebufferConsole framebuffer)
     {
-        if (!WriteLineNovaOrynStarted()) return false;
-        return WriteLineCpuHalted();
+        if (!WriteLineNovaOrynStarted(ref framebuffer)) return false;
+        return WriteLineCpuHalted(ref framebuffer);
     }
 
-    private static Boolean WriteLineNovaOrynStarted()
+    private static Boolean WriteLineNovaOrynStarted(ref FramebufferConsole framebuffer)
     {
-        if (!Write((Byte)'N')) return false;
-        if (!Write((Byte)'o')) return false;
-        if (!Write((Byte)'v')) return false;
-        if (!Write((Byte)'a')) return false;
-        if (!Write((Byte)'O')) return false;
-        if (!Write((Byte)'r')) return false;
-        if (!Write((Byte)'y')) return false;
-        if (!Write((Byte)'n')) return false;
-        if (!Write((Byte)' ')) return false;
-        if (!Write((Byte)'K')) return false;
-        if (!Write((Byte)'M')) return false;
-        if (!Write((Byte)'a')) return false;
-        if (!Write((Byte)'i')) return false;
-        if (!Write((Byte)'n')) return false;
-        if (!Write((Byte)' ')) return false;
-        if (!Write((Byte)'s')) return false;
-        if (!Write((Byte)'t')) return false;
-        if (!Write((Byte)'a')) return false;
-        if (!Write((Byte)'r')) return false;
-        if (!Write((Byte)'t')) return false;
-        if (!Write((Byte)'e')) return false;
-        if (!Write((Byte)'d')) return false;
-        if (!Write((Byte)'.')) return false;
-        if (!Write((Byte)'\r')) return false;
-        return Write((Byte)'\n');
+        if (!Write(ref framebuffer, (Byte)'N')) return false;
+        if (!Write(ref framebuffer, (Byte)'o')) return false;
+        if (!Write(ref framebuffer, (Byte)'v')) return false;
+        if (!Write(ref framebuffer, (Byte)'a')) return false;
+        if (!Write(ref framebuffer, (Byte)'O')) return false;
+        if (!Write(ref framebuffer, (Byte)'r')) return false;
+        if (!Write(ref framebuffer, (Byte)'y')) return false;
+        if (!Write(ref framebuffer, (Byte)'n')) return false;
+        if (!Write(ref framebuffer, (Byte)' ')) return false;
+        if (!Write(ref framebuffer, (Byte)'K')) return false;
+        if (!Write(ref framebuffer, (Byte)'M')) return false;
+        if (!Write(ref framebuffer, (Byte)'a')) return false;
+        if (!Write(ref framebuffer, (Byte)'i')) return false;
+        if (!Write(ref framebuffer, (Byte)'n')) return false;
+        if (!Write(ref framebuffer, (Byte)' ')) return false;
+        if (!Write(ref framebuffer, (Byte)'s')) return false;
+        if (!Write(ref framebuffer, (Byte)'t')) return false;
+        if (!Write(ref framebuffer, (Byte)'a')) return false;
+        if (!Write(ref framebuffer, (Byte)'r')) return false;
+        if (!Write(ref framebuffer, (Byte)'t')) return false;
+        if (!Write(ref framebuffer, (Byte)'e')) return false;
+        if (!Write(ref framebuffer, (Byte)'d')) return false;
+        if (!Write(ref framebuffer, (Byte)'.')) return false;
+        if (!Write(ref framebuffer, (Byte)'\r')) return false;
+        return Write(ref framebuffer, (Byte)'\n');
     }
 
-    private static Boolean WriteLineCpuHalted()
+    private static Boolean WriteLineCpuHalted(ref FramebufferConsole framebuffer)
     {
-        if (!Write((Byte)'C')) return false;
-        if (!Write((Byte)'P')) return false;
-        if (!Write((Byte)'U')) return false;
-        if (!Write((Byte)' ')) return false;
-        if (!Write((Byte)'h')) return false;
-        if (!Write((Byte)'a')) return false;
-        if (!Write((Byte)'l')) return false;
-        if (!Write((Byte)'t')) return false;
-        if (!Write((Byte)'e')) return false;
-        if (!Write((Byte)'d')) return false;
-        if (!Write((Byte)'.')) return false;
-        if (!Write((Byte)'\r')) return false;
-        return Write((Byte)'\n');
+        if (!Write(ref framebuffer, (Byte)'C')) return false;
+        if (!Write(ref framebuffer, (Byte)'P')) return false;
+        if (!Write(ref framebuffer, (Byte)'U')) return false;
+        if (!Write(ref framebuffer, (Byte)' ')) return false;
+        if (!Write(ref framebuffer, (Byte)'h')) return false;
+        if (!Write(ref framebuffer, (Byte)'a')) return false;
+        if (!Write(ref framebuffer, (Byte)'l')) return false;
+        if (!Write(ref framebuffer, (Byte)'t')) return false;
+        if (!Write(ref framebuffer, (Byte)'e')) return false;
+        if (!Write(ref framebuffer, (Byte)'d')) return false;
+        if (!Write(ref framebuffer, (Byte)'.')) return false;
+        if (!Write(ref framebuffer, (Byte)'\r')) return false;
+        return Write(ref framebuffer, (Byte)'\n');
     }
 
-    private static Boolean Write(Byte value) => Native.WritePort8(0x3F8, value);
+    private static Boolean Write(ref FramebufferConsole framebuffer, Byte value)
+    {
+        if (!Native.WritePort8(0x3F8, value)) return false;
+        return framebuffer.Write(value);
+    }
 }

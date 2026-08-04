@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Console.Contracts"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Console.Serial", "src\NovaOryn.Console.Serial\NovaOryn.Console.Serial.csproj", "{4EA28E24-9D5A-5893-B975-4B62F2256C4C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Console.Framebuffer", "src\NovaOryn.Console.Framebuffer\NovaOryn.Console.Framebuffer.csproj", "{A9E7BC89-924C-5D5E-B9AD-99D4F7820B5F}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.ProjectModel", "src\NovaOryn.ProjectModel\NovaOryn.ProjectModel.csproj", "{89191770-AC83-5E2A-BB95-7BFB891BC9A5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.ManagedCompiler", "src\NovaOryn.ManagedCompiler\NovaOryn.ManagedCompiler.csproj", "{D7F31490-221F-56F8-94B5-2DFEEED7EFBB}"
@@ -70,6 +72,10 @@ Global
 		{4EA28E24-9D5A-5893-B975-4B62F2256C4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EA28E24-9D5A-5893-B975-4B62F2256C4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4EA28E24-9D5A-5893-B975-4B62F2256C4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9E7BC89-924C-5D5E-B9AD-99D4F7820B5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9E7BC89-924C-5D5E-B9AD-99D4F7820B5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9E7BC89-924C-5D5E-B9AD-99D4F7820B5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9E7BC89-924C-5D5E-B9AD-99D4F7820B5F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{89191770-AC83-5E2A-BB95-7BFB891BC9A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{89191770-AC83-5E2A-BB95-7BFB891BC9A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89191770-AC83-5E2A-BB95-7BFB891BC9A5}.Release|Any CPU.ActiveCfg = Release|Any CPU

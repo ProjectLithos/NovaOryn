@@ -1,19 +1,19 @@
-# Nova Oryn OS SDK 0.0.26
+# Nova Oryn OS SDK 0.0.27
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.26
+## Release 0.0.27
 
-This release implements the first complete x64 UEFI boot-and-run stage. The build now links the freestanding NativeAOT EFI application, creates a real GPT disk image with a FAT32 EFI System Partition, installs the kernel at `EFI/BOOT/BOOTX64.EFI`, launches QEMU with x64 OVMF without `-S`, captures COM1 serial output, confirms managed `KMain`, confirms `CPU.Halt()`, and leaves the halted VM open.
+This release implements the first managed framebuffer console. The x64 UEFI entry locates the Graphics Output Protocol, captures the active framebuffer address, size, resolution, pixels-per-scan-line pitch, pixel format, and channel masks, and passes a native boot context to the freestanding managed bootstrap.
 
-The required runtime acceptance output is:
+Managed code validates the framebuffer, clears the display, renders a built-in 5x7 bitmap font, mirrors every acceptance character to COM1 and the framebuffer, and then enters the existing non-returning `CPU.Halt()` loop. The QEMU window now displays:
 
 ```text
 NovaOryn KMain started.
 CPU halted.
 ```
 
-`Build-NovaOryn.bat` now performs build, image creation, and runtime acceptance by default. Use `Build-NovaOryn.bat -NoRun` to stop after producing `Artifacts\MinimalKernel\MinimalKernel.img`.
+The same exact lines remain in `Artifacts\MinimalKernel\serial.log`, and the runtime launcher still confirms that QEMU remains open after the halt.
 
 ## Source update workflow
 
@@ -83,7 +83,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.26.md` for this release.
+See `docs/Release-0.0.27.md` for this release.
 
 
 ## 0.0.22 build
@@ -139,4 +139,12 @@ EFI\BOOT\BOOTX64.EFI
 `Install-NovaOrynToolchain.bat` locates the non-secure x64 OVMF code image and writable variable-store template shipped with QEMU. Their resolved paths are recorded in `.toolchain\NovaOryn.ToolPaths.json`.
 
 `NovaOryn.QemuLauncher.exe` copies the boot image and OVMF variable store into a unique run directory, starts QEMU immediately without `-S`, watches the serial log for both acceptance lines, confirms the QEMU process remains alive, writes `NovaOryn.Run.json`, and returns without terminating the VM.
+
+## 0.0.27 managed framebuffer console
+
+`native\x64\Entry.asm` calls UEFI `LocateProtocol` for the Graphics Output Protocol before interrupts are disabled. It records the current framebuffer in a compact native boot context and passes its address to `NovaOrynManagedEntry`.
+
+The no-CoreLib bootstrap validates the context and framebuffer bounds before touching video memory. It supports the UEFI RGB, BGR, and direct bit-mask pixel formats, clears the full visible framebuffer, and renders the acceptance output with a managed bitmap font. Serial output is performed first for each character, so framebuffer work cannot remove the existing COM1 diagnostics.
+
+The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and the ordinary kernel sample demonstrates explicit serial/framebuffer mirroring.
 
