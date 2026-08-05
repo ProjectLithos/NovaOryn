@@ -61,18 +61,16 @@ if ([string]::IsNullOrWhiteSpace($installer)) {
 }
 
 Write-Host "[INFO] VSIX installer: $installer"
-Write-Host "[INFO] Removing an older $extensionId installation, if present."
-$uninstall = Start-Process -FilePath $installer -ArgumentList @('/quiet', "/uninstall:$extensionId") -Wait -PassThru
-if ($uninstall.ExitCode -notin @(0, 1001, 2003)) {
-    Write-Warning "VSIX uninstall returned exit code $($uninstall.ExitCode). Installation will still be attempted."
-}
-
-Write-Host "[INFO] Installing $extensionId $version."
-$installArguments = @('/quiet', '/shutdownprocesses', '/force', $vsix)
+Write-Host "[INFO] Installing or upgrading $extensionId $version."
+# Visual Studio has already been confirmed closed. Do not use /shutdownprocesses:
+# on Visual Studio 2026 it can terminate the VSIX installer host with 0xC000013A.
+# VSIXInstaller performs an in-place upgrade when the extension ID is unchanged.
+$installArguments = @('/quiet', '/force', $vsix)
 $install = Start-Process -FilePath $installer -ArgumentList $installArguments -Wait -PassThru
 
 if ($install.ExitCode -eq -1073741510) {
-    throw "VSIXInstaller.exe was interrupted (Windows status 0xC000013A). Do not press Ctrl+C, ensure Visual Studio is closed, and run Install-NovaOrynVSIX.bat again."
+    Write-Warning "Quiet VSIX installation was interrupted (Windows status 0xC000013A). Retrying with the installer UI so Visual Studio can display the actual result."
+    $install = Start-Process -FilePath $installer -ArgumentList @('/force', $vsix) -Wait -PassThru
 }
 if ($install.ExitCode -ne 0) {
     throw "VSIX installation failed with exit code $($install.ExitCode). VSIXInstaller logs are normally written under $env:TEMP."
