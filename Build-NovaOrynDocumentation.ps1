@@ -14,6 +14,20 @@ if (-not (Test-Path -LiteralPath $dotnet -PathType Leaf)) {
 $projectDirectory = Join-Path $root "src\NovaOryn.DocumentationGenerator"
 $project = Join-Path $projectDirectory "NovaOryn.DocumentationGenerator.csproj"
 $config = Join-Path $root "docs\NovaOryn.Documentation.json"
+if (-not (Test-Path -LiteralPath $config -PathType Leaf)) {
+    throw "Documentation configuration was not found: $config"
+}
+$configData = Get-Content -LiteralPath $config -Raw | ConvertFrom-Json
+$outputDirectory = [string]$configData.outputDirectory
+if ([string]::IsNullOrWhiteSpace($outputDirectory)) {
+    throw "Documentation configuration does not define outputDirectory: $config"
+}
+$siteRoot = if ([IO.Path]::IsPathRooted($outputDirectory)) {
+    [IO.Path]::GetFullPath($outputDirectory)
+} else {
+    [IO.Path]::GetFullPath((Join-Path $root $outputDirectory))
+}
+
 Write-Host "[INFO] Building NovaOryn SDK documentation generator."
 & $dotnet build $project --configuration $Configuration --nologo
 if ($LASTEXITCODE -ne 0) { throw "Documentation generator build failed with exit code $LASTEXITCODE." }
@@ -34,9 +48,9 @@ Write-Host "[INFO] Generating NovaOryn SDK usage site."
 & $dotnet $generator @arguments
 if ($LASTEXITCODE -ne 0) { throw "Documentation generation failed with exit code $LASTEXITCODE." }
 
-$index = Join-Path $root "docs\site\index.html"
-$search = Join-Path $root "docs\site\search-index.json"
+$index = Join-Path $siteRoot "index.html"
+$search = Join-Path $siteRoot "search-index.json"
 if (-not (Test-Path -LiteralPath $index -PathType Leaf) -or -not (Test-Path -LiteralPath $search -PathType Leaf)) {
-    throw "Documentation generator did not produce the required site outputs."
+    throw "Documentation generator did not produce the required site outputs beneath $siteRoot."
 }
 Write-Host "[ OK ] NovaOryn SDK usage site: $index"
