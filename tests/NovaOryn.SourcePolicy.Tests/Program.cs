@@ -22,7 +22,30 @@ if (!cpu.Contains("cli", StringComparison.Ordinal) || !cpu.Contains("hlt", Strin
     failures.Add("Native halt loop is incomplete.");
 }
 
+string x64CpuApi = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Architecture.X64", "CPU.cs"));
+foreach (string requiredDocumentation in new[]
+{
+    "/// <summary>Provides direct x64 processor operations",
+    "/// <summary>Enables maskable interrupts",
+    "/// <summary>Disables maskable interrupts",
+    "/// <summary>Determines whether maskable interrupts",
+    "/// <summary>Enters the architecture-defined terminal halt",
+    "/// <summary>Provides x64 port-mapped input/output operations",
+    "/// <summary>Writes one byte to an x64 I/O port",
+    "/// <summary>Attempts to read one byte from an x64 I/O port"
+})
+{
+    if (!x64CpuApi.Contains(requiredDocumentation, StringComparison.Ordinal))
+    {
+        failures.Add($"The public x64 compatibility API is missing XML documentation: {requiredDocumentation}");
+    }
+}
+
 string solution = File.ReadAllText(Path.Combine(root, "NovaOryn.sln"));
+if (!solution.Contains("NovaOryn.Architecture.Arm64", StringComparison.Ordinal))
+{
+    failures.Add("The ARM64 architecture assembly must be included in the authoritative solution.");
+}
 if (!solution.Contains("Release|Any CPU", StringComparison.Ordinal))
 {
     failures.Add("Solution must define Release|Any CPU.");
