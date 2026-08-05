@@ -1,4 +1,4 @@
-# NovaOryn 0.0.49
+# NovaOryn 0.0.50
 
 ## VSIX version validation correction
 
