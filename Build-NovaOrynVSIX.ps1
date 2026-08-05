@@ -11,6 +11,14 @@ if (-not (Test-Path -LiteralPath $sourceManifest -PathType Leaf)) { throw "VSIX 
 [xml]$sourceManifestXml = Get-Content -LiteralPath $sourceManifest -Raw
 $expectedVersion = [string]$sourceManifestXml.PackageManifest.Metadata.Identity.Version
 if ([string]::IsNullOrWhiteSpace($expectedVersion)) { throw "VSIX source manifest does not define Metadata/Identity/@Version." }
+$templateSource = Join-Path $projectDirectory "ProjectTemplates\CSharp\1033\NovaOrynKernel\NovaOrynKernel.vstemplate"
+if (-not (Test-Path -LiteralPath $templateSource -PathType Leaf)) { throw "NovaOryn project template was not found: $templateSource" }
+[xml]$templateSourceXml = Get-Content -LiteralPath $templateSource -Raw
+$templateNamespace = New-Object System.Xml.XmlNamespaceManager($templateSourceXml.NameTable)
+$templateNamespace.AddNamespace("vst", "http://schemas.microsoft.com/developer/vstemplate/2005")
+$templateName = [string]$templateSourceXml.SelectSingleNode("/vst:VSTemplate/vst:TemplateData/vst:Name", $templateNamespace).InnerText
+$expectedTemplateName = "NovaOryn Kernel $expectedVersion"
+if ($templateName -ne $expectedTemplateName) { throw "Project template name is '$templateName', expected '$expectedTemplateName'." }
 foreach ($stale in @((Join-Path $projectDirectory "bin"), (Join-Path $projectDirectory "obj"))) {
     if (Test-Path -LiteralPath $stale) { Remove-Item -LiteralPath $stale -Recurse -Force }
 }
@@ -35,6 +43,14 @@ try {
     foreach ($requiredEntry in $requiredTemplateEntries) {
         if ($entryNames -notcontains $requiredEntry) { throw "NovaOryn VSIX is missing project-template content: $requiredEntry" }
     }
+    $templateEntry = $archive.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.vstemplate" } | Select-Object -First 1
+    if ($null -eq $templateEntry) { throw "NovaOryn VSIX is missing NovaOrynKernel.vstemplate." }
+    $templateReader = [IO.StreamReader]::new($templateEntry.Open())
+    try { [xml]$builtTemplate = $templateReader.ReadToEnd() } finally { $templateReader.Dispose() }
+    $builtTemplateNamespace = New-Object System.Xml.XmlNamespaceManager($builtTemplate.NameTable)
+    $builtTemplateNamespace.AddNamespace("vst", "http://schemas.microsoft.com/developer/vstemplate/2005")
+    $builtTemplateName = [string]$builtTemplate.SelectSingleNode("/vst:VSTemplate/vst:TemplateData/vst:Name", $builtTemplateNamespace).InnerText
+    if ($builtTemplateName -ne $expectedTemplateName) { throw "Built VSIX template name is '$builtTemplateName', expected '$expectedTemplateName'." }
     $manifestEntry = $archive.Entries | Where-Object { $_.FullName -eq "extension.vsixmanifest" } | Select-Object -First 1
     if ($null -eq $manifestEntry) { throw "NovaOryn VSIX is missing extension.vsixmanifest." }
     $reader = [IO.StreamReader]::new($manifestEntry.Open())
