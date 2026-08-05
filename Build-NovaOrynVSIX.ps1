@@ -29,7 +29,7 @@ try {
 } finally {
     $archive.Dispose()
 }
-$artifact = Join-Path $root "Artifacts\VisualStudio\NovaOryn.VisualStudio-0.0.41.vsix"
+$artifact = Join-Path $root "Artifacts\VisualStudio\NovaOryn.VisualStudio-0.0.42.vsix"
 New-Item -ItemType Directory -Path (Split-Path -Parent $artifact) -Force | Out-Null
 Copy-Item -LiteralPath $vsix -Destination $artifact -Force
 Write-Host "[ OK ] NovaOryn VSIX: $artifact"

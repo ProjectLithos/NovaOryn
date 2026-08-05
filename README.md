@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.41
+# Nova Oryn OS SDK 0.0.42
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.41
+## Release 0.0.42
 
-Release 0.0.41 corrects Visual Studio project-template folder resolution. Project items inside `<Folder>` elements now use filenames relative to those folders, preventing duplicated temporary paths such as `Kernel\Kernel\Kernel.cs`. New projects retain the structured Boot, Console, Kernel and Runtime folders.
+Release 0.0.42 adds a source-driven SDK documentation generator and an offline HTML usage site. The site lists configured public and SDK-tool assemblies, detected public items, declarations, purposes, usage guidance, dependencies, return contracts, examples and source locations. It is generated automatically before the normal `Build-NovaOryn.bat` pipeline runs.
 
 ## External C# kernel project
 
@@ -86,7 +86,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.41.md` for this release.
+See `docs/Release-0.0.42.md` for this release.
 
 
 ## 0.0.22 build
@@ -158,8 +158,13 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.41** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.42** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 
 Generated kernel projects place boot contracts, console code, kernel entry code and runtime support into `Boot`, `Console`, `Kernel` and `Runtime` subdirectories.
+
+
+## SDK usage documentation
+
+Run `Build-NovaOrynDocumentation.bat` to regenerate the offline site at `docs\site\index.html`. The normal `Build-NovaOryn.bat` entry point regenerates the site before compiling the SDK and kernel. Public API documentation uses standard XML comments together with `<nova.when>` and `<nova.depends>` metadata.

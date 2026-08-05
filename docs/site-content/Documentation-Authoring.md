@@ -1,0 +1,15 @@
+# Documentation Authoring
+
+Public SDK declarations use normal XML documentation plus NovaOryn-specific metadata.
+
+```csharp
+/// <summary>Halts the current processor.</summary>
+/// <remarks>This operation normally does not return.</remarks>
+/// <returns>False only when the architecture implementation rejects the operation.</returns>
+/// <nova.when>Use after final kernel output when no scheduler is active.</nova.when>
+/// <nova.depends>The selected architecture CPU implementation.</nova.depends>
+/// <example>return CPU.Halt();</example>
+public static bool Halt()
+```
+
+The generator reads public declarations from `src`, records project-reference dependencies and writes `docs/site`. Release 0.0.42 establishes the generator without failing existing undocumented APIs. The 0.0.43 API audit can enable strict documentation and example enforcement.

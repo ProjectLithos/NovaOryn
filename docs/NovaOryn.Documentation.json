@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "product": "Nova Oryn OS SDK",
+  "version": "0.0.42",
+  "outputDirectory": "docs/site",
+  "publicAssemblies": [
+    "NovaOryn.Primitives",
+    "NovaOryn.Core",
+    "NovaOryn.Runtime.Contracts",
+    "NovaOryn.Boot.Contracts",
+    "NovaOryn.Architecture.Contracts",
+    "NovaOryn.Architecture.X64",
+    "NovaOryn.Console.Contracts",
+    "NovaOryn.Console.Serial",
+    "NovaOryn.Console.Framebuffer"
+  ],
+  "toolAssemblies": [
+    "NovaOryn.ProjectModel",
+    "NovaOryn.ManagedCompiler",
+    "NovaOryn.Linker",
+    "NovaOryn.ImageBuilder",
+    "NovaOryn.QemuLauncher",
+    "NovaOryn.ProjectCreator",
+    "NovaOryn.DocumentationGenerator"
+  ],
+  "requireDocumentationForPublicItems": false,
+  "requireExampleForPublicMethods": false
+}
