@@ -18,6 +18,7 @@ DocumentationConfiguration configuration = ConfigurationReader.Read(Path.GetFull
 IReadOnlyList<ProjectDocumentation> projects = PublicApiCollector.Collect(root, configuration);
 IReadOnlyList<DocumentationFinding> findings = DocumentationAudit.Create(projects, configuration);
 DocumentationAudit.Write(root, configuration, projects, findings);
+ApiCompatibilityWriter.Write(root, configuration, projects);
 
 List<string> failures = [];
 if (validate && configuration.RequireDocumentationForPublicItems)
@@ -26,7 +27,7 @@ if (validate && configuration.RequireDocumentationForPublicItems)
 }
 HtmlSiteWriter.Write(root, configuration, projects);
 Console.WriteLine($"[ OK ] Generated NovaOryn SDK usage site with {projects.Count} assemblies and {projects.Sum(project => project.Items.Count)} public items.");
-Console.WriteLine($@"[INFO] Public API documentation audit: {findings.Count} finding(s). See Artifacts\Documentation\PublicApiAudit.json.");
+Console.WriteLine($@"[INFO] Public API documentation audit: {findings.Count} finding(s). See Artifacts\Documentation\PublicApiAudit.json and NovaOryn.ApiCompatibility.json.");
 if (failures.Count == 0) return 0;
 foreach (string failure in failures) Console.Error.WriteLine($"[FAIL] {failure}");
 return 1;

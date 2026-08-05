@@ -1,19 +1,21 @@
 {
   "schemaVersion": 2,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.49",
+  "version": "0.0.50",
+  "baseVersion": "0.0.49",
   "changedFiles": [
-    "Build-NovaOrynVSIX.ps1",
     "Directory.Build.props",
     "README.md",
     "docs/NovaOryn.Documentation.json",
-    "docs/Release-0.0.49.md",
+    "docs/Public-API-Baseline.md",
+    "docs/Release-0.0.50.md",
+    "src/NovaOryn.Core/ApiMetadata.cs",
+    "src/NovaOryn.DocumentationGenerator/ApiCompatibilityWriter.cs",
+    "src/NovaOryn.DocumentationGenerator/Program.cs",
     "src/NovaOryn.VisualStudio/ProjectTemplates/NovaOryn.VisualStudio.Project.vstman",
     "src/NovaOryn.VisualStudio/Properties/AssemblyInfo.cs",
     "src/NovaOryn.VisualStudio/source.extension.vsixmanifest",
-    "toolchain/NovaOryn.Toolchain.json",
-    "NovaOryn-Changes.json",
-    "NovaOryn-SourceManifest.json"
+    "toolchain/NovaOryn.Toolchain.json"
   ],
   "deletedFiles": [],
   "renamedFiles": []

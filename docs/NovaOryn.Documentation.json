@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.49",
+  "version": "0.0.50",
   "outputDirectory": "Artifacts/Documentation/site",
   "publicAssemblies": [
     "NovaOryn.Primitives",
@@ -23,6 +23,6 @@
     "NovaOryn.ProjectCreator",
     "NovaOryn.DocumentationGenerator"
   ],
-  "requireDocumentationForPublicItems": false,
-  "requireExampleForPublicMethods": false
+  "requireDocumentationForPublicItems": true,
+  "requireExampleForPublicMethods": true
 }
