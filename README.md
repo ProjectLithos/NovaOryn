@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.42
+# Nova Oryn OS SDK 0.0.45
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.42
+## Release 0.0.45
 
-Release 0.0.42 adds a source-driven SDK documentation generator and an offline HTML usage site. The site lists configured public and SDK-tool assemblies, detected public items, declarations, purposes, usage guidance, dependencies, return contracts, examples and source locations. It is generated automatically before the normal `Build-NovaOryn.bat` pipeline runs.
+Release 0.0.45 corrects the documentation generator entry point so its top-level statements compile, and advances the VSIX version so Visual Studio recognises it as an update. It retains the source-driven SDK documentation generator and an offline HTML usage site. The site lists configured public and SDK-tool assemblies, detected public items, declarations, purposes, usage guidance, dependencies, return contracts, examples and source locations. It is generated automatically before the normal `Build-NovaOryn.bat` pipeline runs.
 
 ## External C# kernel project
 
@@ -86,7 +86,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.42.md` for this release.
+See `docs/Release-0.0.45.md` for this release.
 
 
 ## 0.0.22 build
@@ -158,7 +158,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.42** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.45** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 

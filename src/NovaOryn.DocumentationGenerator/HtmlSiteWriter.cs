@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -40,7 +41,7 @@ internal static class HtmlSiteWriter
     private static void WriteAssembly(string output, DocumentationConfiguration config, ProjectDocumentation project)
     {
         string items = string.Join(Environment.NewLine, project.Items.Select(item =>
-            $"<tr><td><a href=\"../api/{item.Id}.html\">{H(item.Name)}</a></td><td>{H(item.Kind)}</td><td>{H(item.Summary.Length == 0 ? "Documentation pending." : item.Summary)}</td></tr>"));
+            $"<tr><td><a href=\"../api/{CreateApiFileName(item)}.html\">{H(item.Name)}</a></td><td>{H(item.Kind)}</td><td>{H(item.Summary.Length == 0 ? "Documentation pending." : item.Summary)}</td></tr>"));
         string body = $"<p class=\"eyebrow\">{(project.IsToolAssembly ? "SDK TOOL" : "PUBLIC ASSEMBLY")}</p><h1>{H(project.Name)}</h1><dl><dt>Project</dt><dd>{H(project.ProjectPath)}</dd><dt>Dependencies</dt><dd>{H(project.Dependencies.Count == 0 ? "None" : string.Join(", ", project.Dependencies))}</dd></dl><h2>Public items</h2><table><thead><tr><th>Name</th><th>Kind</th><th>Purpose</th></tr></thead><tbody>{items}</tbody></table>";
         File.WriteAllText(Path.Combine(output, "assemblies", EncodeFile(project.Name) + ".html"), Page(config, project.Name, body, "../"));
     }
@@ -48,7 +49,7 @@ internal static class HtmlSiteWriter
     private static void WriteApi(string output, DocumentationConfiguration config, ApiDocumentation item)
     {
         string body = $"<p class=\"eyebrow\">{H(item.Assembly)} · {H(item.Kind)}</p><h1>{H(item.QualifiedName)}</h1><pre><code>{H(item.Signature)}</code></pre>{Section("What it does", item.Summary)}{Section("When to use it", item.WhenToUse)}{Section("Details", item.Remarks)}{Section("Dependencies", item.Dependencies)}{Section("Return value", item.Returns)}{CodeSection("Example", item.Example)}<h2>Source</h2><p><code>{H(item.SourcePath)}:{item.SourceLine}</code></p>";
-        File.WriteAllText(Path.Combine(output, "api", item.Id + ".html"), Page(config, item.Name, body, "../"));
+        File.WriteAllText(Path.Combine(output, "api", CreateApiFileName(item) + ".html"), Page(config, item.Name, body, "../"));
     }
 
     private static void CopyGuides(string root, string output, DocumentationConfiguration config)
@@ -71,7 +72,7 @@ internal static class HtmlSiteWriter
             assembly = item.Assembly,
             kind = item.Kind,
             summary = item.Summary,
-            url = $"api/{item.Id}.html"
+            url = $"api/{CreateApiFileName(item)}.html"
         })).Cast<object>().ToArray();
         File.WriteAllText(Path.Combine(output, "search-index.json"), JsonSerializer.Serialize(entries, new JsonSerializerOptions { WriteIndented = true }));
     }
@@ -84,6 +85,18 @@ internal static class HtmlSiteWriter
     private static string CodeSection(string title, string value) => $"<h2>{H(title)}</h2><pre><code>{H(value.Length == 0 ? "No example has been added yet." : value)}</code></pre>";
     private static string H(string value) => WebUtility.HtmlEncode(value);
     private static string EncodeFile(string value) => Regex.Replace(value.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+
+    private static string CreateApiFileName(ApiDocumentation item)
+    {
+        string readable = EncodeFile(item.Name);
+        if (readable.Length == 0) readable = "item";
+        if (readable.Length > 48) readable = readable[..48].TrimEnd('-');
+
+        string identity = string.Join("|", item.Assembly, item.Kind, item.QualifiedName, item.Signature);
+        byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(identity));
+        string suffix = Convert.ToHexString(digest.AsSpan(0, 8)).ToLowerInvariant();
+        return $"{readable}-{suffix}";
+    }
 
     private static string Markdown(string text)
     {

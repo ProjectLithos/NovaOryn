@@ -4,7 +4,7 @@ Nova Oryn OS SDK compiles user-owned freestanding C# kernels with the repository
 
 ## Create a kernel project
 
-Install the Visual Studio extension with `Install-NovaOrynVSIX.bat`, then create a NovaOryn Kernel 0.0.42 project. The editable project is kept outside the SDK source tree.
+Install the Visual Studio extension with `Install-NovaOrynVSIX.bat`, then create a NovaOryn Kernel 0.0.43 project. The editable project is kept outside the SDK source tree.
 
 ## Kernel entry point
 

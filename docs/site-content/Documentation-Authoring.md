@@ -12,4 +12,4 @@ Public SDK declarations use normal XML documentation plus NovaOryn-specific meta
 public static bool Halt()
 ```
 
-The generator reads public declarations from `src`, records project-reference dependencies and writes `docs/site`. Release 0.0.42 establishes the generator without failing existing undocumented APIs. The 0.0.43 API audit can enable strict documentation and example enforcement.
+The generator reads public declarations from `src`, records project-reference dependencies and writes `docs/site`. Release 0.0.43 establishes the generator without failing existing undocumented APIs. The 0.0.44 API audit can enable strict documentation and example enforcement.

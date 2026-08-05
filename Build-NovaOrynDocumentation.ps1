@@ -11,16 +11,22 @@ if (-not (Test-Path -LiteralPath $dotnet -PathType Leaf)) {
     throw "Repository-pinned dotnet.exe was not found: $dotnet. Run Install-NovaOrynToolchain.bat first."
 }
 
-$project = Join-Path $root "src\NovaOryn.DocumentationGenerator\NovaOryn.DocumentationGenerator.csproj"
+$projectDirectory = Join-Path $root "src\NovaOryn.DocumentationGenerator"
+$project = Join-Path $projectDirectory "NovaOryn.DocumentationGenerator.csproj"
 $config = Join-Path $root "docs\NovaOryn.Documentation.json"
 Write-Host "[INFO] Building NovaOryn SDK documentation generator."
 & $dotnet build $project --configuration $Configuration --nologo
 if ($LASTEXITCODE -ne 0) { throw "Documentation generator build failed with exit code $LASTEXITCODE." }
 
-$generator = Join-Path $root "src\NovaOryn.DocumentationGenerator\bin\$Configuration\net10.0\NovaOryn.DocumentationGenerator.dll"
-if (-not (Test-Path -LiteralPath $generator -PathType Leaf)) {
-    throw "Documentation generator was not produced: $generator"
+$generatorName = "NovaOryn.DocumentationGenerator.dll"
+$generatorCandidates = @(Get-ChildItem -LiteralPath (Join-Path $projectDirectory "bin") -Filter $generatorName -File -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -match "[\\/]$([Regex]::Escape($Configuration))[\\/]net10\.0[\\/]$([Regex]::Escape($generatorName))$" } |
+    Sort-Object LastWriteTimeUtc -Descending)
+if ($generatorCandidates.Count -eq 0) {
+    throw "Documentation generator was not produced beneath $projectDirectory\bin for configuration $Configuration."
 }
+$generator = $generatorCandidates[0].FullName
+Write-Host "[ OK ] Documentation generator: $generator"
 
 $arguments = @("generate", "--root", $root, "--configuration", $config)
 if ($Strict) { $arguments += "--validate" }

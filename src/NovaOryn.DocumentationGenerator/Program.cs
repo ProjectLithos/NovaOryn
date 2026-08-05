@@ -1,4 +1,4 @@
-namespace NovaOryn.DocumentationGenerator;
+using NovaOryn.DocumentationGenerator;
 
 if (args.Length == 0 || args[0] is "--help" or "-h")
 {
