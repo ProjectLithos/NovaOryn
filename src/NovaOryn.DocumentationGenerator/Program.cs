@@ -16,20 +16,17 @@ string configPath = GetOption(args, "--configuration") ?? Path.Combine(root, "do
 bool validate = args.Contains("--validate", StringComparer.OrdinalIgnoreCase);
 DocumentationConfiguration configuration = ConfigurationReader.Read(Path.GetFullPath(configPath));
 IReadOnlyList<ProjectDocumentation> projects = PublicApiCollector.Collect(root, configuration);
+IReadOnlyList<DocumentationFinding> findings = DocumentationAudit.Create(projects, configuration);
+DocumentationAudit.Write(root, configuration, projects, findings);
+
 List<string> failures = [];
 if (validate && configuration.RequireDocumentationForPublicItems)
 {
-    foreach (ApiDocumentation item in projects.Where(project => project.IsPublicAssembly).SelectMany(project => project.Items))
-    {
-        if (item.Summary.Length == 0) failures.Add($"Missing summary: {item.Assembly}::{item.QualifiedName}");
-        if (item.WhenToUse.Length == 0) failures.Add($"Missing <nova.when>: {item.Assembly}::{item.QualifiedName}");
-        if (item.Dependencies.Length == 0) failures.Add($"Missing dependency information: {item.Assembly}::{item.QualifiedName}");
-        if (configuration.RequireExampleForPublicMethods && item.Kind == "Method" && item.Example.Length == 0)
-            failures.Add($"Missing example: {item.Assembly}::{item.QualifiedName}");
-    }
+    failures.AddRange(findings.Select(finding => finding.Message));
 }
 HtmlSiteWriter.Write(root, configuration, projects);
 Console.WriteLine($"[ OK ] Generated NovaOryn SDK usage site with {projects.Count} assemblies and {projects.Sum(project => project.Items.Count)} public items.");
+Console.WriteLine($"[INFO] Public API documentation audit: {findings.Count} finding(s). See Artifacts\Documentation\PublicApiAudit.json.");
 if (failures.Count == 0) return 0;
 foreach (string failure in failures) Console.Error.WriteLine($"[FAIL] {failure}");
 return 1;

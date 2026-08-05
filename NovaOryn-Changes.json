@@ -1,29 +1,24 @@
 {
   "schemaVersion": 2,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.46",
-  "baseVersion": "0.0.45",
+  "version": "0.0.47",
+  "baseVersion": "0.0.46",
   "changedFiles": [
-    "Build-NovaOrynDocumentation.ps1",
     "Directory.Build.props",
-    "NovaOryn-Changes.json",
-    "NovaOryn-SourceManifest.json",
     "README.md",
     "docs/NovaOryn.Documentation.json",
-    "docs/Release-0.0.46.md",
+    "docs/Public-API-Rules.md",
+    "docs/Release-0.0.47.md",
+    "docs/site-content/Public-API-Quality.md",
+    "src/NovaOryn.DocumentationGenerator/DocumentationAudit.cs",
+    "src/NovaOryn.DocumentationGenerator/Program.cs",
     "src/NovaOryn.VisualStudio/ProjectTemplates/NovaOryn.VisualStudio.Project.vstman",
     "src/NovaOryn.VisualStudio/Properties/AssemblyInfo.cs",
     "src/NovaOryn.VisualStudio/source.extension.vsixmanifest",
-    "toolchain/NovaOryn.Toolchain.json"
+    "toolchain/NovaOryn.Toolchain.json",
+    "NovaOryn-Changes.json",
+    "NovaOryn-SourceManifest.json"
   ],
-  "deletedFiles": [
-    "docs/site/assets/site.css",
-    "docs/site/assets/site.js",
-    "docs/site/guides/Documentation-Authoring.html",
-    "docs/site/guides/Getting-Started.html",
-    "docs/site/guides/Next-Steps.html",
-    "docs/site/index.html",
-    "docs/site/search-index.json"
-  ],
+  "deletedFiles": [],
   "renamedFiles": []
 }

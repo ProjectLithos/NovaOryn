@@ -1,10 +1,21 @@
-# Public API rules
+# NovaOryn public API rules
 
-1. Public callable members return `bool` or a meaningful value.
-2. Public `void` methods are forbidden.
-3. Expected operational failures return `false`.
-4. Fallible queries use `Try...` and an `out` value.
-5. Invalid API use may throw normal .NET exceptions after runtime initialization.
-6. Fatal kernel failures panic and halt.
-7. Fallible public constructors and state-changing public property setters are avoided.
-8. `CPU.Halt()` returns `bool` by signature but never returns after success.
+NovaOryn public SDK APIs are a compatibility contract.
+
+Every public type and member in an assembly listed under `publicAssemblies` in `docs/NovaOryn.Documentation.json` must provide:
+
+- an XML `<summary>` that states what the item does;
+- a `<nova.when>` section explaining when the SDK user should use it;
+- dependency information through `<nova.depends>` or project references;
+- `<returns>` for every value-returning public method;
+- an `<example>` for public methods when strict example validation is enabled.
+
+Public methods and procedures must return `bool` or a value. Public `void` methods are rejected by source-policy tests.
+
+`Build-NovaOrynDocumentation.bat` always writes `Artifacts/Documentation/PublicApiAudit.json`. Run the strict audit with:
+
+```bat
+Build-NovaOrynDocumentation.bat -Strict
+```
+
+Strict mode exits with failure when any required documentation field is missing. Generated HTML and audit files belong beneath `Artifacts` and must never be committed.
