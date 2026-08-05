@@ -8,5 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\NovaOryn.Core\NovaOryn.Core.csproj" />
+    <ProjectReference Include="..\NovaOryn.Primitives\NovaOryn.Primitives.csproj" />
   </ItemGroup>
 </Project>
