@@ -4,13 +4,55 @@ using NovaOryn.Primitives;
 namespace NovaOryn.InterruptControllers;
 
 /// <summary>Identifies the delivery technology hidden behind a routed interrupt.</summary>
-public enum InterruptDeliveryMechanism : byte { LegacyPic, IoApic, Msi, MsiX, LocalApic, X2Apic }
+public enum InterruptDeliveryMechanism : byte
+{
+    /// <summary>Legacy dual 8259 programmable interrupt controllers.</summary>
+    LegacyPic,
+    /// <summary>I/O APIC redirection-table delivery.</summary>
+    IoApic,
+    /// <summary>PCI message-signalled interrupt delivery.</summary>
+    Msi,
+    /// <summary>PCI-X/PCIe MSI-X table delivery.</summary>
+    MsiX,
+    /// <summary>Processor-local APIC delivery.</summary>
+    LocalApic,
+    /// <summary>Extended x2APIC MSR-based delivery.</summary>
+    X2Apic
+}
 /// <summary>Defines the electrical polarity of an interrupt source.</summary>
-public enum InterruptPolarity : byte { Conforms, ActiveHigh, ActiveLow }
+public enum InterruptPolarity : byte
+{
+    /// <summary>Uses the polarity defined by the interrupt bus or firmware.</summary>
+    Conforms,
+    /// <summary>The interrupt is asserted at a high electrical level.</summary>
+    ActiveHigh,
+    /// <summary>The interrupt is asserted at a low electrical level.</summary>
+    ActiveLow
+}
 /// <summary>Defines whether an interrupt is edge or level triggered.</summary>
-public enum InterruptTriggerMode : byte { Conforms, Edge, Level }
+public enum InterruptTriggerMode : byte
+{
+    /// <summary>Uses the trigger mode defined by the interrupt bus or firmware.</summary>
+    Conforms,
+    /// <summary>The interrupt is triggered by an edge transition.</summary>
+    Edge,
+    /// <summary>The interrupt remains asserted at a level until serviced.</summary>
+    Level
+}
 /// <summary>Defines the Local APIC delivery mode.</summary>
-public enum InterruptDeliveryMode : byte { Fixed, LowestPriority, NonMaskable, Init, Startup }
+public enum InterruptDeliveryMode : byte
+{
+    /// <summary>Delivers the vector directly to the selected processor.</summary>
+    Fixed,
+    /// <summary>Delivers the vector to the lowest-priority selected processor.</summary>
+    LowestPriority,
+    /// <summary>Delivers a non-maskable interrupt.</summary>
+    NonMaskable,
+    /// <summary>Delivers an INIT interprocessor interrupt.</summary>
+    Init,
+    /// <summary>Delivers a startup interprocessor interrupt.</summary>
+    Startup
+}
 /// <summary>Represents an architecture-independent hardware interrupt source.</summary>
 public readonly record struct InterruptSource(uint Value);
 /// <summary>Represents an opaque route handle used by drivers.</summary>

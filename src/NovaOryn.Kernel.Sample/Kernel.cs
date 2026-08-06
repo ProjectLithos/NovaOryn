@@ -20,6 +20,9 @@ public static class Kernel
         if (!serial.Initialize(boot)) return false;
         if (!framebuffer.Initialize(boot)) return false;
         if (!WriteLine(serial, framebuffer, "NovaOryn KMain started.")) return false;
+        KernelDiagnosticSink diagnostics = new(serial, framebuffer);
+        if (!PlatformInitialization.Initialize(diagnostics)) return false;
+        if (!WriteLine(serial, framebuffer, "GDT, TSS, IDT, exceptions, and interrupt-controller contracts online.")) return false;
         if (!WriteLine(serial, framebuffer, "CPU halted.")) return false;
         return CPU.Halt();
     }

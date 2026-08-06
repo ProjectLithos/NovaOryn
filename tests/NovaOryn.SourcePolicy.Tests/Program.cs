@@ -16,6 +16,36 @@ if (!Regex.IsMatch(kernel, @"public\s+static\s+bool\s+KMain\s*\("))
 {
     failures.Add("KMain must be public static bool.");
 }
+
+string samplePlatform = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Sample", "PlatformInitialization.cs"));
+foreach (string required in new[]
+{
+    "X64TaskStateSegment",
+    "X64GlobalDescriptorTable",
+    "X64InterruptDescriptorTable",
+    "EssentialExceptionHandlers",
+    "X64InterruptController",
+    "InterruptDeliveryMechanism.Msi",
+    "CreateMessage",
+    "SetAffinity",
+    "SetPriority",
+    "Unmask",
+    "Mask",
+    "RemoveRoute",
+    "ReleaseVector"
+})
+{
+    if (!samplePlatform.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"The sample kernel does not demonstrate public platform facility: {required}");
+    }
+}
+if (!kernel.Contains("PlatformInitialization.Initialize", StringComparison.Ordinal) ||
+    !kernel.Contains("KernelDiagnosticSink", StringComparison.Ordinal))
+{
+    failures.Add("KMain must initialise the public descriptor, interrupt, exception, and controller facilities.");
+}
+
 string cpu = File.ReadAllText(Path.Combine(root, "native", "x64", "Cpu.S"));
 if (!cpu.Contains("cli", StringComparison.Ordinal) || !cpu.Contains("hlt", StringComparison.Ordinal) || !cpu.Contains("jmp .LNovaOrynHaltForever", StringComparison.Ordinal))
 {
