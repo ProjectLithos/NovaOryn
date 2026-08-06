@@ -409,6 +409,16 @@ foreach (string required in new[] { "in al, dx", "out dx, al", "rdmsr", "wrmsr",
 {
     if (!controllerAssembly.Contains(required, StringComparison.Ordinal)) failures.Add($"Native interrupt-controller support is missing {required}.");
 }
+string cpuAssembly = File.ReadAllText(Path.Combine(root, "native", "x64", "Cpu.asm"));
+foreach (string symbol in new[] { "NovaOrynX64ReadPort8", "NovaOrynX64WritePort8" })
+{
+    if (controllerAssembly.Contains($"global {symbol}", StringComparison.Ordinal)) failures.Add($"InterruptControllers.asm must not duplicate the CPU native symbol {symbol}.");
+}
+foreach (string symbol in new[] { "NovaOrynX64ControllerReadPort8", "NovaOrynX64ControllerWritePort8" })
+{
+    if (!controllerAssembly.Contains($"global {symbol}", StringComparison.Ordinal)) failures.Add($"InterruptControllers.asm is missing its namespaced native symbol {symbol}.");
+    if (cpuAssembly.Contains($"global {symbol}", StringComparison.Ordinal)) failures.Add($"Cpu.asm must not duplicate the interrupt-controller native symbol {symbol}.");
+}
 if (!buildScript.Contains("InterruptControllers.asm", StringComparison.Ordinal) || !linker.Contains("InterruptControllers.obj", StringComparison.Ordinal))
 {
     failures.Add("Interrupt-controller native object must be assembled and linked into the EFI image.");

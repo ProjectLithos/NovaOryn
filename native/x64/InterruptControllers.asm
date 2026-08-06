@@ -2,20 +2,20 @@ bits 64
 default rel
 section .text
 
-global NovaOrynX64ReadPort8
-global NovaOrynX64WritePort8
+global NovaOrynX64ControllerReadPort8
+global NovaOrynX64ControllerWritePort8
 global NovaOrynX64ReadMsr
 global NovaOrynX64WriteMsr
 global NovaOrynX64ReadMmio32
 global NovaOrynX64WriteMmio32
 global NovaOrynX64DisableLegacyPic
 
-NovaOrynX64ReadPort8:
+NovaOrynX64ControllerReadPort8:
     mov dx, cx
     xor eax, eax
     in al, dx
     ret
-NovaOrynX64WritePort8:
+NovaOrynX64ControllerWritePort8:
     mov eax, edx
     mov dx, cx
     out dx, al
