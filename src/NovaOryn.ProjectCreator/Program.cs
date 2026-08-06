@@ -16,6 +16,8 @@ static int MainEntry(string[] args)
     if (!Directory.Exists(template)) return Fail($"Kernel project template was not found: {template}");
 
     Directory.CreateDirectory(output);
+    if (!MigrateLegacyRootKernel(output)) return 1;
+
     foreach (string source in Directory.EnumerateFiles(template, "*", SearchOption.AllDirectories))
     {
         string relative = Path.GetRelativePath(template, source);
@@ -46,6 +48,27 @@ static int MainEntry(string[] args)
     return 0;
 }
 
+
+
+static bool MigrateLegacyRootKernel(string output)
+{
+    string legacyRootKernel = Path.Combine(output, "Kernel.cs");
+    if (!File.Exists(legacyRootKernel)) return true;
+
+    if (!IsSdkGeneratedLegacyKernel(legacyRootKernel))
+    {
+        Console.Error.WriteLine($"[FAIL] A user-owned legacy root Kernel.cs prevents migration: {legacyRootKernel}");
+        Console.Error.WriteLine("[FAIL] Move that file to Kernel\\Kernel.cs or remove it before refreshing the SDK project.");
+        return false;
+    }
+
+    string backup = legacyRootKernel + ".pre-0.0.73.bak";
+    File.Copy(legacyRootKernel, backup, true);
+    File.Delete(legacyRootKernel);
+    Console.WriteLine($"[ OK ] Migrated legacy root kernel: {legacyRootKernel}");
+    Console.WriteLine($"[ OK ] Legacy kernel backup : {backup}");
+    return true;
+}
 
 static bool IsSdkGeneratedLegacyKernel(string path)
 {

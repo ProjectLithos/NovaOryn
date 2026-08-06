@@ -185,7 +185,26 @@ if (Test-Path -LiteralPath $externalKernelDirectory -PathType Container) {
     Write-Host "[INFO] Refreshing the existing external NovaOryn kernel project."
     & $dotnet $projectCreator create --output $externalKernelDirectory --sdk-root $root
     if ($LASTEXITCODE -ne 0) { throw "External NovaOryn kernel project refresh failed with exit code $LASTEXITCODE." }
+
+    $legacyRootKernel = Join-Path $externalKernelDirectory "Kernel.cs"
+    if (Test-Path -LiteralPath $legacyRootKernel -PathType Leaf) {
+        throw "External kernel migration left an obsolete root Kernel.cs in place: $legacyRootKernel"
+    }
+
+    $externalUserKernel = Join-Path $externalKernelDirectory "Kernel\Kernel.cs"
+    if (-not (Test-Path -LiteralPath $externalUserKernel -PathType Leaf)) {
+        throw "External kernel refresh did not produce the high-level Kernel\Kernel.cs file: $externalUserKernel"
+    }
+
+    $externalKernelSource = Get-Content -LiteralPath $externalUserKernel -Raw
+    foreach ($forbiddenKernelToken in @("DllImport", "internal static class Native", "WritePort8", "RuntimeExport", "FramebufferConsole", "0x3F8")) {
+        if ($externalKernelSource.Contains($forbiddenKernelToken, [StringComparison]::Ordinal)) {
+            throw "External user kernel still exposes low-level token '$forbiddenKernelToken': $externalUserKernel"
+        }
+    }
+
     Write-Host "[ OK ] External kernel project refreshed: $externalKernelDirectory"
+    Write-Host "[ OK ] External user kernel is high-level only: $externalUserKernel"
 }
 
 $defaultKernelDirectory = Join-Path $root "src\NovaOryn.Kernel.Bootstrap"

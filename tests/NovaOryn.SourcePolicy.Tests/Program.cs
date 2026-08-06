@@ -81,6 +81,11 @@ if (!solution.Contains("Release|Any CPU", StringComparison.Ordinal))
     failures.Add("Solution must define Release|Any CPU.");
 }
 string buildScript = File.ReadAllText(Path.Combine(root, "Build-NovaOryn.ps1"));
+if (!buildScript.Contains("External user kernel is high-level only", StringComparison.Ordinal) ||
+    !buildScript.Contains("External kernel migration left an obsolete root Kernel.cs", StringComparison.Ordinal))
+{
+    failures.Add("The build must prove that external generated kernels no longer expose the obsolete root Kernel.cs.");
+}
 if (!buildScript.Contains("--property:Platform=\"Any CPU\"", StringComparison.Ordinal))
 {
     failures.Add("Build script must explicitly select Any CPU for managed solution projects.");
@@ -229,6 +234,13 @@ if (!projectCreator.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordi
     !projectCreator.Contains(".pre-0.0.69.bak", StringComparison.Ordinal))
 {
     failures.Add("Project creation must migrate SDK-generated low-level Kernel.cs files while retaining a backup.");
+}
+if (!projectCreator.Contains("MigrateLegacyRootKernel", StringComparison.Ordinal) ||
+    !projectCreator.Contains("Path.Combine(output, \"Kernel.cs\")", StringComparison.Ordinal) ||
+    !projectCreator.Contains(".pre-0.0.73.bak", StringComparison.Ordinal) ||
+    !projectCreator.Contains("File.Delete(legacyRootKernel)", StringComparison.Ordinal))
+{
+    failures.Add("Project creation must migrate and remove the obsolete root-level generated Kernel.cs.");
 }
 string lowLevelAssembly = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.X64.LowLevel", "Native.cs"));
 foreach (string nativeMember in new[] { "class Native", "WritePort8", "InitializeBootstrapDescriptors", "InitializeBootstrapInterrupts", "DisableLegacyPic", "Halt" })
