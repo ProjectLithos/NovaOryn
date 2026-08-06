@@ -1682,6 +1682,62 @@ NovaOrynX64InterruptCommon:
     add rsp, 16
     iretq
 
+
+
+section .bss align=16
+NovaOrynX64BootstrapIdt: resb 4096
+
+section .text
+global NovaOrynX64InitializeBootstrapInterrupts
+
+; Builds all 256 gates and installs the bootstrap processor IDT.
+NovaOrynX64InitializeBootstrapInterrupts:
+    lea r10, [rel NovaOrynX64BootstrapIdt]
+    lea r11, [rel NovaOrynX64InterruptStubTable]
+    lea r9, [rel NovaOrynX64InterruptStackSwitch]
+    xor r8d, r8d
+.bootstrap_idt_loop:
+    mov rax, [r11 + r8 * 8]
+    mov rdx, r8
+    shl rdx, 4
+    add rdx, r10
+    mov [rdx + 0], ax
+    mov word [rdx + 2], 0x08
+    mov byte [rdx + 4], 0
+    cmp r8d, 8
+    jne .check_nmi
+    mov byte [rdx + 4], 1
+    mov byte [r9 + r8], 1
+    jmp .ist_done
+.check_nmi:
+    cmp r8d, 2
+    jne .check_machine_check
+    mov byte [rdx + 4], 2
+    mov byte [r9 + r8], 1
+    jmp .ist_done
+.check_machine_check:
+    cmp r8d, 18
+    jne .ist_done
+    mov byte [rdx + 4], 3
+    mov byte [r9 + r8], 1
+.ist_done:
+    mov byte [rdx + 5], 0x8E
+    shr rax, 16
+    mov [rdx + 6], ax
+    shr rax, 16
+    mov [rdx + 8], eax
+    mov dword [rdx + 12], 0
+    inc r8d
+    cmp r8d, 256
+    jne .bootstrap_idt_loop
+    sub rsp, 16
+    mov word [rsp], 4095
+    mov [rsp + 2], r10
+    lidt [rsp]
+    add rsp, 16
+    mov eax, 1
+    ret
+
 align 8
 NovaOrynX64InterruptStubTable:
     dq NovaOrynX64InterruptStub0

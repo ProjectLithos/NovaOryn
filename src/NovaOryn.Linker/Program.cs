@@ -92,6 +92,7 @@ static int MainEntry(string[] args)
         runtime,
         descriptors,
         interrupts,
+        interruptControllers,
         nativeObject
     ];
 

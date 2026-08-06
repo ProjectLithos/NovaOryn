@@ -174,8 +174,20 @@ if (!linker.Contains("SupportedCompilationManifestSchema = 5", StringComparison.
 
 
 string bootstrapKernel = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "Kernel.cs"));
-if (!bootstrapKernel.Contains("WriteLineNovaOrynStarted", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("WriteLineCpuHalted", StringComparison.Ordinal))
+if (!bootstrapKernel.Contains("InitializeBootstrapDescriptors", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("InitializeBootstrapInterrupts", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("DisableLegacyPic", StringComparison.Ordinal))
+{
+    failures.Add("The actual ILC bootstrap must install GDT/TSS, IDT, and disable the legacy PIC.");
+}
+if (!bootstrapKernel.Contains("GDT and TSS installed.", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("IDT with 256 vectors installed.", StringComparison.Ordinal))
+{
+    failures.Add("The booting kernel must visibly report descriptor and interrupt initialization.");
+}
+
+if (!bootstrapKernel.Contains("WriteLineStarted", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("WriteLineHalted", StringComparison.Ordinal))
 {
     failures.Add("Freestanding bootstrap must emit both runtime acceptance lines before halting.");
 }
@@ -308,9 +320,9 @@ if (!projectCreator.Contains("Source", StringComparison.Ordinal) || !projectCrea
 {
     failures.Add("Project creator must default to the user Source\\Repos\\NovaOrynKernel directory.");
 }
-if (!buildScript.Contains("Source\\Repos\\NovaOrynKernel", StringComparison.Ordinal) || !buildScript.Contains("NovaOryn.ProjectCreator", StringComparison.Ordinal))
+if (!buildScript.Contains("src\\NovaOryn.Kernel.Bootstrap", StringComparison.Ordinal) || !buildScript.Contains("NovaOrynProject.json", StringComparison.Ordinal))
 {
-    failures.Add("Build script must create and consume the external C# kernel project.");
+    failures.Add("Build script must compile the authoritative in-repository bootstrap by default.");
 }
 string kernelTemplate = Path.Combine(root, "templates", "NovaOrynKernel", "Kernel", "Kernel.cs");
 if (!File.Exists(kernelTemplate))

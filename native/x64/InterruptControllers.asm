@@ -8,6 +8,7 @@ global NovaOrynX64ReadMsr
 global NovaOrynX64WriteMsr
 global NovaOrynX64ReadMmio32
 global NovaOrynX64WriteMmio32
+global NovaOrynX64DisableLegacyPic
 
 NovaOrynX64ReadPort8:
     mov dx, cx
@@ -40,5 +41,14 @@ NovaOrynX64ReadMmio32:
 NovaOrynX64WriteMmio32:
     mov [rcx], edx
     mfence
+    mov eax, 1
+    ret
+
+
+; Masks both 8259 PICs so APIC/MSI delivery can own external vectors.
+NovaOrynX64DisableLegacyPic:
+    mov al, 0xFF
+    out 0x21, al
+    out 0xA1, al
     mov eax, 1
     ret

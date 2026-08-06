@@ -180,7 +180,7 @@ if (-not (Test-Path -LiteralPath $projectCreator -PathType Leaf)) {
     throw "NovaOryn.ProjectCreator was not produced: $projectCreator"
 }
 
-$defaultKernelDirectory = Join-Path $env:USERPROFILE "Source\Repos\NovaOrynKernel"
+$defaultKernelDirectory = Join-Path $root "src\NovaOryn.Kernel.Bootstrap"
 $projectManifest = if ([string]::IsNullOrWhiteSpace($Project)) {
     Join-Path $defaultKernelDirectory "NovaOrynProject.json"
 } elseif ([IO.Path]::IsPathRooted($Project)) {
@@ -189,11 +189,6 @@ $projectManifest = if ([string]::IsNullOrWhiteSpace($Project)) {
     [IO.Path]::GetFullPath((Join-Path $root $Project))
 }
 
-if (-not (Test-Path -LiteralPath $projectManifest -PathType Leaf)) {
-    Write-Host "[INFO] Creating the C# kernel project at $defaultKernelDirectory"
-    & $dotnet $projectCreator create --output $defaultKernelDirectory --sdk-root $root
-    if ($LASTEXITCODE -ne 0) { throw "C# kernel project creation failed with exit code $LASTEXITCODE." }
-}
 if (-not (Test-Path -LiteralPath $projectManifest -PathType Leaf)) {
     throw "NovaOryn project manifest was not found: $projectManifest"
 }
