@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.87
+# Nova Oryn OS SDK 0.0.88
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.87
+## Release 0.0.88
 
-Release 0.0.87 fixes the blank framebuffer after the freestanding kernel was split into separate DLLs. The screen clear completed, but the first normal `KernelConsole.WriteLine(...)` call entered the placeholder `System.String` indexer and looped permanently. The freestanding CoreLib now exposes the real inline NativeAOT string layout and a terminating character indexer, while `KernelConsole.Write(String)` pins and reads the managed character buffer directly. Native serial and framebuffer operations remain hidden from the end-user `Kernel.cs`.
+Release 0.0.88 fixes the source-policy test compilation failure caused by declaring the top-level local variable `visualStudioConsole` twice. The Visual Studio template console check now uses the distinct name `visualStudioTemplateConsole`. The kernel, freestanding string implementation, managed console, NativeAOT compiler path, and native boot path are unchanged from 0.0.87.
 
 ## Release 0.0.56
 
@@ -102,7 +102,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.87.md` for this release.
+See `docs/Release-0.0.88.md` for this release.
 
 
 ## 0.0.22 build
@@ -174,7 +174,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.87** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.88** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 

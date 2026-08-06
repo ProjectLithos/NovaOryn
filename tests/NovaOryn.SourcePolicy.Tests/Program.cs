@@ -547,9 +547,9 @@ if (!visualStudioLowLevel.Contains("class Native", StringComparison.Ordinal) || 
 {
     failures.Add("Visual Studio template must keep native imports in the separate low-level assembly.");
 }
-string visualStudioConsole = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "Sdk", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
-if (!visualStudioConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
-    !visualStudioConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal))
+string visualStudioTemplateConsole = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "Sdk", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
+if (!visualStudioTemplateConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
+    !visualStudioTemplateConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal))
 {
     failures.Add("Visual Studio template must expose normal managed Write and WriteLine functions from the console assembly.");
 }
