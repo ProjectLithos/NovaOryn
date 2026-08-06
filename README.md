@@ -1,6 +1,22 @@
-# Nova Oryn OS SDK 0.0.93
+# Nova Oryn OS SDK 0.0.95
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
+
+## Release 0.0.95
+
+Release 0.0.95 corrects the freestanding framebuffer font dispatch seen at runtime as repeated question-mark glyphs for valid ASCII letters, digits, and punctuation. The font data itself was complete, but the two dense 95-case glyph switches were not a safe dispatch form for this freestanding NativeAOT path.
+
+Both packed glyph halves are now compile-time constants selected through explicit range checks and bit branches. The renderer therefore reaches every printable ASCII glyph without a switch jump table, while keeping the exact NovaOryn Mono 8×16 data and the user-selected rendered `FontSize`. The authoritative kernel console, command-line project template, Visual Studio template, and reusable framebuffer assembly use the same glyph values.
+
+The generated kernel remains user-owned: edit only `Kernel\Kernel.cs`, then run the project build or run wrapper. SDK support code is refreshed separately and must not replace that file. Source-policy validation now rejects a return to dense font switches and verifies both halves of all 95 printable characters in the constant table.
+
+## Release 0.0.94
+
+Release 0.0.94 replaces the framebuffer console's partial 5×7 character table with **NovaOryn Mono**, a complete embedded bitmap typeface for printable ASCII U+0020 through U+007E.
+
+The font now provides proper uppercase and lowercase letters, digits, punctuation, symbols, and below-baseline descenders for `g`, `j`, `p`, `q`, and `y`. Its embedded raster master is 8×16, but the renderer accepts one real `FontSize` value—the rendered glyph height in framebuffer pixels—and derives glyph width, character advance, line height, wrapping, and sampling from that value. Generated kernels explicitly request 32 pixels with `KernelConsole.Initialize(boot, 32U)`, and both framebuffer APIs report the exact accepted size. There is no separate public scale setting.
+
+Source-policy validation checks all 95 printable characters, both packed halves of every glyph, renderer/template identity, reusable/freestanding data identity, and descender rows. A specimen is included at `docs/assets/NovaOryn-Mono-8x16.png`, and the typeface notice is retained in `THIRD-PARTY-NOTICES.md`.
 
 ## Release 0.0.93
 
@@ -120,7 +136,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.93.md` for this release.
+See `docs/Release-0.0.95.md` for this release.
 
 
 ## 0.0.22 build
@@ -192,7 +208,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.93** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.95** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 

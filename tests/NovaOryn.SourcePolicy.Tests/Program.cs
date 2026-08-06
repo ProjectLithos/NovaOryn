@@ -278,6 +278,9 @@ if (bootstrapCoreLib.Contains("public sealed class String { public readonly Int3
     failures.Add("Freestanding System.String must not retain the non-terminating placeholder indexer.");
 }
 if (!bootstrapConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
+    !bootstrapConsole.Contains("public static UInt32 FontSize", StringComparison.Ordinal) ||
+    !bootstrapConsole.Contains("Initialize(BootContext boot, UInt32 fontSize)", StringComparison.Ordinal) ||
+    !bootstrapConsole.Contains("_framebuffer.Initialize(boot, fontSize)", StringComparison.Ordinal) ||
     !bootstrapConsole.Contains("Char character = value[index];", StringComparison.Ordinal) ||
     bootstrapConsole.Contains("public static unsafe Boolean Write(String value)", StringComparison.Ordinal) ||
     bootstrapConsole.Contains("fixed (Char* characters = value)", StringComparison.Ordinal))
@@ -292,6 +295,14 @@ if (!string.Equals(bootstrapCoreLib, templateCoreLib, StringComparison.Ordinal) 
     !string.Equals(bootstrapConsole, visualStudioConsole, StringComparison.Ordinal))
 {
     failures.Add("Authoritative, command-line, and Visual Studio freestanding string/console implementations must remain identical.");
+}
+
+string commandLineUserKernel = File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Kernel", "Kernel.cs"));
+string visualStudioUserKernel = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Kernel", "Kernel.cs"));
+if (!commandLineUserKernel.Contains("KernelConsole.Initialize(boot, 32U)", StringComparison.Ordinal) ||
+    !visualStudioUserKernel.Contains("KernelConsole.Initialize(boot, 32U)", StringComparison.Ordinal))
+{
+    failures.Add("Generated kernels must pass the exact 32-pixel font size used by the framebuffer renderer.");
 }
 
 string managedCompiler = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ManagedCompiler", "Program.cs"));
@@ -458,7 +469,16 @@ foreach (string required in new[]
     "context->FramebufferSize / bytesPerScanLine",
     "context->PixelFormat > 2U",
     "internal Boolean Clear()",
-    "BitmapFont.GetGlyph",
+    "BitmapFont.GetGlyphRow",
+    "BitmapFont.GlyphWidth",
+    "BitmapFont.GetRenderedGlyphWidth",
+    "BitmapFont.GetRenderedCharacterAdvance",
+    "BitmapFont.GetRenderedLineHeight",
+    "BitmapFont.GetSourceRow",
+    "BitmapFont.GetSourceColumn",
+    "_fontSize",
+    "Initialize(BootContext boot, UInt32 fontSize)",
+    "fontSize < BitmapFont.MinimumFontSize",
     "PackColor",
     "EncodeMask"
 })
@@ -468,8 +488,113 @@ foreach (string required in new[]
         failures.Add($"Managed framebuffer bootstrap is missing validation/rendering contract: {required}");
     }
 }
+string bootstrapBitmapFont = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "BitmapFont.cs"));
+string commandLineBitmapFont = File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "BitmapFont.cs"));
+string visualStudioBitmapFont = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "BitmapFont.cs"));
+string reusableBitmapFont = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Console.Framebuffer", "BitmapFont.cs"));
+string commandLineFramebuffer = File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "FramebufferConsole.cs"));
+string visualStudioFramebuffer = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "FramebufferConsole.cs"));
+if (!string.Equals(bootstrapFramebuffer, commandLineFramebuffer, StringComparison.Ordinal) ||
+    !string.Equals(bootstrapFramebuffer, visualStudioFramebuffer, StringComparison.Ordinal))
+{
+    failures.Add("Authoritative, command-line, and Visual Studio templates must contain the identical freestanding framebuffer renderer.");
+}
+if (!string.Equals(bootstrapBitmapFont, commandLineBitmapFont, StringComparison.Ordinal) ||
+    !string.Equals(bootstrapBitmapFont, visualStudioBitmapFont, StringComparison.Ordinal))
+{
+    failures.Add("Authoritative, command-line, and Visual Studio templates must contain the identical freestanding bitmap font.");
+}
+foreach (string required in new[]
+{
+    "NovaOryn Mono 8x16",
+    "GlyphWidth = 8U",
+    "GlyphHeight = 16U",
+    "CharacterAdvance = 10U",
+    "LineHeight = 20U",
+    "DefaultFontSize = 32U",
+    "GetRenderedGlyphWidth",
+    "GetRenderedCharacterAdvance",
+    "GetRenderedLineHeight",
+    "GetSourceRow",
+    "GetSourceColumn",
+    "GetGlyphRow"
+})
+{
+    if (!bootstrapBitmapFont.Contains(required, StringComparison.Ordinal))
+    {
+        failures.Add($"Freestanding framebuffer font is missing its real-font contract: {required}");
+    }
+}
+if (bootstrapBitmapFont.Contains("switch (value)", StringComparison.Ordinal) ||
+    reusableBitmapFont.Contains("switch (value)", StringComparison.Ordinal))
+{
+    failures.Add("Framebuffer glyph dispatch must use the branch-only bit tree rather than a dense switch table.");
+}
+ulong[] expectedGlyphTop = new ulong[0x7F];
+ulong[] expectedGlyphBottom = new ulong[0x7F];
+for (int character = 0x20; character <= 0x7E; character++)
+{
+    string glyphPattern = $@"Top{character:X2} = 0x([0-9A-F]{{16}})UL, Bottom{character:X2} = 0x([0-9A-F]{{16}})UL;";
+    Match freestandingGlyph = Regex.Match(bootstrapBitmapFont, glyphPattern, RegexOptions.CultureInvariant);
+    Match reusableGlyph = Regex.Match(reusableBitmapFont, glyphPattern, RegexOptions.CultureInvariant);
+    if (!freestandingGlyph.Success || !reusableGlyph.Success)
+    {
+        failures.Add($"NovaOryn Mono must define both 8-row halves for printable ASCII 0x{character:X2}.");
+        continue;
+    }
+    if (!string.Equals(freestandingGlyph.Groups[1].Value, reusableGlyph.Groups[1].Value, StringComparison.Ordinal) ||
+        !string.Equals(freestandingGlyph.Groups[2].Value, reusableGlyph.Groups[2].Value, StringComparison.Ordinal))
+    {
+        failures.Add($"Reusable and freestanding font data differ for printable ASCII 0x{character:X2}.");
+    }
+    expectedGlyphTop[character] = Convert.ToUInt64(freestandingGlyph.Groups[1].Value, 16);
+    expectedGlyphBottom[character] = Convert.ToUInt64(freestandingGlyph.Groups[2].Value, 16);
+}
+Type? reusableBitmapFontType = typeof(NovaOryn.Console.Framebuffer.FramebufferConsole).Assembly.GetType("NovaOryn.Console.Framebuffer.BitmapFont");
+System.Reflection.MethodInfo? reusableGetGlyphRow = reusableBitmapFontType?.GetMethod(
+    "GetGlyphRow",
+    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (reusableGetGlyphRow is null)
+{
+    failures.Add("Reusable framebuffer glyph-row function could not be loaded for dispatch testing.");
+}
+else
+{
+    for (int character = 0x20; character <= 0x7E; character++)
+    {
+        for (uint row = 0; row < 16U; row++)
+        {
+            ulong packed = row < 8U ? expectedGlyphTop[character] : expectedGlyphBottom[character];
+            uint rowInHalf = row < 8U ? row : row - 8U;
+            byte expectedRow = (byte)((packed >> (int)((7U - rowInHalf) * 8U)) & 0xFFUL);
+            object? result = reusableGetGlyphRow.Invoke(null, new object?[] { (char)character, row });
+            if (result is not byte actualRow || actualRow != expectedRow)
+            {
+                failures.Add($"Reusable framebuffer bit-tree dispatch failed for ASCII 0x{character:X2}, row {row}.");
+                break;
+            }
+        }
+    }
+}
+foreach (int descender in new[] { 0x67, 0x6A, 0x70, 0x71, 0x79 })
+{
+    Match descenderGlyph = Regex.Match(
+        bootstrapBitmapFont,
+        $@"Top{descender:X2} = 0x([0-9A-F]{{16}})UL, Bottom{descender:X2} = 0x([0-9A-F]{{16}})UL;",
+        RegexOptions.CultureInvariant);
+    if (!descenderGlyph.Success || (Convert.ToUInt64(descenderGlyph.Groups[2].Value, 16) & 0xFFFFFFUL) == 0)
+    {
+        failures.Add($"NovaOryn Mono descender U+{descender:X4} must draw below the baseline.");
+    }
+}
+string thirdPartyNotices = File.ReadAllText(Path.Combine(root, "THIRD-PARTY-NOTICES.md"));
+if (!thirdPartyNotices.Contains("DejaVu Sans Mono Bold 2.37", StringComparison.Ordinal) ||
+    !thirdPartyNotices.Contains("Bitstream Vera Fonts Copyright", StringComparison.Ordinal))
+{
+    failures.Add("The embedded framebuffer font must retain its DejaVu/Bitstream provenance notice.");
+}
 string kernelConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
-if (!kernelConsole.Contains("_framebuffer.Initialize(boot)", StringComparison.Ordinal) ||
+if (!kernelConsole.Contains("_framebuffer.Initialize(boot, fontSize)", StringComparison.Ordinal) ||
     !kernelConsole.Contains("_framebuffer.Clear()", StringComparison.Ordinal) ||
     !kernelConsole.Contains("Native.WriteSerial(value)", StringComparison.Ordinal) ||
     !kernelConsole.Contains("_framebuffer.Write(value)", StringComparison.Ordinal))
@@ -484,8 +609,19 @@ if (!framebufferProject.Contains("<AssemblyName>NovaOryn.Console.Framebuffer</As
 {
     failures.Add("The reusable managed framebuffer console assembly is not present.");
 }
+if (!framebufferAssembly.Contains("public uint FontSize { get; }", StringComparison.Ordinal) ||
+    !framebufferAssembly.Contains("public uint FontSize => _configuration.FontSize;", StringComparison.Ordinal) ||
+    !framebufferAssembly.Contains("Default(uint fontSize)", StringComparison.Ordinal) ||
+    !framebufferAssembly.Contains("configuration.FontSize", StringComparison.Ordinal) ||
+    !framebufferAssembly.Contains("BitmapFont.GetRenderedGlyphWidth(fontSize)", StringComparison.Ordinal) ||
+    framebufferAssembly.Contains("public uint Scale { get; }", StringComparison.Ordinal) ||
+    framebufferAssembly.Contains("configuration.Scale", StringComparison.Ordinal))
+{
+    failures.Add("The reusable framebuffer renderer must use FontSize as its single rendered-size input and must not expose a separate Scale setting.");
+}
 if (!solution.Contains("NovaOryn.Console.Framebuffer", StringComparison.Ordinal) ||
     !kernel.Contains("FramebufferConsole", StringComparison.Ordinal) ||
+    !kernel.Contains("FramebufferConfiguration.Default(32U)", StringComparison.Ordinal) ||
     !kernel.Contains("WriteLine(serial, framebuffer", StringComparison.Ordinal))
 {
     failures.Add("The solution and kernel sample must demonstrate serial/framebuffer mirroring.");
@@ -578,9 +714,39 @@ if (!File.Exists(kernelTemplate))
 {
     failures.Add("External C# kernel project template is missing Kernel.cs.");
 }
+string commandLineTemplateRoot = Path.Combine(root, "templates", "NovaOrynKernel");
+foreach (string wrapperName in new[] { "Build-Kernel.bat", "Run-Kernel.bat", "README-Kernel.md" })
+{
+    string commandLineWrapper = Path.Combine(commandLineTemplateRoot, wrapperName);
+    if (!File.Exists(commandLineWrapper))
+    {
+        failures.Add($"Command-line kernel template is missing project helper: {wrapperName}");
+    }
+}
+string buildKernelWrapper = File.ReadAllText(Path.Combine(commandLineTemplateRoot, "Build-Kernel.bat"));
+string runKernelWrapper = File.ReadAllText(Path.Combine(commandLineTemplateRoot, "Run-Kernel.bat"));
+if (!buildKernelWrapper.Contains("Build-NovaOryn.bat", StringComparison.Ordinal) ||
+    !buildKernelWrapper.Contains("-Project", StringComparison.Ordinal) ||
+    !buildKernelWrapper.Contains("-NoRun", StringComparison.Ordinal) ||
+    !runKernelWrapper.Contains("Build-NovaOryn.bat", StringComparison.Ordinal) ||
+    !runKernelWrapper.Contains("-Project", StringComparison.Ordinal) ||
+    !runKernelWrapper.Contains("-Run", StringComparison.Ordinal))
+{
+    failures.Add("Kernel project wrappers must invoke the authoritative SDK pipeline with the selected project manifest.");
+}
 
 string visualStudioTemplateRoot = Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel");
 string visualStudioKernelPath = Path.Combine(visualStudioTemplateRoot, "Kernel", "Kernel.cs");
+foreach (string wrapperName in new[] { "Build-Kernel.bat", "Run-Kernel.bat", "README-Kernel.md" })
+{
+    string commandLineWrapper = File.ReadAllText(Path.Combine(commandLineTemplateRoot, wrapperName));
+    string visualStudioWrapperPath = Path.Combine(visualStudioTemplateRoot, wrapperName);
+    if (!File.Exists(visualStudioWrapperPath) ||
+        !string.Equals(commandLineWrapper, File.ReadAllText(visualStudioWrapperPath), StringComparison.Ordinal))
+    {
+        failures.Add($"Visual Studio and command-line templates must ship the same project helper: {wrapperName}");
+    }
+}
 if (!File.Exists(visualStudioKernelPath))
 {
     failures.Add("Visual Studio kernel template is missing Kernel/Kernel.cs.");
@@ -665,6 +831,7 @@ if (!visualStudioLowLevel.Contains("class Native", StringComparison.Ordinal) || 
 string visualStudioTemplateConsole = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "Sdk", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
 if (!visualStudioTemplateConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
     !visualStudioTemplateConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal) ||
+    !visualStudioTemplateConsole.Contains("Initialize(BootContext boot, UInt32 fontSize)", StringComparison.Ordinal) ||
     visualStudioTemplateConsole.Contains("unsafe Boolean Write", StringComparison.Ordinal) ||
     visualStudioTemplateConsole.Contains("WritePort8", StringComparison.Ordinal) ||
     visualStudioTemplateConsole.Contains("0x3F8", StringComparison.Ordinal))
@@ -813,6 +980,7 @@ Console.WriteLine("[ OK ] x64 halt executes CLI and a repeating HLT loop.");
 Console.WriteLine("[ OK ] No-CoreLib kernel compilation invokes ILC directly.");
 Console.WriteLine("[ OK ] Windows NativeAOT runtime-pack resolution is not used.");
 Console.WriteLine("[ OK ] UEFI GOP capture and managed framebuffer rendering are wired.");
+Console.WriteLine("[ OK ] NovaOryn Mono 8x16 covers printable ASCII with retained descenders.");
 Console.WriteLine("[ OK ] GPT/FAT32 image creation and OVMF/QEMU runtime acceptance are wired.");
 return 0;
 

@@ -10,8 +10,11 @@ public static class Kernel
     /// <summary>Initializes the kernel platform and enters the terminal processor halt state.</summary>
     public static Boolean KMain(BootContext boot)
     {
-        if (!KernelConsole.Initialize(boot)) return false;
+        if (!KernelConsole.Initialize(boot, 32U)) return false;
         if (!KernelConsole.WriteLine("NovaOryn KMain started.")) return false;
+
+        // USER CODE: change this text, add more managed calls, then rebuild.
+        if (!KernelConsole.WriteLine("Editable kernel: change this line and rebuild.")) return false;
         if (!boot.HasFinalMemoryMap()) return false;
         if (!KernelConsole.WriteLine("Final UEFI memory map retained; ExitBootServices succeeded.")) return false;
         if (!KernelPlatform.InitializeDescriptors()) return false;

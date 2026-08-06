@@ -4,4 +4,7 @@
     <OutputType>Exe</OutputType>
     <NovaOrynSkipPublicApiValidation>true</NovaOrynSkipPublicApiValidation>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NovaOryn.Console.Framebuffer\NovaOryn.Console.Framebuffer.csproj" />
+  </ItemGroup>
 </Project>

@@ -23,5 +23,8 @@
     <ProjectReference Include="Sdk\NovaOryn.Kernel.Console\NovaOryn.Kernel.Console.csproj" />
     <ProjectReference Include="Sdk\NovaOryn.Kernel.Platform.X64\NovaOryn.Kernel.Platform.X64.csproj" />
     <None Include="NovaOrynProject.json" />
+    <None Include="Build-Kernel.bat" />
+    <None Include="Run-Kernel.bat" />
+    <None Include="README-Kernel.md" />
   </ItemGroup>
 </Project>
