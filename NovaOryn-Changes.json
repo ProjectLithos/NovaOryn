@@ -1,17 +1,23 @@
 {
   "schemaVersion": 2,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.57",
-  "baseVersion": "0.0.56",
+  "version": "0.0.58",
+  "baseVersion": "0.0.57",
   "changedFiles": [
+    "Build-NovaOryn.ps1",
     "Directory.Build.props",
     "NovaOryn-Changes.json",
-    "NovaOryn-SourceManifest.json",
     "NovaOryn.sln",
     "README.md",
     "docs/NovaOryn.Documentation.json",
-    "docs/Release-0.0.57.md",
-    "src/NovaOryn.Architecture.X64/CPU.cs",
+    "docs/Release-0.0.58.md",
+    "native/x64/Descriptors.asm",
+    "src/NovaOryn.Architecture.Contracts/DescriptorContracts.cs",
+    "src/NovaOryn.Architecture.X64.Descriptors/NativeMethods.cs",
+    "src/NovaOryn.Architecture.X64.Descriptors/NovaOryn.Architecture.X64.Descriptors.csproj",
+    "src/NovaOryn.Architecture.X64.Descriptors/X64GlobalDescriptorTable.cs",
+    "src/NovaOryn.Architecture.X64.Descriptors/X64TaskStateSegment.cs",
+    "src/NovaOryn.Linker/Program.cs",
     "src/NovaOryn.QemuLauncher/Program.cs",
     "src/NovaOryn.VisualStudio/NovaOrynPackage.cs",
     "src/NovaOryn.VisualStudio/ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.vstemplate",
@@ -19,7 +25,8 @@
     "src/NovaOryn.VisualStudio/Properties/AssemblyInfo.cs",
     "src/NovaOryn.VisualStudio/source.extension.vsixmanifest",
     "tests/NovaOryn.SourcePolicy.Tests/Program.cs",
-    "toolchain/NovaOryn.Toolchain.json"
+    "toolchain/NovaOryn.Toolchain.json",
+    "NovaOryn-SourceManifest.json"
   ],
   "deletedFiles": [],
   "renamedFiles": []

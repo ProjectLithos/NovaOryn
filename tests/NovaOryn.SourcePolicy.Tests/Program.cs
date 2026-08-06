@@ -288,6 +288,35 @@ if (!File.Exists(kernelTemplate))
     failures.Add("External C# kernel project template is missing Kernel.cs.");
 }
 
+string descriptorContracts = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Architecture.Contracts", "DescriptorContracts.cs"));
+foreach (string required in new[] { "SegmentSelector", "DescriptorPrivilegeLevel", "GlobalDescriptorTableConfiguration", "TaskStateSegmentConfiguration", "IGlobalDescriptorTable", "ITaskStateSegment", "IoPermissionBitmapPolicy" })
+{
+    if (!descriptorContracts.Contains(required, StringComparison.Ordinal)) failures.Add($"Descriptor contracts are missing {required}.");
+}
+string descriptorImplementation = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Architecture.X64.Descriptors", "X64GlobalDescriptorTable.cs"));
+string taskStateImplementation = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Architecture.X64.Descriptors", "X64TaskStateSegment.cs"));
+foreach (string required in new[] { "0x00AF9A000000FFFFUL", "0x00CF92000000FFFFUL", "0x00AFFA000000FFFFUL", "WriteTaskStateDescriptor", "TaskStateSelector" })
+{
+    if (!descriptorImplementation.Contains(required, StringComparison.Ordinal)) failures.Add($"x64 GDT implementation is missing {required}.");
+}
+foreach (string required in new[] { "RingZeroStackTop", "DoubleFaultStackTop", "NmiStackTop", "MachineCheckStackTop", "IoPermissionBitmapPolicy", "SetInterruptStack" })
+{
+    if (!taskStateImplementation.Contains(required, StringComparison.Ordinal)) failures.Add($"x64 TSS implementation is missing {required}.");
+}
+string descriptorAssembly = File.ReadAllText(Path.Combine(root, "native", "x64", "Descriptors.asm"));
+foreach (string required in new[] { "lgdt", "ltr ax", "retfq", "mov ds, ax", "mov ss, ax" })
+{
+    if (!descriptorAssembly.Contains(required, StringComparison.Ordinal)) failures.Add($"Native descriptor support is missing {required}.");
+}
+if (!buildScript.Contains("Descriptors.asm", StringComparison.Ordinal) || !linker.Contains("Descriptors.obj", StringComparison.Ordinal))
+{
+    failures.Add("Descriptor native object must be assembled and linked into the EFI image.");
+}
+if (!solution.Contains("NovaOryn.Architecture.X64.Descriptors", StringComparison.Ordinal))
+{
+    failures.Add("The authoritative solution must include the x64 descriptors assembly.");
+}
+
 if (failures.Count != 0)
 {
     foreach (string failure in failures)

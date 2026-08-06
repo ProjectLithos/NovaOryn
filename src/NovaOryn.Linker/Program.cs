@@ -64,7 +64,8 @@ static int MainEntry(string[] args)
     string entry = Path.Combine(nativeRoot, "Entry.obj");
     string cpu = Path.Combine(nativeRoot, "Cpu.obj");
     string runtime = Path.Combine(nativeRoot, "Runtime.obj");
-    foreach (string file in new[] { entry, cpu, runtime })
+    string descriptors = Path.Combine(nativeRoot, "Descriptors.obj");
+    foreach (string file in new[] { entry, cpu, runtime, descriptors })
     {
         if (!File.Exists(file))
         {
@@ -87,6 +88,7 @@ static int MainEntry(string[] args)
         entry,
         cpu,
         runtime,
+        descriptors,
         nativeObject
     ];
 
