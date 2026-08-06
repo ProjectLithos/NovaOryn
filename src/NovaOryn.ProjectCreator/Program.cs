@@ -62,7 +62,7 @@ static bool MigrateLegacyRootKernel(string output)
         return false;
     }
 
-    string backup = legacyRootKernel + ".pre-0.0.73.bak";
+    string backup = legacyRootKernel + ".pre-0.0.74.bak";
     File.Copy(legacyRootKernel, backup, true);
     File.Delete(legacyRootKernel);
     Console.WriteLine($"[ OK ] Migrated legacy root kernel: {legacyRootKernel}");
@@ -73,13 +73,18 @@ static bool MigrateLegacyRootKernel(string output)
 static bool IsSdkGeneratedLegacyKernel(string path)
 {
     string source = File.ReadAllText(path);
-    bool monolithic = source.Contains("internal static class Native", StringComparison.Ordinal) &&
-        source.Contains("WriteLineDescriptors", StringComparison.Ordinal) &&
-        source.Contains("InitializeSerial", StringComparison.Ordinal);
-    bool previousGenerated = source.Contains("[RuntimeExport(\"NovaOrynManagedEntry\")]", StringComparison.Ordinal) &&
-        source.Contains("KernelPlatform.InitializeDescriptors", StringComparison.Ordinal) &&
+    bool exposesNativeInterop = source.Contains("DllImport", StringComparison.Ordinal) &&
+        source.Contains("WritePort8", StringComparison.Ordinal) &&
+        source.Contains("NovaOrynX64", StringComparison.Ordinal);
+    bool monolithicConsole = source.Contains("FramebufferConsole", StringComparison.Ordinal) &&
+        source.Contains("InitializeSerial", StringComparison.Ordinal) &&
+        source.Contains("WriteLineDescriptors", StringComparison.Ordinal);
+    bool exportedBootstrap = source.Contains("RuntimeExport", StringComparison.Ordinal) &&
+        source.Contains("NovaOrynManagedEntry", StringComparison.Ordinal) &&
+        source.Contains("KMain", StringComparison.Ordinal);
+    bool previousGenerated = source.Contains("KernelPlatform.InitializeDescriptors", StringComparison.Ordinal) &&
         source.Contains("KernelConsole.WriteLine", StringComparison.Ordinal);
-    return monolithic || previousGenerated;
+    return (exposesNativeInterop && monolithicConsole && exportedBootstrap) || previousGenerated;
 }
 
 static string FindSdkRoot(string start)

@@ -237,10 +237,17 @@ if (!projectCreator.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordi
 }
 if (!projectCreator.Contains("MigrateLegacyRootKernel", StringComparison.Ordinal) ||
     !projectCreator.Contains("Path.Combine(output, \"Kernel.cs\")", StringComparison.Ordinal) ||
-    !projectCreator.Contains(".pre-0.0.73.bak", StringComparison.Ordinal) ||
+    !projectCreator.Contains(".pre-0.0.74.bak", StringComparison.Ordinal) ||
     !projectCreator.Contains("File.Delete(legacyRootKernel)", StringComparison.Ordinal))
 {
     failures.Add("Project creation must migrate and remove the obsolete root-level generated Kernel.cs.");
+}
+if (!projectCreator.Contains("source.Contains(\"DllImport\"", StringComparison.Ordinal) ||
+    !projectCreator.Contains("source.Contains(\"WritePort8\"", StringComparison.Ordinal) ||
+    !projectCreator.Contains("source.Contains(\"FramebufferConsole\"", StringComparison.Ordinal) ||
+    !projectCreator.Contains("source.Contains(\"NovaOrynManagedEntry\"", StringComparison.Ordinal))
+{
+    failures.Add("Legacy kernel migration must recognize the generated monolithic low-level kernel by stable structural markers.");
 }
 string lowLevelAssembly = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.X64.LowLevel", "Native.cs"));
 foreach (string nativeMember in new[] { "class Native", "WritePort8", "InitializeBootstrapDescriptors", "InitializeBootstrapInterrupts", "DisableLegacyPic", "Halt" })
