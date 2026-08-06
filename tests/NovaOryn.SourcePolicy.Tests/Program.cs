@@ -215,7 +215,7 @@ if (bootstrapKernel.Contains("RuntimeExport", StringComparison.Ordinal) || boots
 }
 string kernelEntry = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Entry.X64", "KernelEntry.cs"));
 if (!kernelEntry.Contains("RuntimeExport(\"NovaOrynManagedEntry\")", StringComparison.Ordinal) ||
-    !kernelEntry.Contains("Kernel.KMain(new BootContext(bootContextAddress))", StringComparison.Ordinal))
+    !kernelEntry.Contains("global::NovaOryn.Kernel.Bootstrap.Kernel.KMain(new BootContext(bootContextAddress))", StringComparison.Ordinal))
 {
     failures.Add("The separate x64 entry assembly must own the runtime export and dispatch to KMain.");
 }

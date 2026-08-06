@@ -10,6 +10,6 @@ internal static class KernelEntry
     [RuntimeExport("NovaOrynManagedEntry")]
     private static Boolean NativeEntry(UInt64 bootContextAddress)
     {
-        return Kernel.KMain(new BootContext(bootContextAddress));
+        return global::NovaOryn.Kernel.Bootstrap.Kernel.KMain(new BootContext(bootContextAddress));
     }
 }
