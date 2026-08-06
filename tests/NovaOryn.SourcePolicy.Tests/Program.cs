@@ -317,6 +317,36 @@ if (!solution.Contains("NovaOryn.Architecture.X64.Descriptors", StringComparison
     failures.Add("The authoritative solution must include the x64 descriptors assembly.");
 }
 
+
+string interruptContracts = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Interrupts.Contracts", "InterruptContracts.cs"));
+foreach (string required in new[] { "InterruptContext", "InterruptHandler", "InterruptResult", "InterruptRegistrationResult", "IInterruptDescriptorTable", "IInterruptVectorAllocator", "IExceptionDiagnosticSink", "ControlRegister2", "PrivilegeTransition" })
+{
+    if (!interruptContracts.Contains(required, StringComparison.Ordinal)) failures.Add($"Interrupt contracts are missing {required}.");
+}
+string idtImplementation = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Architecture.X64.Interrupts", "X64InterruptDescriptorTable.cs"));
+foreach (string required in new[] { "EntryCount = 256", "WriteGate", "GetInterruptStub", "InterruptGateType", "InterruptStackTable", "DispatchNative", "Remove(" })
+{
+    if (!idtImplementation.Contains(required, StringComparison.Ordinal)) failures.Add($"x64 IDT implementation is missing {required}.");
+}
+string exceptionHandlers = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Architecture.X64.Interrupts", "EssentialExceptionHandlers.cs"));
+foreach (string required in new[] { "Divide error", "Invalid opcode", "General protection fault", "Page fault", "Double fault", "Stack-segment fault", "Non-maskable interrupt", "Machine check", "Current thread/process", "Stack trace" })
+{
+    if (!exceptionHandlers.Contains(required, StringComparison.Ordinal)) failures.Add($"Essential exception diagnostics are missing {required}.");
+}
+string interruptAssembly = File.ReadAllText(Path.Combine(root, "native", "x64", "Interrupts.asm"));
+foreach (string required in new[] { "NovaOrynX64InterruptStub0", "NovaOrynX64InterruptStub255", "NovaOrynX64InterruptStubTable", "lidt", "iretq", "mov rax, cr2", "push qword 0", "NovaOrynX64StopProcessor", "NovaOrynX64SetInterruptStackSwitch" })
+{
+    if (!interruptAssembly.Contains(required, StringComparison.Ordinal)) failures.Add($"Native interrupt support is missing {required}.");
+}
+if (!buildScript.Contains("Interrupts.asm", StringComparison.Ordinal) || !linker.Contains("Interrupts.obj", StringComparison.Ordinal))
+{
+    failures.Add("Interrupt native object must be assembled and linked into the EFI image.");
+}
+if (!solution.Contains("NovaOryn.Interrupts.Contracts", StringComparison.Ordinal) || !solution.Contains("NovaOryn.Architecture.X64.Interrupts", StringComparison.Ordinal))
+{
+    failures.Add("The authoritative solution must include the interrupt contracts and x64 implementation assemblies.");
+}
+
 if (failures.Count != 0)
 {
     foreach (string failure in failures)

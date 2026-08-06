@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.58",
+  "version": "0.0.59",
   "outputDirectory": "Artifacts/Documentation/site",
   "publicAssemblies": [
     "NovaOryn.Primitives",
@@ -14,7 +14,9 @@
     "NovaOryn.Architecture.Arm64",
     "NovaOryn.Console.Contracts",
     "NovaOryn.Console.Serial",
-    "NovaOryn.Console.Framebuffer"
+    "NovaOryn.Console.Framebuffer",
+    "NovaOryn.Interrupts.Contracts",
+    "NovaOryn.Architecture.X64.Interrupts"
   ],
   "toolAssemblies": [
     "NovaOryn.ProjectModel",
