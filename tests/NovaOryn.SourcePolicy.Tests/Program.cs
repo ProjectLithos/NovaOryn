@@ -163,6 +163,11 @@ if (!bootstrapCoreLib.Contains("private readonly Int32 _stringLength;", StringCo
 {
     failures.Add("Freestanding System.String must expose its NativeAOT inline character layout and a terminating character indexer.");
 }
+if (!bootstrapCoreLib.Contains("#pragma warning disable CS0649", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("#pragma warning restore CS0649", StringComparison.Ordinal))
+{
+    failures.Add("Freestanding System.String runtime layout fields must use a narrowly scoped CS0649 suppression because NativeAOT, not C# constructors, populates them.");
+}
 if (bootstrapCoreLib.Contains("public sealed class String { public readonly Int32 Length; public Char this[Int32 index] { get { while (true)", StringComparison.Ordinal))
 {
     failures.Add("Freestanding System.String must not retain the non-terminating placeholder indexer.");

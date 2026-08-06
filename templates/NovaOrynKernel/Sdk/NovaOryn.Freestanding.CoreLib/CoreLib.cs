@@ -37,8 +37,10 @@ namespace System
     }
     public sealed unsafe class String
     {
+#pragma warning disable CS0649 // NativeAOT materializes string objects and populates these runtime layout fields.
         private readonly Int32 _stringLength;
         private Char _firstChar;
+#pragma warning restore CS0649
 
         public Int32 Length
         {
