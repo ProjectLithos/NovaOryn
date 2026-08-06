@@ -511,6 +511,24 @@ if (!solution.Contains("NovaOryn.InterruptControllers.Contracts", StringComparis
     failures.Add("The authoritative solution must include interrupt-controller contracts and the x64 implementation.");
 }
 
+string updaterSource = File.ReadAllText(Path.Combine(root, "Update-NovaOryn.ps1"));
+if (!updaterSource.Contains("Get-ArchiveDeclaredDeletionSet", StringComparison.Ordinal) ||
+    !updaterSource.Contains("Get-ArchiveTargetPathSet", StringComparison.Ordinal) ||
+    !updaterSource.Contains("$isMissingLocally -and -not $targetPaths.Contains($normalized)", StringComparison.Ordinal))
+{
+    failures.Add("Updater must accept locally absent carried-forward deletions absent from the selected target source manifest.");
+}
+if (!updaterSource.Contains("$statusCode[0] -eq 'D'", StringComparison.Ordinal) ||
+    !updaterSource.Contains("$statusCode[1] -eq 'D'", StringComparison.Ordinal))
+{
+    failures.Add("Updater must recognise tracked deletions in either Git porcelain status column.");
+}
+if (!updaterSource.Contains("NovaOryn-SourceManifest.json", StringComparison.Ordinal) ||
+    !updaterSource.Contains("archiveHashes.ContainsKey($normalized)", StringComparison.Ordinal))
+{
+    failures.Add("Updater must permit the selected archive to replace generated source-manifest metadata.");
+}
+
 if (failures.Count != 0)
 {
     foreach (string failure in failures)
@@ -526,18 +544,6 @@ Console.WriteLine("[ OK ] No-CoreLib kernel compilation invokes ILC directly.");
 Console.WriteLine("[ OK ] Windows NativeAOT runtime-pack resolution is not used.");
 Console.WriteLine("[ OK ] UEFI GOP capture and managed framebuffer rendering are wired.");
 Console.WriteLine("[ OK ] GPT/FAT32 image creation and OVMF/QEMU runtime acceptance are wired.");
-string updaterSource = File.ReadAllText(Path.Combine(root, "Update-NovaOryn.ps1"));
-Assert(updaterSource.Contains("Get-ArchiveDeclaredDeletionSet", StringComparison.Ordinal) &&
-       updaterSource.Contains("Get-ArchiveTargetPathSet", StringComparison.Ordinal) &&
-       updaterSource.Contains("$isMissingLocally -and -not $targetPaths.Contains($normalized)", StringComparison.Ordinal),
-       "Updater accepts locally absent carried-forward deletions absent from the selected target source manifest.");
-Assert(updaterSource.Contains("$statusCode[0] -eq 'D'", StringComparison.Ordinal) &&
-       updaterSource.Contains("$statusCode[1] -eq 'D'", StringComparison.Ordinal),
-       "Updater recognises tracked deletions in either Git porcelain status column.");
-Assert(updaterSource.Contains("NovaOryn-SourceManifest.json", StringComparison.Ordinal) &&
-       updaterSource.Contains("archiveHashes.ContainsKey($normalized)", StringComparison.Ordinal),
-       "Updater permits the selected archive to replace generated source-manifest metadata.");
-
 return 0;
 
 static string FindRepositoryRoot(string start)
