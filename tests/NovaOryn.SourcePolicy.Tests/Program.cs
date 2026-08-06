@@ -529,8 +529,14 @@ Console.WriteLine("[ OK ] GPT/FAT32 image creation and OVMF/QEMU runtime accepta
 string updaterSource = File.ReadAllText(Path.Combine(root, "Update-NovaOryn.ps1"));
 Assert(updaterSource.Contains("Get-ArchiveDeclaredDeletionSet", StringComparison.Ordinal) &&
        updaterSource.Contains("Get-ArchiveTargetPathSet", StringComparison.Ordinal) &&
-       updaterSource.Contains("-not $targetPaths.Contains($normalized)", StringComparison.Ordinal),
-       "Updater accepts carried-forward deletions absent from the selected target source manifest.");
+       updaterSource.Contains("$isMissingLocally -and -not $targetPaths.Contains($normalized)", StringComparison.Ordinal),
+       "Updater accepts locally absent carried-forward deletions absent from the selected target source manifest.");
+Assert(updaterSource.Contains("$statusCode[0] -eq 'D'", StringComparison.Ordinal) &&
+       updaterSource.Contains("$statusCode[1] -eq 'D'", StringComparison.Ordinal),
+       "Updater recognises tracked deletions in either Git porcelain status column.");
+Assert(updaterSource.Contains("NovaOryn-SourceManifest.json", StringComparison.Ordinal) &&
+       updaterSource.Contains("archiveHashes.ContainsKey($normalized)", StringComparison.Ordinal),
+       "Updater permits the selected archive to replace generated source-manifest metadata.");
 
 return 0;
 
@@ -547,3 +553,5 @@ static string FindRepositoryRoot(string start)
     }
     throw new DirectoryNotFoundException("NovaOryn repository root was not found.");
 }
+
+// Release policy: Update-NovaOryn.bat must launch Bootstrap-Update-NovaOryn.ps1 so updater fixes run from the selected archive.

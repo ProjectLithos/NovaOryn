@@ -1,3 +1,4 @@
+# This script may be launched from inside the selected archive by Bootstrap-Update-NovaOryn.ps1.
 param(
     [Parameter(Position = 0)]
     [string]$ArchiveFolder
@@ -234,8 +235,24 @@ function Assert-SafeWorkingTree([string]$RepositoryRoot, [string]$ArchivePath) {
             $normalized = $candidate.Trim('"').Replace('\', '/')
             $localPath = Join-Path $RepositoryRoot $normalized
 
-            # A deletion or rename source is safe only when the selected release explicitly declares it.
-            if (($statusCode.Contains('D') -or $pathText.Contains(' -> ')) -and ($archivePaths.Contains($normalized) -or $declaredDeletions.Contains($normalized) -or -not $targetPaths.Contains($normalized))) {
+            # A tracked path that is already absent locally and absent from the selected
+            # target source manifest is a valid carried-forward deletion. This filesystem
+            # and target-state rule is independent of which Git porcelain column reports D.
+            $isMissingLocally = -not (Test-Path -LiteralPath $localPath)
+            if ($isMissingLocally -and -not $targetPaths.Contains($normalized)) {
+                continue
+            }
+
+            # Immediate declared deletions and rename sources remain valid as well.
+            $isDeletion = ($statusCode.Length -ge 2) -and (($statusCode[0] -eq 'D') -or ($statusCode[1] -eq 'D'))
+            $isRename = $pathText.Contains(' -> ')
+            if (($isDeletion -or $isRename) -and ($archivePaths.Contains($normalized) -or $declaredDeletions.Contains($normalized))) {
+                continue
+            }
+
+            # The source manifest is generated release-control data. A selected archive
+            # always replaces it, so an older unapplied manifest is safe to overwrite.
+            if ($normalized.Equals('NovaOryn-SourceManifest.json', [StringComparison]::OrdinalIgnoreCase) -and $archiveHashes.ContainsKey($normalized)) {
                 continue
             }
 
