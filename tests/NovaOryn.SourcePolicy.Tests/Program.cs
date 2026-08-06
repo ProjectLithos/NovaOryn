@@ -361,7 +361,7 @@ foreach (string required in new[]
 string kernelConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
 if (!kernelConsole.Contains("_framebuffer.Initialize(boot)", StringComparison.Ordinal) ||
     !kernelConsole.Contains("_framebuffer.Clear()", StringComparison.Ordinal) ||
-    !kernelConsole.Contains("Native.WritePort8(0x3F8, value)", StringComparison.Ordinal) ||
+    !kernelConsole.Contains("Native.WriteSerial(value)", StringComparison.Ordinal) ||
     !kernelConsole.Contains("_framebuffer.Write(value)", StringComparison.Ordinal))
 {
     failures.Add("The managed console assembly must initialize and clear the framebuffer and mirror each serial character to it.");

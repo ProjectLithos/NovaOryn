@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.89
+# Nova Oryn OS SDK 0.0.90
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.89
+## Release 0.0.90
 
-Release 0.0.89 makes `KernelConsole.Write` and `KernelConsole.WriteLine` ordinary safe managed C# functions. The console now uses the terminating freestanding `System.String` indexer, while COM1 port numbers and the raw `WritePort8` import are confined to `NovaOryn.Kernel.X64.LowLevel.dll`. The authoritative bootstrap, command-line template, and Visual Studio template use identical console and low-level implementations.
+Release 0.0.90 corrects the console-mirroring source-policy test to validate the separated low-level serial API actually used by the managed console. The policy now requires `Native.WriteSerial(value)` together with framebuffer initialization, clearing, and `_framebuffer.Write(value)`, instead of incorrectly requiring raw `WritePort8` and the COM1 port address to reappear inside `NovaOryn.Kernel.Console.dll`.
 
 ## Release 0.0.56
 
@@ -102,7 +102,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.89.md` for this release.
+See `docs/Release-0.0.90.md` for this release.
 
 
 ## 0.0.22 build
@@ -174,7 +174,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.89** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.90** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 
