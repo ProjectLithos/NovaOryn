@@ -235,7 +235,7 @@ if (!bootstrapManifest.Contains("NovaOryn.Kernel.Entry.X64.csproj", StringCompar
     failures.Add("The authoritative bootstrap manifest must compile through the separate entry assembly.");
 }
 string projectCreator = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ProjectCreator", "Program.cs"));
-if (!projectCreator.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordinal) ||
+if (!projectCreator.Contains("IsSdkGeneratedLowLevelKernel", StringComparison.Ordinal) ||
     projectCreator.Contains(".pre-0.0.69.bak", StringComparison.Ordinal) ||
     projectCreator.Contains(".pre-0.0.74.bak", StringComparison.Ordinal))
 {
@@ -247,6 +247,13 @@ if (!projectCreator.Contains("MigrateLegacyRootKernel", StringComparison.Ordinal
     !projectCreator.Contains("File.Delete(legacyRootKernel)", StringComparison.Ordinal))
 {
     failures.Add("Project creation must migrate and remove the obsolete root-level generated Kernel.cs.");
+}
+if (!projectCreator.Contains("ResolveMainProjectPath", StringComparison.Ordinal) ||
+    !projectCreator.Contains("Path.GetFileName(mainProjectPath)", StringComparison.Ordinal) ||
+    !projectCreator.Contains("RemoveSdkOwnedLegacyTrees", StringComparison.Ordinal) ||
+    !projectCreator.Contains("Directory.Delete(path, true)", StringComparison.Ordinal))
+{
+    failures.Add("Project refresh must preserve the selected root project filename and replace SDK-owned monolithic support trees.");
 }
 if (!projectCreator.Contains("source.Contains(\"DllImport\"", StringComparison.Ordinal) ||
     !projectCreator.Contains("source.Contains(\"WritePort8\"", StringComparison.Ordinal) ||
@@ -405,7 +412,13 @@ if (!buildScript.Contains("Refreshing the existing external NovaOryn kernel proj
 {
     failures.Add("Build script must safely refresh an existing external NovaOryn kernel project.");
 }
-if (!projectCreatorDefaults.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordinal) ||
+if (!buildScript.Contains("Refreshing the selected NovaOryn project before compilation", StringComparison.Ordinal) ||
+    !buildScript.Contains("$dotnet $projectCreator create --output $selectedProjectDirectory --sdk-root $root", StringComparison.Ordinal) ||
+    !buildScript.Contains("Selected user kernel is high-level only", StringComparison.Ordinal))
+{
+    failures.Add("Build script must refresh and validate the project selected by Visual Studio before compiling it.");
+}
+if (!projectCreatorDefaults.Contains("IsSdkGeneratedLowLevelKernel", StringComparison.Ordinal) ||
     !projectCreatorDefaults.Contains("\"DllImport\"", StringComparison.Ordinal) ||
     !projectCreatorDefaults.Contains("\"WritePort8\"", StringComparison.Ordinal) ||
     !projectCreatorDefaults.Contains("\"FramebufferConsole\"", StringComparison.Ordinal) ||
@@ -420,6 +433,111 @@ string kernelTemplate = Path.Combine(root, "templates", "NovaOrynKernel", "Kerne
 if (!File.Exists(kernelTemplate))
 {
     failures.Add("External C# kernel project template is missing Kernel.cs.");
+}
+
+string visualStudioTemplateRoot = Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel");
+string visualStudioKernelPath = Path.Combine(visualStudioTemplateRoot, "Kernel", "Kernel.cs");
+if (!File.Exists(visualStudioKernelPath))
+{
+    failures.Add("Visual Studio kernel template is missing Kernel/Kernel.cs.");
+}
+else
+{
+    string visualStudioKernel = File.ReadAllText(visualStudioKernelPath);
+    string commandLineKernel = File.ReadAllText(kernelTemplate);
+    if (!string.Equals(visualStudioKernel, commandLineKernel, StringComparison.Ordinal))
+    {
+        failures.Add("Visual Studio and command-line templates must ship the same high-level user Kernel.cs.");
+    }
+    foreach (string forbiddenToken in new[] { "DllImport", "class Native", "WritePort8", "RuntimeExport", "NativeEntry", "FramebufferConsole", "0x3F8" })
+    {
+        if (visualStudioKernel.Contains(forbiddenToken, StringComparison.Ordinal))
+        {
+            failures.Add($"Visual Studio user Kernel.cs exposes low-level token: {forbiddenToken}");
+        }
+    }
+    foreach (string requiredToken in new[] { "KernelConsole.WriteLine", "KernelPlatform.InitializeDescriptors", "KernelPlatform.InitializeInterrupts", "KernelPlatform.DisableLegacyPic", "KernelPlatform.Halt" })
+    {
+        if (!visualStudioKernel.Contains(requiredToken, StringComparison.Ordinal))
+        {
+            failures.Add($"Visual Studio user Kernel.cs is missing high-level call: {requiredToken}");
+        }
+    }
+}
+foreach (string obsoleteTemplateFile in new[]
+{
+    Path.Combine("Boot", "BootContext.cs"),
+    Path.Combine("Console", "FramebufferConsole.cs"),
+    Path.Combine("Console", "BitmapFont.cs"),
+    Path.Combine("Runtime", "CoreLib.cs")
+})
+{
+    if (File.Exists(Path.Combine(visualStudioTemplateRoot, obsoleteTemplateFile)))
+    {
+        failures.Add($"Visual Studio template still exposes obsolete monolithic source: {obsoleteTemplateFile}");
+    }
+}
+string visualStudioKernelProject = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "NovaOrynKernel.csproj"));
+foreach (string requiredProjectReference in new[]
+{
+    "NovaOryn.Freestanding.CoreLib.csproj",
+    "NovaOryn.Kernel.Console.csproj",
+    "NovaOryn.Kernel.Platform.X64.csproj"
+})
+{
+    if (!visualStudioKernelProject.Contains(requiredProjectReference, StringComparison.Ordinal))
+    {
+        failures.Add($"Visual Studio kernel project is missing separated assembly reference: {requiredProjectReference}");
+    }
+}
+if (visualStudioKernelProject.Contains("Runtime\\CoreLib.cs", StringComparison.Ordinal) ||
+    visualStudioKernelProject.Contains("Boot\\BootContext.cs", StringComparison.Ordinal) ||
+    visualStudioKernelProject.Contains("Console\\FramebufferConsole.cs", StringComparison.Ordinal))
+{
+    failures.Add("Visual Studio kernel project must not compile low-level support into the user assembly.");
+}
+string visualStudioManifest = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "NovaOrynProject.json"));
+if (!visualStudioManifest.Contains("Sdk/NovaOryn.Kernel.Entry.X64/NovaOryn.Kernel.Entry.X64.csproj", StringComparison.Ordinal))
+{
+    failures.Add("Visual Studio project manifest must compile through the separate x64 entry assembly.");
+}
+string visualStudioEntryProject = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "Sdk", "NovaOryn.Kernel.Entry.X64", "NovaOryn.Kernel.Entry.X64.csproj"));
+if (!visualStudioEntryProject.Contains("..\\..\\$safeprojectname$.csproj", StringComparison.Ordinal) ||
+    visualStudioEntryProject.Contains("..\\..\\..\\$safeprojectname$.csproj", StringComparison.Ordinal))
+{
+    failures.Add("Visual Studio entry project must reference the generated user project exactly two directories above the entry assembly.");
+}
+string commandLineEntryProject = File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Entry.X64", "NovaOryn.Kernel.Entry.X64.csproj"));
+if (!commandLineEntryProject.Contains("..\\..\\NovaOrynKernel.csproj", StringComparison.Ordinal) ||
+    commandLineEntryProject.Contains("..\\..\\..\\NovaOrynKernel.csproj", StringComparison.Ordinal))
+{
+    failures.Add("Command-line entry project must reference the user kernel exactly two directories above the entry assembly.");
+}
+string visualStudioLowLevel = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "Sdk", "NovaOryn.Kernel.X64.LowLevel", "Native.cs"));
+if (!visualStudioLowLevel.Contains("class Native", StringComparison.Ordinal) || !visualStudioLowLevel.Contains("DllImport", StringComparison.Ordinal))
+{
+    failures.Add("Visual Studio template must keep native imports in the separate low-level assembly.");
+}
+string visualStudioConsole = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "Sdk", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
+if (!visualStudioConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
+    !visualStudioConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal))
+{
+    failures.Add("Visual Studio template must expose normal managed Write and WriteLine functions from the console assembly.");
+}
+string visualStudioVstemplate = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "NovaOrynKernel.vstemplate"));
+if (!visualStudioVstemplate.Contains("NovaOryn.Kernel.X64.LowLevel", StringComparison.Ordinal) ||
+    visualStudioVstemplate.Contains("<Folder Name=\"Runtime\"", StringComparison.Ordinal) ||
+    visualStudioVstemplate.Contains("<Folder Name=\"Boot\"", StringComparison.Ordinal) ||
+    visualStudioVstemplate.Contains("<Folder Name=\"Console\"", StringComparison.Ordinal))
+{
+    failures.Add("Visual Studio .vstemplate must package separated SDK assemblies and reject the obsolete monolithic folders.");
+}
+string vsixBuildScript = File.ReadAllText(Path.Combine(root, "Build-NovaOrynVSIX.ps1"));
+if (!vsixBuildScript.Contains("NovaOryn.Kernel.X64.LowLevel/Native.cs", StringComparison.Ordinal) ||
+    !vsixBuildScript.Contains("VSIX user Kernel.cs exposes low-level token", StringComparison.Ordinal) ||
+    !vsixBuildScript.Contains("obsolete monolithic template content", StringComparison.Ordinal))
+{
+    failures.Add("VSIX build validation must inspect the exact high-level kernel and separated template payload.");
 }
 
 string descriptorContracts = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Architecture.Contracts", "DescriptorContracts.cs"));

@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.85
+# Nova Oryn OS SDK 0.0.86
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.85
+## Release 0.0.86
 
-Release 0.0.85 fixes Windows PowerShell 5.1 compatibility in the external-kernel validation step. The build now uses an ordinal `IndexOf` check instead of the unavailable two-argument `String.Contains` overload.
+Release 0.0.86 replaces the stale monolithic Visual Studio kernel template with the same separated freestanding assembly design used by the authoritative bootstrap and command-line project template. New Visual Studio kernels expose only high-level `KernelConsole` and `KernelPlatform` calls in `Kernel\Kernel.cs`; native imports, serial I/O, framebuffer rendering, runtime entry glue, and CoreLib support live in separate SDK assemblies. The generated entry project also uses the corrected two-directory reference back to the user kernel project. When Visual Studio supplies `-Project`, the selected project directory is refreshed before compilation, so older generated monolithic kernels outside the default repository path are migrated too.
 
 ## Release 0.0.56
 
@@ -30,9 +30,9 @@ The editable C# kernel project is created automatically at:
 C:\Users\<UserName>\Source\Repos\NovaOrynKernel
 ```
 
-`Build-NovaOryn.bat` creates it through the compiled `NovaOryn.ProjectCreator` tool when it does not already exist. The SDK remains in `C:\NovaOryn`; generated EFI, image and run artifacts remain under `C:\NovaOryn\Artifacts`. Existing kernel files are not overwritten.
+`Build-NovaOryn.bat` refreshes this project through the compiled `NovaOryn.ProjectCreator` tool. SDK-owned support assemblies are updated, recognised generated monolithic kernels are removed, and a genuinely user-authored `Kernel\Kernel.cs` is preserved. The SDK remains in `C:\NovaOryn`; generated EFI, image and run artifacts remain under `C:\NovaOryn\Artifacts`.
 
-Open `NovaOrynKernel.sln` in Visual Studio to edit `Kernel.cs`. The default build consumes `NovaOrynProject.json` from this external project directory while preserving the framebuffer, serial and halt behaviour completed in the preceding releases.
+Open `NovaOrynKernel.sln` in Visual Studio to edit `Kernel\Kernel.cs`. A normal SDK build compiles the authoritative in-repository bootstrap. Visual Studio Build/Run commands pass the selected project manifest explicitly. In either path, the user kernel contains high-level managed calls while native I/O, framebuffer implementation, runtime entry glue, and architecture initialization remain in separate SDK assemblies.
 
 ## Source update workflow
 
@@ -102,7 +102,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.85.md` for this release.
+See `docs/Release-0.0.86.md` for this release.
 
 
 ## 0.0.22 build
@@ -174,11 +174,11 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.85** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.86** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 
-Generated kernel projects place boot contracts, console code, kernel entry code and runtime support into `Boot`, `Console`, `Kernel` and `Runtime` subdirectories.
+Generated kernel projects expose the user-owned source only under `Kernel`. Freestanding CoreLib, console implementation, native entry glue, x64 platform services, and native interop are compiled as separate SDK assemblies under the project’s hidden `Sdk` support tree.
 
 
 ## SDK usage documentation
@@ -187,7 +187,7 @@ Run `Build-NovaOrynDocumentation.bat` to regenerate the offline site at `Artifac
 
 ## IDT and CPU exceptions
 
-Version 0.0.85 adds all 256 x64 IDT vectors, a normalised managed/native exception frame, driver-vector allocation, handler lifecycle management, IST-aware essential exception handlers, and terminal fatal handling.
+NovaOryn provides all 256 x64 IDT vectors, a normalised managed/native exception frame, driver-vector allocation, handler lifecycle management, IST-aware essential exception handlers, and terminal fatal handling.
 
 
-Version 0.0.85 adds controller-neutral IRQ routing, legacy PIC takeover, APIC EOI/IPI, I/O APIC redirection, MSI/MSI-X message creation, x2APIC delivery, affinity, priorities, polarity, trigger mode, and masking.
+NovaOryn provides controller-neutral IRQ routing, legacy PIC takeover, APIC EOI/IPI, I/O APIC redirection, MSI/MSI-X message creation, x2APIC delivery, affinity, priorities, polarity, trigger mode, and masking.

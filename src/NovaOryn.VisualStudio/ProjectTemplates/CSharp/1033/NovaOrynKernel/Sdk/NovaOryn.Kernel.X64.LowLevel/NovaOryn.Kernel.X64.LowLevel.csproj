@@ -12,12 +12,9 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
-    <AssemblyName>NovaOryn.Kernel.Entry.X64</AssemblyName>
-    <NovaOrynSystemModule>NovaOryn.Freestanding.CoreLib</NovaOrynSystemModule>
+    <AssemblyName>NovaOryn.Kernel.X64.LowLevel</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\NovaOryn.Freestanding.CoreLib\NovaOryn.Freestanding.CoreLib.csproj" />
-    <ProjectReference Include="..\NovaOryn.Kernel.Console\NovaOryn.Kernel.Console.csproj" />
-    <ProjectReference Include="..\..\NovaOrynKernel.csproj" />
   </ItemGroup>
 </Project>

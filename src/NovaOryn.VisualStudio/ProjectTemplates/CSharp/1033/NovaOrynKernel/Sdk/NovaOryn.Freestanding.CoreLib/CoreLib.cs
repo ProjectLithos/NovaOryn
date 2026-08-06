@@ -35,7 +35,7 @@ namespace System
             while (true) { }
         }
     }
-    public sealed class String { public readonly Int32 Length; }
+    public sealed class String { public readonly Int32 Length; public Char this[Int32 index] { get { while (true) { } } } }
     public abstract class Delegate { }
     public abstract class MulticastDelegate : Delegate { }
     public class Attribute { }
@@ -51,9 +51,17 @@ namespace System
     public struct RuntimeFieldHandle { }
     public struct Nullable<T> where T : struct { }
 
+    namespace Reflection
+    {
+        public sealed class DefaultMemberAttribute : Attribute
+        {
+            public DefaultMemberAttribute(String memberName) { }
+        }
+    }
+
     namespace Runtime
     {
-        internal sealed class RuntimeExportAttribute : Attribute
+        public sealed class RuntimeExportAttribute : Attribute
         {
             public RuntimeExportAttribute(String name) { }
         }

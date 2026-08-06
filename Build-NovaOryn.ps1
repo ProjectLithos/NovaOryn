@@ -208,8 +208,9 @@ if (Test-Path -LiteralPath $externalKernelDirectory -PathType Container) {
 }
 
 $defaultKernelDirectory = Join-Path $root "src\NovaOryn.Kernel.Bootstrap"
+$defaultProjectManifest = Join-Path $defaultKernelDirectory "NovaOrynProject.json"
 $projectManifest = if ([string]::IsNullOrWhiteSpace($Project)) {
-    Join-Path $defaultKernelDirectory "NovaOrynProject.json"
+    $defaultProjectManifest
 } elseif ([IO.Path]::IsPathRooted($Project)) {
     [IO.Path]::GetFullPath($Project)
 } else {
@@ -219,6 +220,27 @@ $projectManifest = if ([string]::IsNullOrWhiteSpace($Project)) {
 if (-not (Test-Path -LiteralPath $projectManifest -PathType Leaf)) {
     throw "NovaOryn project manifest was not found: $projectManifest"
 }
+
+if (-not [string]::Equals([IO.Path]::GetFullPath($projectManifest), [IO.Path]::GetFullPath($defaultProjectManifest), [StringComparison]::OrdinalIgnoreCase)) {
+    $selectedProjectDirectory = Split-Path -Parent $projectManifest
+    Write-Host "[INFO] Refreshing the selected NovaOryn project before compilation: $selectedProjectDirectory"
+    & $dotnet $projectCreator create --output $selectedProjectDirectory --sdk-root $root
+    if ($LASTEXITCODE -ne 0) { throw "Selected NovaOryn project refresh failed with exit code $LASTEXITCODE." }
+    $projectManifest = Join-Path $selectedProjectDirectory "NovaOrynProject.json"
+
+    $selectedUserKernel = Join-Path $selectedProjectDirectory "Kernel\Kernel.cs"
+    if (-not (Test-Path -LiteralPath $selectedUserKernel -PathType Leaf)) {
+        throw "Selected project refresh did not produce Kernel\Kernel.cs: $selectedUserKernel"
+    }
+    $selectedKernelSource = Get-Content -LiteralPath $selectedUserKernel -Raw
+    foreach ($forbiddenKernelToken in @("DllImport", "class Native", "WritePort8", "RuntimeExport", "NativeEntry", "FramebufferConsole", "0x3F8", "InitializeSerial")) {
+        if ($selectedKernelSource.IndexOf($forbiddenKernelToken, [StringComparison]::Ordinal) -ge 0) {
+            throw "Selected user kernel still exposes low-level token '$forbiddenKernelToken': $selectedUserKernel"
+        }
+    }
+    Write-Host "[ OK ] Selected user kernel is high-level only: $selectedUserKernel"
+}
+
 Write-Host "[ OK ] C# kernel project manifest: $projectManifest"
 
 $projectData = Get-Content -LiteralPath $projectManifest -Raw | ConvertFrom-Json

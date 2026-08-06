@@ -34,14 +34,45 @@ try {
         "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.vstemplate",
         "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.csproj",
         "ProjectTemplates/CSharp/1033/NovaOrynKernel/Kernel/Kernel.cs",
-        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Runtime/CoreLib.cs",
-        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Boot/BootContext.cs",
-        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Console/FramebufferConsole.cs",
-        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Console/BitmapFont.cs",
-        "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynProject.json"
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynProject.json",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Freestanding.CoreLib/CoreLib.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Freestanding.CoreLib/NovaOryn.Freestanding.CoreLib.csproj",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Console/BitmapFont.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Console/BootContext.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Console/FramebufferConsole.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Console/KernelConsole.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Console/NovaOryn.Kernel.Console.csproj",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Entry.X64/KernelEntry.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Entry.X64/NovaOryn.Kernel.Entry.X64.csproj",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Platform.X64/KernelPlatform.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.Platform.X64/NovaOryn.Kernel.Platform.X64.csproj",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.X64.LowLevel/Native.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Sdk/NovaOryn.Kernel.X64.LowLevel/NovaOryn.Kernel.X64.LowLevel.csproj"
     )
     foreach ($requiredEntry in $requiredTemplateEntries) {
         if ($entryNames -notcontains $requiredEntry) { throw "NovaOryn VSIX is missing project-template content: $requiredEntry" }
+    }
+    foreach ($obsoleteEntry in @(
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Runtime/CoreLib.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Boot/BootContext.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Console/FramebufferConsole.cs",
+        "ProjectTemplates/CSharp/1033/NovaOrynKernel/Console/BitmapFont.cs"
+    )) {
+        if ($entryNames -contains $obsoleteEntry) { throw "NovaOryn VSIX still contains obsolete monolithic template content: $obsoleteEntry" }
+    }
+    $kernelEntry = $archive.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "ProjectTemplates/CSharp/1033/NovaOrynKernel/Kernel/Kernel.cs" } | Select-Object -First 1
+    if ($null -eq $kernelEntry) { throw "NovaOryn VSIX is missing the user-owned Kernel/Kernel.cs." }
+    $kernelReader = [IO.StreamReader]::new($kernelEntry.Open())
+    try { $kernelSource = $kernelReader.ReadToEnd() } finally { $kernelReader.Dispose() }
+    foreach ($forbiddenToken in @("DllImport", "class Native", "WritePort8", "RuntimeExport", "NativeEntry", "FramebufferConsole", "0x3F8")) {
+        if ($kernelSource.IndexOf($forbiddenToken, [StringComparison]::Ordinal) -ge 0) {
+            throw "NovaOryn VSIX user Kernel.cs exposes low-level token '$forbiddenToken'."
+        }
+    }
+    foreach ($requiredToken in @("KernelConsole.WriteLine", "KernelPlatform.InitializeDescriptors", "KernelPlatform.InitializeInterrupts", "KernelPlatform.DisableLegacyPic", "KernelPlatform.Halt")) {
+        if ($kernelSource.IndexOf($requiredToken, [StringComparison]::Ordinal) -lt 0) {
+            throw "NovaOryn VSIX user Kernel.cs is missing high-level call '$requiredToken'."
+        }
     }
     $templateEntry = $archive.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "ProjectTemplates/CSharp/1033/NovaOrynKernel/NovaOrynKernel.vstemplate" } | Select-Object -First 1
     if ($null -eq $templateEntry) { throw "NovaOryn VSIX is missing NovaOrynKernel.vstemplate." }

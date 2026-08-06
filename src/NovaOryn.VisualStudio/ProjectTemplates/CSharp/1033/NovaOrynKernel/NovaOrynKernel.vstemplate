@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <VSTemplate Version="3.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name>NovaOryn Kernel 0.0.85</Name>
-    <Description>Create a freestanding C# NovaOryn x64 UEFI kernel that builds and runs in QEMU from Visual Studio.</Description>
+    <Name>NovaOryn Kernel 0.0.86</Name>
+    <Description>Create a freestanding C# NovaOryn x64 UEFI kernel with a high-level user Kernel.cs and separated SDK implementation assemblies.</Description>
     <Icon>NovaOrynKernel.ico</Icon>
     <ProjectType>CSharp</ProjectType>
     <LanguageTag>csharp</LanguageTag>
@@ -17,19 +17,34 @@
   <TemplateContent>
     <Project File="NovaOrynKernel.csproj" ReplaceParameters="true">
       <Folder Name="Kernel" TargetFolderName="Kernel">
-        <ProjectItem ReplaceParameters="true">Kernel.cs</ProjectItem>
+        <ProjectItem ReplaceParameters="false" OpenInEditor="true">Kernel.cs</ProjectItem>
       </Folder>
-      <Folder Name="Runtime" TargetFolderName="Runtime">
-        <ProjectItem ReplaceParameters="true">CoreLib.cs</ProjectItem>
+      <Folder Name="Sdk" TargetFolderName="Sdk">
+        <Folder Name="NovaOryn.Freestanding.CoreLib" TargetFolderName="NovaOryn.Freestanding.CoreLib">
+          <ProjectItem ReplaceParameters="false" OpenInEditor="false">CoreLib.cs</ProjectItem>
+          <ProjectItem ReplaceParameters="true" OpenInEditor="false">NovaOryn.Freestanding.CoreLib.csproj</ProjectItem>
+        </Folder>
+        <Folder Name="NovaOryn.Kernel.Console" TargetFolderName="NovaOryn.Kernel.Console">
+          <ProjectItem ReplaceParameters="false" OpenInEditor="false">BitmapFont.cs</ProjectItem>
+          <ProjectItem ReplaceParameters="false" OpenInEditor="false">BootContext.cs</ProjectItem>
+          <ProjectItem ReplaceParameters="false" OpenInEditor="false">FramebufferConsole.cs</ProjectItem>
+          <ProjectItem ReplaceParameters="false" OpenInEditor="false">KernelConsole.cs</ProjectItem>
+          <ProjectItem ReplaceParameters="true" OpenInEditor="false">NovaOryn.Kernel.Console.csproj</ProjectItem>
+        </Folder>
+        <Folder Name="NovaOryn.Kernel.Entry.X64" TargetFolderName="NovaOryn.Kernel.Entry.X64">
+          <ProjectItem ReplaceParameters="false" OpenInEditor="false">KernelEntry.cs</ProjectItem>
+          <ProjectItem ReplaceParameters="true" OpenInEditor="false">NovaOryn.Kernel.Entry.X64.csproj</ProjectItem>
+        </Folder>
+        <Folder Name="NovaOryn.Kernel.Platform.X64" TargetFolderName="NovaOryn.Kernel.Platform.X64">
+          <ProjectItem ReplaceParameters="false" OpenInEditor="false">KernelPlatform.cs</ProjectItem>
+          <ProjectItem ReplaceParameters="true" OpenInEditor="false">NovaOryn.Kernel.Platform.X64.csproj</ProjectItem>
+        </Folder>
+        <Folder Name="NovaOryn.Kernel.X64.LowLevel" TargetFolderName="NovaOryn.Kernel.X64.LowLevel">
+          <ProjectItem ReplaceParameters="false" OpenInEditor="false">Native.cs</ProjectItem>
+          <ProjectItem ReplaceParameters="true" OpenInEditor="false">NovaOryn.Kernel.X64.LowLevel.csproj</ProjectItem>
+        </Folder>
       </Folder>
-      <Folder Name="Boot" TargetFolderName="Boot">
-        <ProjectItem ReplaceParameters="true">BootContext.cs</ProjectItem>
-      </Folder>
-      <Folder Name="Console" TargetFolderName="Console">
-        <ProjectItem ReplaceParameters="true">FramebufferConsole.cs</ProjectItem>
-        <ProjectItem ReplaceParameters="true">BitmapFont.cs</ProjectItem>
-      </Folder>
-      <ProjectItem ReplaceParameters="true">NovaOrynProject.json</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false">NovaOrynProject.json</ProjectItem>
     </Project>
   </TemplateContent>
 </VSTemplate>

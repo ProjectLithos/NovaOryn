@@ -16,17 +16,46 @@ static int MainEntry(string[] args)
     if (!Directory.Exists(template)) return Fail($"Kernel project template was not found: {template}");
 
     Directory.CreateDirectory(output);
+    string? mainProjectPath = ResolveMainProjectPath(output);
+    if (mainProjectPath is null) return 1;
     if (!MigrateLegacyRootKernel(output)) return 1;
+    if (!RemoveSdkOwnedLegacyTrees(output)) return 1;
 
     foreach (string source in Directory.EnumerateFiles(template, "*", SearchOption.AllDirectories))
     {
         string relative = Path.GetRelativePath(template, source);
+        if (string.Equals(relative, "NovaOrynProject.json", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(relative, "NovaOrynKernel.csproj", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(relative, "NovaOrynKernel.sln", StringComparison.OrdinalIgnoreCase))
+        {
+            continue;
+        }
+
         string destination = Path.Combine(output, relative);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-        if (string.Equals(relative, "NovaOrynProject.json", StringComparison.OrdinalIgnoreCase)) continue;
         bool userKernelSource = string.Equals(relative, Path.Combine("Kernel", "Kernel.cs"), StringComparison.OrdinalIgnoreCase);
-        if (userKernelSource && File.Exists(destination) && !IsSdkGeneratedLegacyKernel(destination)) continue;
+        if (userKernelSource && File.Exists(destination) && !IsSdkGeneratedLowLevelKernel(destination)) continue;
         File.Copy(source, destination, true);
+    }
+
+    string mainProjectFileName = Path.GetFileName(mainProjectPath);
+    if (string.IsNullOrWhiteSpace(mainProjectFileName)) return Fail($"Kernel project filename is invalid: {mainProjectPath}");
+    File.Copy(Path.Combine(template, "NovaOrynKernel.csproj"), mainProjectPath, true);
+    string entryProjectPath = Path.Combine(output, "Sdk", "NovaOryn.Kernel.Entry.X64", "NovaOryn.Kernel.Entry.X64.csproj");
+    string entryProject = File.ReadAllText(entryProjectPath);
+    entryProject = entryProject.Replace(
+        Path.Combine("..", "..", "NovaOrynKernel.csproj"),
+        Path.Combine("..", "..", mainProjectFileName),
+        StringComparison.OrdinalIgnoreCase);
+    File.WriteAllText(entryProjectPath, entryProject);
+
+    string solutionPath = ResolveSolutionPath(output);
+    if (!File.Exists(solutionPath))
+    {
+        string solution = File.ReadAllText(Path.Combine(template, "NovaOrynKernel.sln"));
+        solution = solution.Replace("NovaOrynKernel.csproj", mainProjectFileName, StringComparison.Ordinal);
+        solution = solution.Replace("\"NovaOrynKernel\"", $"\"{Path.GetFileNameWithoutExtension(mainProjectPath)}\"", StringComparison.Ordinal);
+        File.WriteAllText(solutionPath, solution);
     }
 
     string manifestPath = Path.Combine(output, "NovaOrynProject.json");
@@ -42,19 +71,34 @@ static int MainEntry(string[] args)
     }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
 
     Console.WriteLine($"[ OK ] C# kernel project: {output}");
-    Console.WriteLine($"[ OK ] Kernel solution : {Path.Combine(output, "NovaOrynKernel.sln")}");
+    Console.WriteLine($"[ OK ] User kernel     : {Path.Combine(output, "Kernel", "Kernel.cs")}");
+    Console.WriteLine($"[ OK ] Kernel project  : {mainProjectPath}");
+    Console.WriteLine($"[ OK ] Kernel solution : {solutionPath}");
     Console.WriteLine($"[ OK ] Project manifest: {manifestPath}");
     return 0;
 }
 
+static string? ResolveMainProjectPath(string output)
+{
+    string[] candidates = Directory.EnumerateFiles(output, "*.csproj", SearchOption.TopDirectoryOnly).ToArray();
+    if (candidates.Length == 0) return Path.Combine(output, "NovaOrynKernel.csproj");
+    if (candidates.Length == 1) return candidates[0];
+    Console.Error.WriteLine($"[FAIL] More than one root kernel project exists in {output}: {string.Join(", ", candidates.Select(candidate => Path.GetFileName(candidate)))}");
+    return null;
+}
 
+static string ResolveSolutionPath(string output)
+{
+    string? existing = Directory.EnumerateFiles(output, "*.sln", SearchOption.TopDirectoryOnly).FirstOrDefault();
+    return existing ?? Path.Combine(output, "NovaOrynKernel.sln");
+}
 
 static bool MigrateLegacyRootKernel(string output)
 {
     string legacyRootKernel = Path.Combine(output, "Kernel.cs");
     if (!File.Exists(legacyRootKernel)) return true;
 
-    if (!IsSdkGeneratedLegacyKernel(legacyRootKernel))
+    if (!IsSdkGeneratedLowLevelKernel(legacyRootKernel))
     {
         Console.Error.WriteLine($"[FAIL] A user-owned legacy root Kernel.cs prevents migration: {legacyRootKernel}");
         Console.Error.WriteLine("[FAIL] Move that file to Kernel\\Kernel.cs or remove it before refreshing the SDK project.");
@@ -66,7 +110,19 @@ static bool MigrateLegacyRootKernel(string output)
     return true;
 }
 
-static bool IsSdkGeneratedLegacyKernel(string path)
+static bool RemoveSdkOwnedLegacyTrees(string output)
+{
+    foreach (string relative in new[] { "Boot", "Console", "Runtime", "Sdk" })
+    {
+        string path = Path.Combine(output, relative);
+        if (!Directory.Exists(path)) continue;
+        Directory.Delete(path, true);
+        Console.WriteLine($"[ OK ] Refreshed SDK-owned project tree: {path}");
+    }
+    return true;
+}
+
+static bool IsSdkGeneratedLowLevelKernel(string path)
 {
     string source = File.ReadAllText(path);
     bool exposesNativeInterop = source.Contains("DllImport", StringComparison.Ordinal) &&
@@ -78,9 +134,7 @@ static bool IsSdkGeneratedLegacyKernel(string path)
     bool exportedBootstrap = source.Contains("RuntimeExport", StringComparison.Ordinal) &&
         source.Contains("NovaOrynManagedEntry", StringComparison.Ordinal) &&
         source.Contains("KMain", StringComparison.Ordinal);
-    bool previousGenerated = source.Contains("KernelPlatform.InitializeDescriptors", StringComparison.Ordinal) &&
-        source.Contains("KernelConsole.WriteLine", StringComparison.Ordinal);
-    return (exposesNativeInterop && monolithicConsole && exportedBootstrap) || previousGenerated;
+    return exposesNativeInterop && monolithicConsole && exportedBootstrap;
 }
 
 static string FindSdkRoot(string start)
