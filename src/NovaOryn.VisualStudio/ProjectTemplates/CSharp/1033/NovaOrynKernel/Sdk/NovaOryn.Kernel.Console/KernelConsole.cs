@@ -20,16 +20,20 @@ public static class KernelConsole
     }
 
     /// <summary>Writes a managed string without appending a line terminator.</summary>
-    public static Boolean Write(String value)
+    public static unsafe Boolean Write(String value)
     {
         if (!_initialized || value == null) return false;
+        Int32 length = value.Length;
         Int32 index = 0;
-        while (index < value.Length)
+        fixed (Char* characters = value)
         {
-            Char character = value[index];
-            if ((UInt32)character > 0x7FU) character = (Char)'?';
-            if (!Write((Byte)character)) return false;
-            index++;
+            while (index < length)
+            {
+                Char character = characters[index];
+                if ((UInt32)character > 0x7FU) character = (Char)'?';
+                if (!Write((Byte)character)) return false;
+                index++;
+            }
         }
         return true;
     }

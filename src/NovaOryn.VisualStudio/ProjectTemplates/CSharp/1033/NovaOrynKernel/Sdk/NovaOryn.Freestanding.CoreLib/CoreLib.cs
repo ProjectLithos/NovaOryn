@@ -35,7 +35,28 @@ namespace System
             while (true) { }
         }
     }
-    public sealed class String { public readonly Int32 Length; public Char this[Int32 index] { get { while (true) { } } } }
+    public sealed unsafe class String
+    {
+        private readonly Int32 _stringLength;
+        private Char _firstChar;
+
+        public Int32 Length
+        {
+            get { return _stringLength; }
+        }
+
+        public Char this[Int32 index]
+        {
+            get
+            {
+                if ((UInt32)index >= (UInt32)_stringLength) return (Char)0;
+                fixed (Char* firstCharacter = &_firstChar)
+                {
+                    return firstCharacter[index];
+                }
+            }
+        }
+    }
     public abstract class Delegate { }
     public abstract class MulticastDelegate : Delegate { }
     public class Attribute { }

@@ -155,6 +155,35 @@ if (!templateCoreLib.Contains("class DefaultMemberAttribute", StringComparison.O
     failures.Add("The kernel template CoreLib must include System.Reflection.DefaultMemberAttribute.");
 }
 
+string bootstrapConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
+if (!bootstrapCoreLib.Contains("private readonly Int32 _stringLength;", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("private Char _firstChar;", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("fixed (Char* firstCharacter = &_firstChar)", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("return firstCharacter[index];", StringComparison.Ordinal))
+{
+    failures.Add("Freestanding System.String must expose its NativeAOT inline character layout and a terminating character indexer.");
+}
+if (bootstrapCoreLib.Contains("public sealed class String { public readonly Int32 Length; public Char this[Int32 index] { get { while (true)", StringComparison.Ordinal))
+{
+    failures.Add("Freestanding System.String must not retain the non-terminating placeholder indexer.");
+}
+if (!bootstrapConsole.Contains("public static unsafe Boolean Write(String value)", StringComparison.Ordinal) ||
+    !bootstrapConsole.Contains("fixed (Char* characters = value)", StringComparison.Ordinal) ||
+    !bootstrapConsole.Contains("Char character = characters[index];", StringComparison.Ordinal) ||
+    bootstrapConsole.Contains("Char character = value[index];", StringComparison.Ordinal))
+{
+    failures.Add("KernelConsole.Write must consume the managed string buffer directly instead of entering the placeholder string indexer.");
+}
+string visualStudioCoreLib = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Freestanding.CoreLib", "CoreLib.cs"));
+string visualStudioConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
+if (!string.Equals(bootstrapCoreLib, templateCoreLib, StringComparison.Ordinal) ||
+    !string.Equals(bootstrapCoreLib, visualStudioCoreLib, StringComparison.Ordinal) ||
+    !string.Equals(bootstrapConsole, File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "KernelConsole.cs")), StringComparison.Ordinal) ||
+    !string.Equals(bootstrapConsole, visualStudioConsole, StringComparison.Ordinal))
+{
+    failures.Add("Authoritative, command-line, and Visual Studio freestanding string/console implementations must remain identical.");
+}
+
 string managedCompiler = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ManagedCompiler", "Program.cs"));
 if (managedCompiler.Contains("\"publish\"", StringComparison.Ordinal))
 {

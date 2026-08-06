@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.86
+# Nova Oryn OS SDK 0.0.87
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.86
+## Release 0.0.87
 
-Release 0.0.86 replaces the stale monolithic Visual Studio kernel template with the same separated freestanding assembly design used by the authoritative bootstrap and command-line project template. New Visual Studio kernels expose only high-level `KernelConsole` and `KernelPlatform` calls in `Kernel\Kernel.cs`; native imports, serial I/O, framebuffer rendering, runtime entry glue, and CoreLib support live in separate SDK assemblies. The generated entry project also uses the corrected two-directory reference back to the user kernel project. When Visual Studio supplies `-Project`, the selected project directory is refreshed before compilation, so older generated monolithic kernels outside the default repository path are migrated too.
+Release 0.0.87 fixes the blank framebuffer after the freestanding kernel was split into separate DLLs. The screen clear completed, but the first normal `KernelConsole.WriteLine(...)` call entered the placeholder `System.String` indexer and looped permanently. The freestanding CoreLib now exposes the real inline NativeAOT string layout and a terminating character indexer, while `KernelConsole.Write(String)` pins and reads the managed character buffer directly. Native serial and framebuffer operations remain hidden from the end-user `Kernel.cs`.
 
 ## Release 0.0.56
 
@@ -102,7 +102,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.86.md` for this release.
+See `docs/Release-0.0.87.md` for this release.
 
 
 ## 0.0.22 build
@@ -174,7 +174,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.86** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.87** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 
