@@ -1,6 +1,18 @@
-# Nova Oryn OS SDK 0.0.91
+# Nova Oryn OS SDK 0.0.92
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
+
+## Release 0.0.92
+
+Release 0.0.92 implements the boot memory-map foundation. The native x64 UEFI entry now retains the exact final map obtained immediately before a successful `ExitBootServices`, retries a stale map key without allocating or making another firmware call in between, and passes final-map metadata into managed bootstrap.
+
+`NovaOryn.Memory.Contracts` defines the portable descriptor, memory ownership, cache attributes, runtime status, availability, future NUMA metadata, reservations, bounded workspaces, results, and immutable diagnostic cursor. `NovaOryn.Boot.Memory` translates UEFI descriptors and implements three complete normalisation versions:
+
+- **Strict** rejects incompatible firmware overlaps.
+- **Safety priority** chooses the most restrictive known owner.
+- **Conservative** converts incompatible firmware overlaps to reserved memory while retaining firmware runtime ownership.
+
+Every version sorts ranges, rejects overflow and invalid alignment, splits at every boundary, overlays kernel/boot/framebuffer/MMIO/page-table/early-allocation reservations without discarding firmware runtime ownership, reduces conflicting cache modes to one safe mode, preserves mixed runtime code/data ownership, and merges metadata-compatible adjacent ranges.
 
 ## Release 0.0.91
 
@@ -102,7 +114,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.91.md` for this release.
+See `docs/Release-0.0.92.md` for this release.
 
 
 ## 0.0.22 build
@@ -174,7 +186,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.91** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.92** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 

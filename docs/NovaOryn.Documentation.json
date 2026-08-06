@@ -1,13 +1,15 @@
 {
   "schemaVersion": 1,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.91",
+  "version": "0.0.92",
   "outputDirectory": "Artifacts/Documentation/site",
   "publicAssemblies": [
     "NovaOryn.Primitives",
     "NovaOryn.Core",
     "NovaOryn.Runtime.Contracts",
     "NovaOryn.Boot.Contracts",
+    "NovaOryn.Boot.Memory",
+    "NovaOryn.Memory.Contracts",
     "NovaOryn.Architecture.Contracts",
     "NovaOryn.Architecture.X64",
     "NovaOryn.Architecture.X64.Descriptors",

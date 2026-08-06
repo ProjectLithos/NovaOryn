@@ -104,6 +104,111 @@ if (!buildScript.Contains("NovaOryn.SourcePolicy.Tests", StringComparison.Ordina
     failures.Add("Build script must execute the source-policy tests.");
 }
 
+string memoryContracts = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Memory.Contracts", "MemoryDescriptor.cs"));
+string memoryEnums = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Memory.Contracts", "MemoryEnums.cs"));
+string memoryMapContracts = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Memory.Contracts", "MemoryMapContracts.cs"));
+string memoryNormalisers = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Boot.Memory", "MemoryMapNormalisers.cs"));
+string finalUefiMap = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Boot.Memory", "FinalUefiMemoryMap.cs"));
+string nativeMemorySource = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Boot.Memory", "NativeUefiMemoryMapSource.cs"));
+string reservationPlan = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Boot.Memory", "MemoryReservationPlan.cs"));
+string nativeEntry = File.ReadAllText(Path.Combine(root, "native", "x64", "Entry.asm"));
+foreach (string requiredMemoryType in new[]
+{
+    "UsableConventional", "LoaderKernelImage", "BootServices", "RuntimeServices",
+    "AcpiReclaimable", "AcpiNvs", "Framebuffer", "MemoryMappedIo",
+    "FirmwareReserved", "BadMemory", "PersistentMemory", "BootStructures",
+    "PageTables", "EarlyAllocatorAllocations"
+})
+{
+    if (!memoryEnums.Contains(requiredMemoryType, StringComparison.Ordinal))
+        failures.Add($"Memory contracts are missing required type: {requiredMemoryType}");
+}
+if (!memoryContracts.Contains("pageCount > ulong.MaxValue / 4096UL", StringComparison.Ordinal) ||
+    !memoryContracts.Contains("physicalStart.Value > ulong.MaxValue - length", StringComparison.Ordinal))
+{
+    failures.Add("Memory descriptors must reject page-length and end-address overflow.");
+}
+foreach (string requiredNormaliser in new[] { "StrictMemoryMapNormaliser", "SafetyPriorityMemoryMapNormaliser", "ConservativeMemoryMapNormaliser" })
+{
+    if (!memoryNormalisers.Contains(requiredNormaliser, StringComparison.Ordinal))
+        failures.Add($"Boot memory assembly is missing normaliser implementation: {requiredNormaliser}");
+}
+if (!memoryNormalisers.Contains("SortAndDeduplicate", StringComparison.Ordinal) ||
+    !memoryNormalisers.Contains("TrySlice", StringComparison.Ordinal) ||
+    !memoryNormalisers.Contains("IsMergeCompatible", StringComparison.Ordinal))
+{
+    failures.Add("Memory normalisation must sort, split, and merge compatible adjacent ranges.");
+}
+if (!memoryMapContracts.Contains("CreateDiagnosticCursor", StringComparison.Ordinal) ||
+    !memoryMapContracts.Contains("private readonly MemoryDescriptor[] _descriptors", StringComparison.Ordinal))
+{
+    failures.Add("Normalised memory maps must expose immutable diagnostic enumeration.");
+}
+if (!finalUefiMap.Contains("provider.GetMemoryMap", StringComparison.Ordinal) ||
+    !finalUefiMap.Contains("provider.ExitBootServices", StringComparison.Ordinal) ||
+    !finalUefiMap.Contains("InvalidMapKey", StringComparison.Ordinal))
+{
+    failures.Add("Final UEFI map acquisition must retry stale map keys and seal only the accepted map.");
+}
+int nativeGetMemoryMapCall = nativeEntry.IndexOf("call rdi", StringComparison.Ordinal);
+int nativeExitBootServicesCall = nativeEntry.IndexOf("call r12", StringComparison.Ordinal);
+if (!nativeEntry.Contains("NovaOrynCaptureFinalUefiMemoryMap", StringComparison.Ordinal) ||
+    !nativeEntry.Contains("No allocation or firmware operation occurs", StringComparison.Ordinal) ||
+    nativeGetMemoryMapCall < 0 || nativeExitBootServicesCall < 0 ||
+    nativeGetMemoryMapCall > nativeExitBootServicesCall)
+{
+    failures.Add("Native UEFI entry must obtain the final map immediately before ExitBootServices.");
+}
+if (!nativeEntry.Contains("div qword [rel NovaOrynBootContext + 0x50]", StringComparison.Ordinal) ||
+    !nativeEntry.Contains("test qword [rel NovaOrynBootContext + 0x50], 7", StringComparison.Ordinal))
+{
+    failures.Add("Native UEFI entry must validate descriptor alignment and complete map records before ExitBootServices.");
+}
+if (!nativeMemorySource.Contains("boot.MemoryMapLength % boot.MemoryDescriptorSize", StringComparison.Ordinal) ||
+    !nativeMemorySource.Contains("TryGetUefiDescriptor", StringComparison.Ordinal))
+{
+    failures.Add("Boot memory must expose a checked immutable adapter over the retained native UEFI map.");
+}
+if (!reservationPlan.Contains("TryValidateRequiredReservations", StringComparison.Ordinal) ||
+    !reservationPlan.Contains("HasKernelImage", StringComparison.Ordinal) ||
+    !reservationPlan.Contains("HasBootStructures", StringComparison.Ordinal) ||
+    !memoryNormalisers.Contains("TryCreateReservationInterval", StringComparison.Ordinal) ||
+    !memoryNormalisers.Contains("runtimeStatus == MemoryRuntimeStatus.NotRuntime ? reservation.Availability : MemoryAvailability.RuntimeOwned", StringComparison.Ordinal))
+{
+    failures.Add("Reservation planning must validate mandatory categories and overlays must preserve firmware runtime ownership.");
+}
+if (!solution.Contains("NovaOryn.Memory.Contracts", StringComparison.Ordinal) ||
+    !solution.Contains("NovaOryn.Boot.Memory", StringComparison.Ordinal) ||
+    !solution.Contains("NovaOryn.Memory.Tests", StringComparison.Ordinal))
+{
+    failures.Add("The authoritative solution must include memory contracts, boot memory, and memory tests.");
+}
+if (!buildScript.Contains("NovaOryn.Memory.Tests", StringComparison.Ordinal))
+{
+    failures.Add("Build script must execute boot-memory tests.");
+}
+
+
+string sampleKernelProject = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Sample", "NovaOryn.Kernel.Sample.csproj"));
+if (!sampleKernelProject.Contains("NovaOryn.Boot.Memory", StringComparison.Ordinal) ||
+    !kernel.Contains("NativeUefiMemoryMapSource.TryCreate", StringComparison.Ordinal))
+{
+    failures.Add("The sample kernel must demonstrate the retained native UEFI memory-map adapter.");
+}
+string bootstrapBootContext = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "BootContext.cs"));
+string standaloneTemplateBootContext = File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "BootContext.cs"));
+string visualStudioTemplateBootContext = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "BootContext.cs"));
+foreach (string requiredBootContextToken in new[] { "FinalMemoryMapAddress", "FinalMemoryDescriptorSize", "HasFinalMemoryMap" })
+{
+    if (!bootstrapBootContext.Contains(requiredBootContextToken, StringComparison.Ordinal) ||
+        !standaloneTemplateBootContext.Contains(requiredBootContextToken, StringComparison.Ordinal) ||
+        !visualStudioTemplateBootContext.Contains(requiredBootContextToken, StringComparison.Ordinal))
+    {
+        failures.Add($"All freestanding boot-context copies must expose final-map token: {requiredBootContextToken}");
+    }
+}
+
+
 string projectManifest = File.ReadAllText(Path.Combine(root, "examples", "MinimalKernel", "NovaOrynProject.json"));
 if (!projectManifest.Contains("NovaOryn.Kernel.Bootstrap", StringComparison.Ordinal))
 {

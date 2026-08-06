@@ -15,6 +15,7 @@
     <ProjectReference Include="..\NovaOryn.InterruptControllers.X64\NovaOryn.InterruptControllers.X64.csproj" />
     <ProjectReference Include="..\NovaOryn.Interrupts.Contracts\NovaOryn.Interrupts.Contracts.csproj" />
     <ProjectReference Include="..\NovaOryn.Boot.Contracts\NovaOryn.Boot.Contracts.csproj" />
+    <ProjectReference Include="..\NovaOryn.Boot.Memory\NovaOryn.Boot.Memory.csproj" />
     <ProjectReference Include="..\NovaOryn.Console.Serial\NovaOryn.Console.Serial.csproj" />
     <ProjectReference Include="..\NovaOryn.Console.Framebuffer\NovaOryn.Console.Framebuffer.csproj" />
     <ProjectReference Include="..\NovaOryn.Core\NovaOryn.Core.csproj" />

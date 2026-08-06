@@ -94,17 +94,59 @@ public readonly struct BootContext
         Framebuffer framebuffer,
         PhysicalAddress memoryMapAddress,
         ulong memoryMapLength)
+        : this(protocol, framebuffer, memoryMapAddress, memoryMapLength, 0, 0, 0, false)
+    {
+    }
+
+    /// <summary>Creates a boot context containing the accepted final firmware memory-map metadata.</summary>
+    /// <nova.when>Use after firmware has accepted the map key and boot services have exited.</nova.when>
+    /// <nova.depends>The map storage must remain valid for the lifetime of the boot context.</nova.depends>
+    /// <returns>A boot context that identifies the retained final map and its descriptor format.</returns>
+    /// <example><code>BootContext context = new(BootProtocol.Uefi, framebuffer, mapAddress, mapLength, mapKey, descriptorSize, descriptorVersion, true);</code></example>
+    /// <param name="protocol">Firmware or loader protocol used to enter the kernel.</param>
+    /// <param name="framebuffer">Framebuffer information captured before firmware services ended.</param>
+    /// <param name="memoryMapAddress">Physical address of the retained final map.</param>
+    /// <param name="memoryMapLength">Length of the retained map in bytes.</param>
+    /// <param name="memoryMapKey">Firmware key accepted by ExitBootServices.</param>
+    /// <param name="memoryDescriptorSize">Size of each firmware descriptor.</param>
+    /// <param name="memoryDescriptorVersion">Firmware descriptor format version.</param>
+    /// <param name="isFinalMemoryMap">Whether this is the map accepted immediately before ExitBootServices.</param>
+    public BootContext(
+        BootProtocol protocol,
+        Framebuffer framebuffer,
+        PhysicalAddress memoryMapAddress,
+        ulong memoryMapLength,
+        ulong memoryMapKey,
+        ulong memoryDescriptorSize,
+        uint memoryDescriptorVersion,
+        bool isFinalMemoryMap)
     {
         Protocol = protocol;
         Framebuffer = framebuffer;
         MemoryMapAddress = memoryMapAddress;
         MemoryMapLength = memoryMapLength;
+        MemoryMapKey = memoryMapKey;
+        MemoryDescriptorSize = memoryDescriptorSize;
+        MemoryDescriptorVersion = memoryDescriptorVersion;
+        IsFinalMemoryMap = isFinalMemoryMap;
     }
 
     public BootProtocol Protocol { get; }
     public Framebuffer Framebuffer { get; }
     public PhysicalAddress MemoryMapAddress { get; }
     public ulong MemoryMapLength { get; }
+    /// <summary>Gets the firmware map key accepted by ExitBootServices.</summary>
+    /// <nova.when>Use for diagnostics that prove the retained map was the accepted final map.</nova.when>
+    public ulong MemoryMapKey { get; }
+    /// <summary>Gets the size in bytes of each retained firmware memory descriptor.</summary>
+    /// <nova.when>Use when enumerating the variable-sized UEFI descriptor array.</nova.when>
+    public ulong MemoryDescriptorSize { get; }
+    /// <summary>Gets the retained firmware memory-descriptor format version.</summary>
+    /// <nova.when>Use when validating that a decoder supports the firmware descriptor format.</nova.when>
+    public uint MemoryDescriptorVersion { get; }
+    /// <summary>Gets whether the retained map was accepted immediately before ExitBootServices.</summary>
+    /// <nova.when>Require this before constructing a physical-memory allocator.</nova.when>
+    public bool IsFinalMemoryMap { get; }
 
     public bool TryGetFramebuffer(out Framebuffer framebuffer)
     {

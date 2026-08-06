@@ -16,6 +16,14 @@ internal struct NativeBootContext
     internal UInt32 GreenMask;
     internal UInt32 BlueMask;
     internal UInt32 ReservedMask;
+    internal UInt64 FinalMemoryMapAddress;
+    internal UInt64 FinalMemoryMapLength;
+    internal UInt64 FinalMemoryMapKey;
+    internal UInt64 FinalMemoryDescriptorSize;
+    internal UInt32 FinalMemoryDescriptorVersion;
+    internal UInt32 FinalMemoryMapCaptureAttempts;
+    internal UInt64 ExitBootServicesStatus;
+    internal UInt64 FinalMemoryMapFlag;
 }
 #pragma warning restore CS0649
 
@@ -73,5 +81,51 @@ public readonly unsafe struct BootContext
     {
         NativeBootContext* context = GetNativeContext();
         return context == null ? 3U : context->PixelFormat;
+    }
+
+    public Boolean HasFinalMemoryMap()
+    {
+        NativeBootContext* context = GetNativeContext();
+        if (context == null || context->FinalMemoryMapFlag != 1UL || context->ExitBootServicesStatus != 0UL) return false;
+        if (context->FinalMemoryMapAddress == 0UL || context->FinalMemoryMapLength == 0UL) return false;
+        if (context->FinalMemoryDescriptorSize < 40UL || (context->FinalMemoryDescriptorSize & 7UL) != 0UL) return false;
+        if (context->FinalMemoryMapLength % context->FinalMemoryDescriptorSize != 0UL) return false;
+        return context->FinalMemoryMapAddress <= 0xFFFFFFFFFFFFFFFFUL - context->FinalMemoryMapLength;
+    }
+
+    public UInt64 GetFinalMemoryMapAddress()
+    {
+        NativeBootContext* context = GetNativeContext();
+        return context == null ? 0UL : context->FinalMemoryMapAddress;
+    }
+
+    public UInt64 GetFinalMemoryMapLength()
+    {
+        NativeBootContext* context = GetNativeContext();
+        return context == null ? 0UL : context->FinalMemoryMapLength;
+    }
+
+    public UInt64 GetFinalMemoryMapKey()
+    {
+        NativeBootContext* context = GetNativeContext();
+        return context == null ? 0UL : context->FinalMemoryMapKey;
+    }
+
+    public UInt64 GetFinalMemoryDescriptorSize()
+    {
+        NativeBootContext* context = GetNativeContext();
+        return context == null ? 0UL : context->FinalMemoryDescriptorSize;
+    }
+
+    public UInt32 GetFinalMemoryDescriptorVersion()
+    {
+        NativeBootContext* context = GetNativeContext();
+        return context == null ? 0U : context->FinalMemoryDescriptorVersion;
+    }
+
+    public UInt32 GetFinalMemoryMapCaptureAttempts()
+    {
+        NativeBootContext* context = GetNativeContext();
+        return context == null ? 0U : context->FinalMemoryMapCaptureAttempts;
     }
 }

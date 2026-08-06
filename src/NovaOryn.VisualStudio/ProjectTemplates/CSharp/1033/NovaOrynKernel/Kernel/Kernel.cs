@@ -7,11 +7,13 @@ namespace NovaOryn.Kernel.Bootstrap;
 /// <summary>Defines the user-owned NovaOryn kernel.</summary>
 public static class Kernel
 {
-    /// <summary>Initializes the kernel and enters its terminal processor state.</summary>
+    /// <summary>Initializes the kernel platform and enters the terminal processor halt state.</summary>
     public static Boolean KMain(BootContext boot)
     {
         if (!KernelConsole.Initialize(boot)) return false;
         if (!KernelConsole.WriteLine("NovaOryn KMain started.")) return false;
+        if (!boot.HasFinalMemoryMap()) return false;
+        if (!KernelConsole.WriteLine("Final UEFI memory map retained; ExitBootServices succeeded.")) return false;
         if (!KernelPlatform.InitializeDescriptors()) return false;
         if (!KernelConsole.WriteLine("GDT and TSS installed.")) return false;
         if (!KernelPlatform.InitializeInterrupts()) return false;

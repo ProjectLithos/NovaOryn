@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Runtime.Contracts"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Boot.Contracts", "src\NovaOryn.Boot.Contracts\NovaOryn.Boot.Contracts.csproj", "{A515D277-A694-5200-8ED5-49E36B0A0039}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Memory.Contracts", "src\NovaOryn.Memory.Contracts\NovaOryn.Memory.Contracts.csproj", "{E3A69C37-74B8-4A2F-9C55-7D1316C91A20}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Boot.Memory", "src\NovaOryn.Boot.Memory\NovaOryn.Boot.Memory.csproj", "{F4B70D48-85C9-4B30-AD66-8E2427DA2B31}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Architecture.Contracts", "src\NovaOryn.Architecture.Contracts\NovaOryn.Architecture.Contracts.csproj", "{F39B61DE-A816-53F3-8F79-845CE042299A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Architecture.X64", "src\NovaOryn.Architecture.X64\NovaOryn.Architecture.X64.csproj", "{C13886A9-9A74-5237-8315-EB8E71AC273E}"
@@ -37,6 +41,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Kernel.Sample", "src\NovaOryn.Kernel.Sample\NovaOryn.Kernel.Sample.csproj", "{13573F37-4BEF-542E-BF0A-59D2C719A05C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.SourcePolicy.Tests", "tests\NovaOryn.SourcePolicy.Tests\NovaOryn.SourcePolicy.Tests.csproj", "{4C122A3A-B96E-547D-BFDD-F22F2E839B58}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.Memory.Tests", "tests\NovaOryn.Memory.Tests\NovaOryn.Memory.Tests.csproj", "{A5C81E59-96DA-4C41-BE77-9F3538EB3C42}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaOryn.ProjectCreator", "src\NovaOryn.ProjectCreator\NovaOryn.ProjectCreator.csproj", "{4C715C31-14DA-4AA4-A9F7-8F4E536C1229}"
 EndProject
@@ -146,5 +152,17 @@ Global
 		{B28DCE12-3AD8-4EE0-A226-28F5BBD6E060}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B28DCE12-3AD8-4EE0-A226-28F5BBD6E060}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B28DCE12-3AD8-4EE0-A226-28F5BBD6E060}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3A69C37-74B8-4A2F-9C55-7D1316C91A20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3A69C37-74B8-4A2F-9C55-7D1316C91A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3A69C37-74B8-4A2F-9C55-7D1316C91A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3A69C37-74B8-4A2F-9C55-7D1316C91A20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4B70D48-85C9-4B30-AD66-8E2427DA2B31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4B70D48-85C9-4B30-AD66-8E2427DA2B31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4B70D48-85C9-4B30-AD66-8E2427DA2B31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4B70D48-85C9-4B30-AD66-8E2427DA2B31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5C81E59-96DA-4C41-BE77-9F3538EB3C42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5C81E59-96DA-4C41-BE77-9F3538EB3C42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5C81E59-96DA-4C41-BE77-9F3538EB3C42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5C81E59-96DA-4C41-BE77-9F3538EB3C42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

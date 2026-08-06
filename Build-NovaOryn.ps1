@@ -160,6 +160,12 @@ if (-not (Test-Path -LiteralPath $sourcePolicyTests -PathType Leaf)) { throw "No
 & $dotnet $sourcePolicyTests
 if ($LASTEXITCODE -ne 0) { throw "NovaOryn source-policy tests failed with exit code $LASTEXITCODE." }
 
+Write-Host "[INFO] Running NovaOryn boot-memory tests."
+$memoryTests = Join-Path $root "tests\NovaOryn.Memory.Tests\bin\$Configuration\net10.0\NovaOryn.Memory.Tests.dll"
+if (-not (Test-Path -LiteralPath $memoryTests -PathType Leaf)) { throw "NovaOryn boot-memory test executable was not produced: $memoryTests" }
+& $dotnet $memoryTests
+if ($LASTEXITCODE -ne 0) { throw "NovaOryn boot-memory tests failed with exit code $LASTEXITCODE." }
+
 $compiler = Join-Path $root "src\NovaOryn.ManagedCompiler\bin\$Configuration\net10.0\NovaOryn.ManagedCompiler.dll"
 $linker = Join-Path $root "src\NovaOryn.Linker\bin\$Configuration\net10.0\NovaOryn.Linker.dll"
 $imageBuilder = Join-Path $root "src\NovaOryn.ImageBuilder\bin\$Configuration\net10.0\NovaOryn.ImageBuilder.dll"

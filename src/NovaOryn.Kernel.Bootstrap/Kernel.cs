@@ -12,6 +12,8 @@ public static class Kernel
     {
         if (!KernelConsole.Initialize(boot)) return false;
         if (!KernelConsole.WriteLine("NovaOryn KMain started.")) return false;
+        if (!boot.HasFinalMemoryMap()) return false;
+        if (!KernelConsole.WriteLine("Final UEFI memory map retained; ExitBootServices succeeded.")) return false;
         if (!KernelPlatform.InitializeDescriptors()) return false;
         if (!KernelConsole.WriteLine("GDT and TSS installed.")) return false;
         if (!KernelPlatform.InitializeInterrupts()) return false;

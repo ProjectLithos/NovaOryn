@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using NovaOryn.Architecture.X64;
 using NovaOryn.Boot.Contracts;
+using NovaOryn.Boot.Memory;
 using NovaOryn.Console.Framebuffer;
 using NovaOryn.Console.Serial;
 using NovaOryn.Core;
@@ -20,6 +21,10 @@ public static class Kernel
         if (!serial.Initialize(boot)) return false;
         if (!framebuffer.Initialize(boot)) return false;
         if (!WriteLine(serial, framebuffer, "NovaOryn KMain started.")) return false;
+        if (!NativeUefiMemoryMapSource.TryCreate(boot, out NativeUefiMemoryMapSource? finalMap)) return false;
+        if (finalMap is null || finalMap.Count < 1) return false;
+        if (!WriteLine(serial, framebuffer, "Final UEFI memory map retained; ExitBootServices succeeded.")) return false;
+        if (!WriteLine(serial, framebuffer, "Native UEFI memory-map adapter online.")) return false;
         KernelDiagnosticSink diagnostics = new(serial, framebuffer);
         if (!PlatformInitialization.Initialize(diagnostics)) return false;
         if (!WriteLine(serial, framebuffer, "GDT, TSS, IDT, exceptions, and interrupt-controller contracts online.")) return false;
@@ -42,7 +47,15 @@ public static class Kernel
             native->PixelsPerScanLine,
             (FramebufferPixelFormat)native->PixelFormat,
             new PixelBitMask(native->RedMask, native->GreenMask, native->BlueMask, native->ReservedMask));
-        BootContext boot = new(BootProtocol.Uefi, framebuffer, default, 0);
+        BootContext boot = new(
+            BootProtocol.Uefi,
+            framebuffer,
+            new PhysicalAddress(native->FinalMemoryMapAddress),
+            native->FinalMemoryMapLength,
+            native->FinalMemoryMapKey,
+            native->FinalMemoryDescriptorSize,
+            native->FinalMemoryDescriptorVersion,
+            native->FinalMemoryMapFlag == 1 && native->ExitBootServicesStatus == 0);
         return KMain(boot) ? (byte)1 : (byte)0;
     }
 
@@ -67,6 +80,14 @@ public static class Kernel
         internal uint GreenMask;
         internal uint BlueMask;
         internal uint ReservedMask;
+        internal ulong FinalMemoryMapAddress;
+        internal ulong FinalMemoryMapLength;
+        internal ulong FinalMemoryMapKey;
+        internal ulong FinalMemoryDescriptorSize;
+        internal uint FinalMemoryDescriptorVersion;
+        internal uint FinalMemoryMapCaptureAttempts;
+        internal ulong ExitBootServicesStatus;
+        internal ulong FinalMemoryMapFlag;
     }
     #pragma warning restore CS0649
 }
