@@ -26,7 +26,6 @@ static int MainEntry(string[] args)
         if (string.Equals(relative, "NovaOrynProject.json", StringComparison.OrdinalIgnoreCase)) continue;
         bool userKernelSource = string.Equals(relative, Path.Combine("Kernel", "Kernel.cs"), StringComparison.OrdinalIgnoreCase);
         if (userKernelSource && File.Exists(destination) && !IsSdkGeneratedLegacyKernel(destination)) continue;
-        if (userKernelSource && File.Exists(destination)) File.Copy(destination, destination + ".pre-0.0.69.bak", true);
         File.Copy(source, destination, true);
     }
 
@@ -62,11 +61,8 @@ static bool MigrateLegacyRootKernel(string output)
         return false;
     }
 
-    string backup = legacyRootKernel + ".pre-0.0.74.bak";
-    File.Copy(legacyRootKernel, backup, true);
     File.Delete(legacyRootKernel);
-    Console.WriteLine($"[ OK ] Migrated legacy root kernel: {legacyRootKernel}");
-    Console.WriteLine($"[ OK ] Legacy kernel backup : {backup}");
+    Console.WriteLine($"[ OK ] Removed generated legacy root kernel: {legacyRootKernel}");
     return true;
 }
 

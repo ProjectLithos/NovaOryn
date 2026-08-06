@@ -231,13 +231,14 @@ if (!bootstrapManifest.Contains("NovaOryn.Kernel.Entry.X64.csproj", StringCompar
 }
 string projectCreator = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ProjectCreator", "Program.cs"));
 if (!projectCreator.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordinal) ||
-    !projectCreator.Contains(".pre-0.0.69.bak", StringComparison.Ordinal))
+    projectCreator.Contains(".pre-0.0.69.bak", StringComparison.Ordinal) ||
+    projectCreator.Contains(".pre-0.0.74.bak", StringComparison.Ordinal))
 {
-    failures.Add("Project creation must migrate SDK-generated low-level Kernel.cs files while retaining a backup.");
+    failures.Add("Project creation must replace generated low-level Kernel.cs files without creating backups.");
 }
 if (!projectCreator.Contains("MigrateLegacyRootKernel", StringComparison.Ordinal) ||
     !projectCreator.Contains("Path.Combine(output, \"Kernel.cs\")", StringComparison.Ordinal) ||
-    !projectCreator.Contains(".pre-0.0.74.bak", StringComparison.Ordinal) ||
+    projectCreator.Contains("legacyRootKernel + \".pre-\"", StringComparison.Ordinal) ||
     !projectCreator.Contains("File.Delete(legacyRootKernel)", StringComparison.Ordinal))
 {
     failures.Add("Project creation must migrate and remove the obsolete root-level generated Kernel.cs.");
@@ -401,9 +402,11 @@ if (!buildScript.Contains("Refreshing the existing external NovaOryn kernel proj
 }
 if (!projectCreatorDefaults.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordinal) ||
     !projectCreatorDefaults.Contains("internal static class Native", StringComparison.Ordinal) ||
-    !projectCreatorDefaults.Contains(".pre-0.0.74.bak", StringComparison.Ordinal))
+    projectCreatorDefaults.Contains(".pre-0.0.69.bak", StringComparison.Ordinal) ||
+    projectCreatorDefaults.Contains(".pre-0.0.74.bak", StringComparison.Ordinal) ||
+    !projectCreatorDefaults.Contains("File.Delete(legacyRootKernel)", StringComparison.Ordinal))
 {
-    failures.Add("Project creator must migrate SDK-generated monolithic kernels while preserving a backup.");
+    failures.Add("Project creator must remove SDK-generated monolithic kernels without preserving backups.");
 }
 string kernelTemplate = Path.Combine(root, "templates", "NovaOrynKernel", "Kernel", "Kernel.cs");
 if (!File.Exists(kernelTemplate))
