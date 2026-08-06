@@ -1,6 +1,6 @@
 using System;
 
-namespace NovaOryn.Kernel.Bootstrap;
+namespace NovaOryn.Kernel.Console;
 
 #pragma warning disable CS0649 // Populated by the native UEFI entry before managed execution.
 internal struct NativeBootContext
@@ -23,7 +23,7 @@ public readonly unsafe struct BootContext
 {
     private readonly UInt64 _nativeAddress;
 
-    internal BootContext(UInt64 nativeAddress)
+    public BootContext(UInt64 nativeAddress)
     {
         _nativeAddress = nativeAddress;
     }

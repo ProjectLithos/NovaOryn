@@ -116,7 +116,7 @@ foreach (string forbidden in new[] { "<PublishAot>", "<RuntimeIdentifier>", "<Se
     }
 }
 
-string bootstrapCoreLib = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "CoreLib.cs"));
+string bootstrapCoreLib = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Freestanding.CoreLib", "CoreLib.cs"));
 if (!bootstrapCoreLib.Contains("#pragma warning disable CS0169", StringComparison.Ordinal) ||
     !bootstrapCoreLib.Contains("private IntPtr _methodTable;", StringComparison.Ordinal) ||
     !bootstrapCoreLib.Contains("#pragma warning restore CS0169", StringComparison.Ordinal))
@@ -174,26 +174,33 @@ if (!linker.Contains("SupportedCompilationManifestSchema = 5", StringComparison.
 
 
 string bootstrapKernel = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "Kernel.cs"));
-if (!bootstrapKernel.Contains("InitializeBootstrapDescriptors", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("InitializeBootstrapInterrupts", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("DisableLegacyPic", StringComparison.Ordinal))
+if (!bootstrapKernel.Contains("KernelPlatform.InitializeDescriptors", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("KernelPlatform.InitializeInterrupts", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("KernelPlatform.DisableLegacyPic", StringComparison.Ordinal))
 {
-    failures.Add("The actual ILC bootstrap must install GDT/TSS, IDT, and disable the legacy PIC.");
+    failures.Add("The actual ILC bootstrap must install GDT/TSS, IDT, and disable the legacy PIC through the high-level platform assembly.");
 }
-if (!bootstrapKernel.Contains("WriteLineDescriptors", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("WriteLineInterrupts", StringComparison.Ordinal) ||
-    bootstrapKernel.IndexOf("InitializeBootstrapDescriptors", StringComparison.Ordinal) >
-        bootstrapKernel.IndexOf("WriteLineDescriptors", StringComparison.Ordinal) ||
-    bootstrapKernel.IndexOf("InitializeBootstrapInterrupts", StringComparison.Ordinal) >
-        bootstrapKernel.IndexOf("WriteLineInterrupts", StringComparison.Ordinal))
+foreach (string message in new[] { "NovaOryn KMain started.", "GDT and TSS installed.", "IDT with 256 vectors installed.", "CPU halted." })
 {
-    failures.Add("The booting kernel must visibly report descriptor and interrupt initialization after each stage succeeds.");
+    if (!bootstrapKernel.Contains($"KernelConsole.WriteLine(\"{message}\")", StringComparison.Ordinal))
+    {
+        failures.Add($"The booting kernel must visibly report: {message}");
+    }
 }
-
-if (!bootstrapKernel.Contains("WriteLineStarted", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("WriteLineHalted", StringComparison.Ordinal))
+if (bootstrapKernel.Contains("DllImport", StringComparison.Ordinal) || bootstrapKernel.Contains("WritePort8", StringComparison.Ordinal) || bootstrapKernel.Contains("class Native", StringComparison.Ordinal))
 {
-    failures.Add("Freestanding bootstrap must emit both runtime acceptance lines before halting.");
+    failures.Add("The end-user kernel source must not expose native imports or low-level port I/O.");
+}
+string lowLevelAssembly = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.X64.LowLevel", "Native.cs"));
+foreach (string nativeMember in new[] { "class Native", "WritePort8", "InitializeBootstrapDescriptors", "InitializeBootstrapInterrupts", "DisableLegacyPic", "Halt" })
+{
+    if (!lowLevelAssembly.Contains(nativeMember, StringComparison.Ordinal)) failures.Add($"The low-level x64 assembly is missing {nativeMember}.");
+}
+string managedKernelConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
+if (!managedKernelConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
+    !managedKernelConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal))
+{
+    failures.Add("Freestanding Write and WriteLine must be normal managed C# functions.");
 }
 
 string uefiEntry = File.ReadAllText(Path.Combine(root, "native", "x64", "Entry.asm"));
@@ -220,7 +227,7 @@ if (captureCall < 0 || interruptsDisabled < captureCall)
     failures.Add("UEFI GOP discovery must complete before interrupts are disabled.");
 }
 
-string bootstrapBootContext = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "BootContext.cs"));
+string bootstrapBootContext = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "BootContext.cs"));
 foreach (string required in new[] { "FramebufferAddress", "FramebufferSize", "PixelsPerScanLine", "PixelFormat", "RedMask", "GreenMask", "BlueMask" })
 {
     if (!bootstrapBootContext.Contains(required, StringComparison.Ordinal))
@@ -229,7 +236,7 @@ foreach (string required in new[] { "FramebufferAddress", "FramebufferSize", "Pi
     }
 }
 
-string bootstrapFramebuffer = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "FramebufferConsole.cs"));
+string bootstrapFramebuffer = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "FramebufferConsole.cs"));
 foreach (string required in new[]
 {
     "context->PixelsPerScanLine < context->Width",
@@ -246,12 +253,13 @@ foreach (string required in new[]
         failures.Add($"Managed framebuffer bootstrap is missing validation/rendering contract: {required}");
     }
 }
-if (!bootstrapKernel.Contains("framebuffer.Initialize(boot)", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("framebuffer.Clear()", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("Native.WritePort8(0x3F8, value)", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("framebuffer.Write(value)", StringComparison.Ordinal))
+string kernelConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
+if (!kernelConsole.Contains("_framebuffer.Initialize(boot)", StringComparison.Ordinal) ||
+    !kernelConsole.Contains("_framebuffer.Clear()", StringComparison.Ordinal) ||
+    !kernelConsole.Contains("Native.WritePort8(0x3F8, value)", StringComparison.Ordinal) ||
+    !kernelConsole.Contains("_framebuffer.Write(value)", StringComparison.Ordinal))
 {
-    failures.Add("KMain must initialize and clear the framebuffer and mirror each serial character to it.");
+    failures.Add("The managed console assembly must initialize and clear the framebuffer and mirror each serial character to it.");
 }
 
 string framebufferProject = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Console.Framebuffer", "NovaOryn.Console.Framebuffer.csproj"));

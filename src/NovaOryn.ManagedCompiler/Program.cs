@@ -53,6 +53,7 @@ static int MainEntry(string[] args)
     }
 
     string assemblyName = GetAssemblyName(project.ProjectFile);
+    string systemModule = GetProjectProperty(project.ProjectFile, "NovaOrynSystemModule") ?? assemblyName;
     string managedAssembly = Path.Combine(managedOutput, assemblyName + ".dll");
     if (!File.Exists(managedAssembly))
     {
@@ -65,7 +66,7 @@ static int MainEntry(string[] args)
     [
         managedAssembly,
         $"-o:{nativeObject}",
-        "--systemmodule", assemblyName,
+        "--systemmodule", systemModule,
         "--targetos:win",
         "--targetarch:x64",
         "--nativelib",
@@ -102,6 +103,7 @@ static int MainEntry(string[] args)
         ilScanner = "Disabled",
         optimization = "BootstrapCorrectness",
         managedAssembly,
+        systemModule,
         nativeObject,
         ilcMap,
         ilcExecutable = ilc,
@@ -117,6 +119,14 @@ static int MainEntry(string[] args)
     return 0;
 }
 
+
+static string? GetProjectProperty(string projectFile, string propertyName)
+{
+    XDocument project = XDocument.Load(projectFile, LoadOptions.None);
+    string? value = project.Descendants().FirstOrDefault(element =>
+        string.Equals(element.Name.LocalName, propertyName, StringComparison.Ordinal))?.Value.Trim();
+    return string.IsNullOrWhiteSpace(value) ? null : value;
+}
 
 static string GetAssemblyName(string projectFile)
 {

@@ -35,7 +35,7 @@ namespace System
             while (true) { }
         }
     }
-    public sealed class String { public readonly Int32 Length; }
+    public sealed class String { public readonly Int32 Length; public Char this[Int32 index] { get { while (true) { } } } }
     public abstract class Delegate { }
     public abstract class MulticastDelegate : Delegate { }
     public class Attribute { }
@@ -53,7 +53,7 @@ namespace System
 
     namespace Runtime
     {
-        internal sealed class RuntimeExportAttribute : Attribute
+        public sealed class RuntimeExportAttribute : Attribute
         {
             public RuntimeExportAttribute(String name) { }
         }

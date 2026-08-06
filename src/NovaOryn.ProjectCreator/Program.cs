@@ -22,7 +22,9 @@ static int MainEntry(string[] args)
         string destination = Path.Combine(output, relative);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
         if (string.Equals(relative, "NovaOrynProject.json", StringComparison.OrdinalIgnoreCase)) continue;
-        if (!File.Exists(destination)) File.Copy(source, destination);
+        bool userKernelSource = string.Equals(relative, Path.Combine("Kernel", "Kernel.cs"), StringComparison.OrdinalIgnoreCase);
+        if (userKernelSource && File.Exists(destination)) continue;
+        File.Copy(source, destination, true);
     }
 
     string manifestPath = Path.Combine(output, "NovaOrynProject.json");

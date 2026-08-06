@@ -1,6 +1,6 @@
 using System;
 
-namespace NovaOryn.Kernel.Bootstrap;
+namespace NovaOryn.Kernel.Console;
 
 internal unsafe struct FramebufferConsole
 {

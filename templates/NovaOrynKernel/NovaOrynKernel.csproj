@@ -11,22 +11,17 @@
     <RuntimeMetadataVersion>v4.0.30319</RuntimeMetadataVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
     <AssemblyName>NovaOryn.Kernel.Bootstrap</AssemblyName>
     <RootNamespace>NovaOryn.Kernel.Bootstrap</RootNamespace>
+    <NovaOrynSystemModule>NovaOryn.Freestanding.CoreLib</NovaOrynSystemModule>
     <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Kernel\Kernel.cs" />
-    <Compile Include="Runtime\CoreLib.cs" />
-    <Compile Include="Boot\BootContext.cs" />
-    <Compile Include="Console\FramebufferConsole.cs" />
-    <Compile Include="Console\BitmapFont.cs" />
+    <ProjectReference Include="Sdk\NovaOryn.Freestanding.CoreLib\NovaOryn.Freestanding.CoreLib.csproj" />
+    <ProjectReference Include="Sdk\NovaOryn.Kernel.Console\NovaOryn.Kernel.Console.csproj" />
+    <ProjectReference Include="Sdk\NovaOryn.Kernel.Platform.X64\NovaOryn.Kernel.Platform.X64.csproj" />
     <None Include="NovaOrynProject.json" />
   </ItemGroup>
-  <Target Name="CustomizeReferences" BeforeTargets="BeforeCompile" AfterTargets="FindReferenceAssembliesForReferences">
-    <ItemGroup>
-      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" />
-      <ReferencePath Remove="@(ReferencePath)" />
-    </ItemGroup>
-  </Target>
 </Project>
