@@ -366,8 +366,8 @@ if (!buildScript.Contains("NovaOryn.ImageBuilder", StringComparison.Ordinal) ||
     failures.Add("Build script must create the FAT32 image and execute OVMF/QEMU runtime acceptance.");
 }
 
-string projectCreator = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ProjectCreator", "Program.cs"));
-if (!projectCreator.Contains("Source", StringComparison.Ordinal) || !projectCreator.Contains("Repos", StringComparison.Ordinal) || !projectCreator.Contains("NovaOrynKernel", StringComparison.Ordinal))
+string projectCreatorDefaults = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ProjectCreator", "Program.cs"));
+if (!projectCreatorDefaults.Contains("Source", StringComparison.Ordinal) || !projectCreatorDefaults.Contains("Repos", StringComparison.Ordinal) || !projectCreatorDefaults.Contains("NovaOrynKernel", StringComparison.Ordinal))
 {
     failures.Add("Project creator must default to the user Source\\Repos\\NovaOrynKernel directory.");
 }
