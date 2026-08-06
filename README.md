@@ -1,6 +1,12 @@
-# Nova Oryn OS SDK 0.0.92
+# Nova Oryn OS SDK 0.0.93
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
+
+## Release 0.0.93
+
+Release 0.0.93 corrects the source-policy test build failure discovered when 0.0.92 was compiled with the repository-pinned Windows toolchain. The boot-context validation for framebuffer fields now uses a distinct `framebufferBootContext` local instead of redeclaring the existing `bootstrapBootContext` local in the same top-level scope.
+
+The boot memory-map contracts, final UEFI map capture, and all three normalisation implementations introduced in 0.0.92 are unchanged. This release exists so the complete solution and source-policy test project can compile before the memory tests and native kernel stages run.
 
 ## Release 0.0.92
 
@@ -114,7 +120,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.92.md` for this release.
+See `docs/Release-0.0.93.md` for this release.
 
 
 ## 0.0.22 build
@@ -186,7 +192,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.92** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.93** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 

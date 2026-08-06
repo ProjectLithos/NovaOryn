@@ -442,10 +442,10 @@ if (captureCall < 0 || interruptsDisabled < captureCall)
     failures.Add("UEFI GOP discovery must complete before interrupts are disabled.");
 }
 
-string bootstrapBootContext = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "BootContext.cs"));
+string framebufferBootContext = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "BootContext.cs"));
 foreach (string required in new[] { "FramebufferAddress", "FramebufferSize", "PixelsPerScanLine", "PixelFormat", "RedMask", "GreenMask", "BlueMask" })
 {
-    if (!bootstrapBootContext.Contains(required, StringComparison.Ordinal))
+    if (!framebufferBootContext.Contains(required, StringComparison.Ordinal))
     {
         failures.Add($"Freestanding boot context is missing framebuffer field: {required}");
     }
