@@ -401,7 +401,10 @@ if (!buildScript.Contains("Refreshing the existing external NovaOryn kernel proj
     failures.Add("Build script must safely refresh an existing external NovaOryn kernel project.");
 }
 if (!projectCreatorDefaults.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordinal) ||
-    !projectCreatorDefaults.Contains("internal static class Native", StringComparison.Ordinal) ||
+    !projectCreatorDefaults.Contains("\"DllImport\"", StringComparison.Ordinal) ||
+    !projectCreatorDefaults.Contains("\"WritePort8\"", StringComparison.Ordinal) ||
+    !projectCreatorDefaults.Contains("\"FramebufferConsole\"", StringComparison.Ordinal) ||
+    !projectCreatorDefaults.Contains("\"NovaOrynManagedEntry\"", StringComparison.Ordinal) ||
     projectCreatorDefaults.Contains(".pre-0.0.69.bak", StringComparison.Ordinal) ||
     projectCreatorDefaults.Contains(".pre-0.0.74.bak", StringComparison.Ordinal) ||
     !projectCreatorDefaults.Contains("File.Delete(legacyRootKernel)", StringComparison.Ordinal))
@@ -523,6 +526,12 @@ Console.WriteLine("[ OK ] No-CoreLib kernel compilation invokes ILC directly.");
 Console.WriteLine("[ OK ] Windows NativeAOT runtime-pack resolution is not used.");
 Console.WriteLine("[ OK ] UEFI GOP capture and managed framebuffer rendering are wired.");
 Console.WriteLine("[ OK ] GPT/FAT32 image creation and OVMF/QEMU runtime acceptance are wired.");
+string updaterSource = File.ReadAllText(Path.Combine(root, "Update-NovaOryn.ps1"));
+Assert(updaterSource.Contains("Get-ArchiveDeclaredDeletionSet", StringComparison.Ordinal) &&
+       updaterSource.Contains("Get-ArchiveTargetPathSet", StringComparison.Ordinal) &&
+       updaterSource.Contains("-not $targetPaths.Contains($normalized)", StringComparison.Ordinal),
+       "Updater accepts carried-forward deletions absent from the selected target source manifest.");
+
 return 0;
 
 static string FindRepositoryRoot(string start)

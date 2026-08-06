@@ -148,6 +148,49 @@ function Get-ArchiveFileHashes([string]$ArchivePath) {
     }
 }
 
+
+function Get-ArchiveDeclaredDeletionSet([string]$ArchivePath) {
+    $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) ('NovaOrynArchiveChanges-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
+    try {
+        Expand-Archive -LiteralPath $ArchivePath -DestinationPath $temporaryRoot -Force
+        $manifestPath = Join-Path $temporaryRoot 'NovaOryn-Changes.json'
+        $paths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) { return $paths }
+        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+        foreach ($relativePath in @($manifest.deletedFiles)) {
+            if ([string]::IsNullOrWhiteSpace([string]$relativePath)) { continue }
+            [void]$paths.Add(([string]$relativePath).Replace('\', '/'))
+        }
+        return $paths
+    } finally {
+        Remove-Item -LiteralPath $temporaryRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+
+function Get-ArchiveTargetPathSet([string]$ArchivePath) {
+    $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) ('NovaOrynTargetManifest-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
+    try {
+        Expand-Archive -LiteralPath $ArchivePath -DestinationPath $temporaryRoot -Force
+        $manifestPath = Join-Path $temporaryRoot 'NovaOryn-SourceManifest.json'
+        if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+            Fail 'Selected archive does not contain NovaOryn-SourceManifest.json.'
+        }
+
+        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+        $paths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($file in @($manifest.files)) {
+            if ($null -eq $file -or [string]::IsNullOrWhiteSpace([string]$file.path)) { continue }
+            [void]$paths.Add(([string]$file.path).Replace('\\', '/'))
+        }
+        return $paths
+    } finally {
+        Remove-Item -LiteralPath $temporaryRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Get-PreviouslySuppliedFileHashes([string]$RepositoryRoot) {
     $manifestPath = Join-Path $RepositoryRoot 'NovaOryn-SourceManifest.json'
     $hashes = @{}
@@ -176,6 +219,8 @@ function Assert-SafeWorkingTree([string]$RepositoryRoot, [string]$ArchivePath) {
 
     $archivePaths = Get-ArchivePathSet $ArchivePath
     $archiveHashes = Get-ArchiveFileHashes $ArchivePath
+    $declaredDeletions = Get-ArchiveDeclaredDeletionSet $ArchivePath
+    $targetPaths = Get-ArchiveTargetPathSet $ArchivePath
     $previousHashes = Get-PreviouslySuppliedFileHashes $RepositoryRoot
     $unexpected = [Collections.Generic.List[string]]::new()
 
@@ -190,7 +235,7 @@ function Assert-SafeWorkingTree([string]$RepositoryRoot, [string]$ArchivePath) {
             $localPath = Join-Path $RepositoryRoot $normalized
 
             # A deletion or rename source is safe only when the selected release explicitly declares it.
-            if (($statusCode.Contains('D') -or $pathText.Contains(' -> ')) -and $archivePaths.Contains($normalized)) {
+            if (($statusCode.Contains('D') -or $pathText.Contains(' -> ')) -and ($archivePaths.Contains($normalized) -or $declaredDeletions.Contains($normalized) -or -not $targetPaths.Contains($normalized))) {
                 continue
             }
 
