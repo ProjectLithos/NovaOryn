@@ -51,6 +51,14 @@ namespace System
     public struct RuntimeFieldHandle { }
     public struct Nullable<T> where T : struct { }
 
+    namespace Reflection
+    {
+        public sealed class DefaultMemberAttribute : Attribute
+        {
+            public DefaultMemberAttribute(String memberName) { }
+        }
+    }
+
     namespace Runtime
     {
         public sealed class RuntimeExportAttribute : Attribute

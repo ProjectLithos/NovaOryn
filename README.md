@@ -1,10 +1,10 @@
-# Nova Oryn OS SDK 0.0.65
+# Nova Oryn OS SDK 0.0.66
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.65
+## Release 0.0.66
 
-Release 0.0.65 separates native ABI imports, managed console output, high-level x64 platform initialization, and the end-user kernel into distinct freestanding assemblies. Kernel source now uses normal C# WriteLine calls and contains no low-level port I/O or DllImport declarations.
+Release 0.0.66 adds the compiler-required `System.Reflection.DefaultMemberAttribute` to the freestanding CoreLib used by both the authoritative bootstrap and generated kernel projects. This fixes managed compilation of indexed members such as `System.String.this[Int32]` while preserving the separate low-level, console, platform, and end-user kernel assemblies introduced in 0.0.65.
 
 ## Release 0.0.56
 
@@ -102,7 +102,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.65.md` for this release.
+See `docs/Release-0.0.66.md` for this release.
 
 
 ## 0.0.22 build
@@ -174,7 +174,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.65** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.66** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 
@@ -187,7 +187,7 @@ Run `Build-NovaOrynDocumentation.bat` to regenerate the offline site at `Artifac
 
 ## IDT and CPU exceptions
 
-Version 0.0.65 adds all 256 x64 IDT vectors, a normalised managed/native exception frame, driver-vector allocation, handler lifecycle management, IST-aware essential exception handlers, and terminal fatal handling.
+Version 0.0.66 adds all 256 x64 IDT vectors, a normalised managed/native exception frame, driver-vector allocation, handler lifecycle management, IST-aware essential exception handlers, and terminal fatal handling.
 
 
-Version 0.0.65 adds controller-neutral IRQ routing, legacy PIC takeover, APIC EOI/IPI, I/O APIC redirection, MSI/MSI-X message creation, x2APIC delivery, affinity, priorities, polarity, trigger mode, and masking.
+Version 0.0.66 adds controller-neutral IRQ routing, legacy PIC takeover, APIC EOI/IPI, I/O APIC redirection, MSI/MSI-X message creation, x2APIC delivery, affinity, priorities, polarity, trigger mode, and masking.

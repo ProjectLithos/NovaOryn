@@ -132,6 +132,18 @@ if (!bootstrapCoreLib.Contains("public static class Buffer", StringComparison.Or
 {
     failures.Add("Freestanding CoreLib must provide the .NET 10 ILC System.Buffer helper contract.");
 }
+if (!bootstrapCoreLib.Contains("namespace Reflection", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("class DefaultMemberAttribute", StringComparison.Ordinal) ||
+    !bootstrapCoreLib.Contains("DefaultMemberAttribute(String memberName)", StringComparison.Ordinal))
+{
+    failures.Add("Freestanding CoreLib must provide the compiler-required System.Reflection.DefaultMemberAttribute constructor used by indexed members.");
+}
+string templateCoreLib = File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Sdk", "NovaOryn.Freestanding.CoreLib", "CoreLib.cs"));
+if (!templateCoreLib.Contains("class DefaultMemberAttribute", StringComparison.Ordinal) ||
+    !templateCoreLib.Contains("DefaultMemberAttribute(String memberName)", StringComparison.Ordinal))
+{
+    failures.Add("The kernel template CoreLib must include System.Reflection.DefaultMemberAttribute.");
+}
 
 string managedCompiler = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ManagedCompiler", "Program.cs"));
 if (managedCompiler.Contains("\"publish\"", StringComparison.Ordinal))
