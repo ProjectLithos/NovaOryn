@@ -1,6 +1,6 @@
 {
   "Name": "MinimalKernel",
-  "ProjectFile": "NovaOryn.Kernel.Bootstrap.csproj",
+  "ProjectFile": "../NovaOryn.Kernel.Entry.X64/NovaOryn.Kernel.Entry.X64.csproj",
   "TargetArchitecture": "x64",
   "BootProtocol": "Uefi",
   "KernelEntry": "KMain",

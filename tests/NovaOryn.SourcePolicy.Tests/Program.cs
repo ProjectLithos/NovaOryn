@@ -209,6 +209,27 @@ if (bootstrapKernel.Contains("DllImport", StringComparison.Ordinal) || bootstrap
 {
     failures.Add("The end-user kernel source must not expose native imports or low-level port I/O.");
 }
+if (bootstrapKernel.Contains("RuntimeExport", StringComparison.Ordinal) || bootstrapKernel.Contains("NativeEntry", StringComparison.Ordinal))
+{
+    failures.Add("The end-user kernel source must not expose the native runtime entry bridge.");
+}
+string kernelEntry = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Entry.X64", "KernelEntry.cs"));
+if (!kernelEntry.Contains("RuntimeExport(\"NovaOrynManagedEntry\")", StringComparison.Ordinal) ||
+    !kernelEntry.Contains("Kernel.KMain(new BootContext(bootContextAddress))", StringComparison.Ordinal))
+{
+    failures.Add("The separate x64 entry assembly must own the runtime export and dispatch to KMain.");
+}
+string bootstrapManifest = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Bootstrap", "NovaOrynProject.json"));
+if (!bootstrapManifest.Contains("NovaOryn.Kernel.Entry.X64.csproj", StringComparison.Ordinal))
+{
+    failures.Add("The authoritative bootstrap manifest must compile through the separate entry assembly.");
+}
+string projectCreator = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.ProjectCreator", "Program.cs"));
+if (!projectCreator.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordinal) ||
+    !projectCreator.Contains(".pre-0.0.69.bak", StringComparison.Ordinal))
+{
+    failures.Add("Project creation must migrate SDK-generated low-level Kernel.cs files while retaining a backup.");
+}
 string lowLevelAssembly = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.X64.LowLevel", "Native.cs"));
 foreach (string nativeMember in new[] { "class Native", "WritePort8", "InitializeBootstrapDescriptors", "InitializeBootstrapInterrupts", "DisableLegacyPic", "Halt" })
 {

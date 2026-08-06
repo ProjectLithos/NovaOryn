@@ -23,15 +23,16 @@ static int MainEntry(string[] args)
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
         if (string.Equals(relative, "NovaOrynProject.json", StringComparison.OrdinalIgnoreCase)) continue;
         bool userKernelSource = string.Equals(relative, Path.Combine("Kernel", "Kernel.cs"), StringComparison.OrdinalIgnoreCase);
-        if (userKernelSource && File.Exists(destination)) continue;
+        if (userKernelSource && File.Exists(destination) && !IsSdkGeneratedLegacyKernel(destination)) continue;
+        if (userKernelSource && File.Exists(destination)) File.Copy(destination, destination + ".pre-0.0.69.bak", true);
         File.Copy(source, destination, true);
     }
 
     string manifestPath = Path.Combine(output, "NovaOrynProject.json");
-    if (!File.Exists(manifestPath)) File.WriteAllText(manifestPath, JsonSerializer.Serialize(new
+    File.WriteAllText(manifestPath, JsonSerializer.Serialize(new
     {
         Name = "MinimalKernel",
-        ProjectFile = "NovaOrynKernel.csproj",
+        ProjectFile = "Sdk/NovaOryn.Kernel.Entry.X64/NovaOryn.Kernel.Entry.X64.csproj",
         TargetArchitecture = "x64",
         BootProtocol = "Uefi",
         KernelEntry = "KMain",
@@ -43,6 +44,19 @@ static int MainEntry(string[] args)
     Console.WriteLine($"[ OK ] Kernel solution : {Path.Combine(output, "NovaOrynKernel.sln")}");
     Console.WriteLine($"[ OK ] Project manifest: {manifestPath}");
     return 0;
+}
+
+
+static bool IsSdkGeneratedLegacyKernel(string path)
+{
+    string source = File.ReadAllText(path);
+    bool monolithic = source.Contains("internal static class Native", StringComparison.Ordinal) &&
+        source.Contains("WriteLineDescriptors", StringComparison.Ordinal) &&
+        source.Contains("InitializeSerial", StringComparison.Ordinal);
+    bool previousGenerated = source.Contains("[RuntimeExport(\"NovaOrynManagedEntry\")]", StringComparison.Ordinal) &&
+        source.Contains("KernelPlatform.InitializeDescriptors", StringComparison.Ordinal) &&
+        source.Contains("KernelConsole.WriteLine", StringComparison.Ordinal);
+    return monolithic || previousGenerated;
 }
 
 static string FindSdkRoot(string start)

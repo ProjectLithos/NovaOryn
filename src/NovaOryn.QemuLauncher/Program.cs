@@ -125,7 +125,7 @@ static int MainEntry(string[] args)
                 File.WriteAllText(runManifest, JsonSerializer.Serialize(new
                 {
                     schemaVersion = 1,
-                    productVersion = "0.0.68",
+                    productVersion = "0.0.69",
                     project = project.Name,
                     qemuProcessId = process.Id,
                     qemuExecutable = qemu,

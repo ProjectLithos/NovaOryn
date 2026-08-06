@@ -1,5 +1,4 @@
 using System;
-using System.Runtime;
 using NovaOryn.Kernel.Console;
 using NovaOryn.Kernel.Platform.X64;
 
@@ -21,11 +20,5 @@ public static class Kernel
         if (!KernelConsole.WriteLine("Legacy PIC masked; APIC/MSI controller layer ready.")) return false;
         if (!KernelConsole.WriteLine("CPU halted.")) return false;
         return KernelPlatform.Halt();
-    }
-
-    [RuntimeExport("NovaOrynManagedEntry")]
-    private static Boolean NativeEntry(UInt64 bootContextAddress)
-    {
-        return KMain(new BootContext(bootContextAddress));
     }
 }
