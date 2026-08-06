@@ -180,10 +180,14 @@ if (!bootstrapKernel.Contains("InitializeBootstrapDescriptors", StringComparison
 {
     failures.Add("The actual ILC bootstrap must install GDT/TSS, IDT, and disable the legacy PIC.");
 }
-if (!bootstrapKernel.Contains("GDT and TSS installed.", StringComparison.Ordinal) ||
-    !bootstrapKernel.Contains("IDT with 256 vectors installed.", StringComparison.Ordinal))
+if (!bootstrapKernel.Contains("WriteLineDescriptors", StringComparison.Ordinal) ||
+    !bootstrapKernel.Contains("WriteLineInterrupts", StringComparison.Ordinal) ||
+    bootstrapKernel.IndexOf("InitializeBootstrapDescriptors", StringComparison.Ordinal) >
+        bootstrapKernel.IndexOf("WriteLineDescriptors", StringComparison.Ordinal) ||
+    bootstrapKernel.IndexOf("InitializeBootstrapInterrupts", StringComparison.Ordinal) >
+        bootstrapKernel.IndexOf("WriteLineInterrupts", StringComparison.Ordinal))
 {
-    failures.Add("The booting kernel must visibly report descriptor and interrupt initialization.");
+    failures.Add("The booting kernel must visibly report descriptor and interrupt initialization after each stage succeeds.");
 }
 
 if (!bootstrapKernel.Contains("WriteLineStarted", StringComparison.Ordinal) ||
