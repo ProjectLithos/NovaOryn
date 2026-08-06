@@ -147,6 +147,8 @@ if ($LASTEXITCODE -ne 0) { throw "NASM failed for Runtime.asm with exit code $LA
 if ($LASTEXITCODE -ne 0) { throw "NASM failed for Descriptors.asm with exit code $LASTEXITCODE." }
 & $nasm -f win64 (Join-Path $root "native\x64\Interrupts.asm") -o (Join-Path $nativeOutput "Interrupts.obj")
 if ($LASTEXITCODE -ne 0) { throw "NASM failed for Interrupts.asm with exit code $LASTEXITCODE." }
+& $nasm -f win64 (Join-Path $root "native\x64\InterruptControllers.asm") -o (Join-Path $nativeOutput "InterruptControllers.obj")
+if ($LASTEXITCODE -ne 0) { throw "NASM failed for InterruptControllers.asm with exit code $LASTEXITCODE." }
 
 Write-Host "[INFO] Building NovaOryn executable tools."
 & $dotnet build (Join-Path $root "NovaOryn.sln") --configuration $Configuration --property:Platform="Any CPU" --nologo

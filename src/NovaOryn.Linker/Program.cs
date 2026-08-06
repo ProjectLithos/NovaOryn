@@ -66,7 +66,8 @@ static int MainEntry(string[] args)
     string runtime = Path.Combine(nativeRoot, "Runtime.obj");
     string descriptors = Path.Combine(nativeRoot, "Descriptors.obj");
     string interrupts = Path.Combine(nativeRoot, "Interrupts.obj");
-    foreach (string file in new[] { entry, cpu, runtime, descriptors, interrupts })
+    string interruptControllers = Path.Combine(nativeRoot, "InterruptControllers.obj");
+    foreach (string file in new[] { entry, cpu, runtime, descriptors, interrupts, interruptControllers })
     {
         if (!File.Exists(file))
         {

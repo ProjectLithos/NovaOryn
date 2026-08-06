@@ -347,6 +347,31 @@ if (!solution.Contains("NovaOryn.Interrupts.Contracts", StringComparison.Ordinal
     failures.Add("The authoritative solution must include the interrupt contracts and x64 implementation assemblies.");
 }
 
+
+string controllerContracts = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.InterruptControllers.Contracts", "InterruptControllerContracts.cs"));
+foreach (string required in new[] { "IInterruptController", "ILegacyPic", "InterruptRouteConfiguration", "InterruptDeliveryMechanism", "InterruptPolarity", "InterruptTriggerMode", "InterruptAffinity", "EndOfInterrupt", "SendInterprocessorInterrupt", "CreateMessage" })
+{
+    if (!controllerContracts.Contains(required, StringComparison.Ordinal)) failures.Add($"Interrupt-controller contracts are missing {required}.");
+}
+string controllerImplementation = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.InterruptControllers.X64", "X64InterruptController.cs"));
+foreach (string required in new[] { "LegacyPic", "ProgramIoApic", "CreateMessage", "X2ApicEoiMsr", "X2ApicIcrMsr", "SetAffinity", "SetPriority", "IInterruptVectorAllocator" })
+{
+    if (!controllerImplementation.Contains(required, StringComparison.Ordinal)) failures.Add($"x64 interrupt-controller implementation is missing {required}.");
+}
+string controllerAssembly = File.ReadAllText(Path.Combine(root, "native", "x64", "InterruptControllers.asm"));
+foreach (string required in new[] { "in al, dx", "out dx, al", "rdmsr", "wrmsr", "mfence", "NovaOrynX64WriteMmio32" })
+{
+    if (!controllerAssembly.Contains(required, StringComparison.Ordinal)) failures.Add($"Native interrupt-controller support is missing {required}.");
+}
+if (!buildScript.Contains("InterruptControllers.asm", StringComparison.Ordinal) || !linker.Contains("InterruptControllers.obj", StringComparison.Ordinal))
+{
+    failures.Add("Interrupt-controller native object must be assembled and linked into the EFI image.");
+}
+if (!solution.Contains("NovaOryn.InterruptControllers.Contracts", StringComparison.Ordinal) || !solution.Contains("NovaOryn.InterruptControllers.X64", StringComparison.Ordinal))
+{
+    failures.Add("The authoritative solution must include interrupt-controller contracts and the x64 implementation.");
+}
+
 if (failures.Count != 0)
 {
     foreach (string failure in failures)
