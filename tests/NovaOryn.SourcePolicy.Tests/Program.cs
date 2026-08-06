@@ -161,7 +161,7 @@ foreach (string required in new[] { "--systemmodule", "--targetos:win", "--targe
         failures.Add($"Direct ILC invocation is missing {required}.");
     }
 }
-if (!managedCompiler.Contains("GetFiles(managedOutput, "*.dll"", StringComparison.Ordinal) ||
+if (!managedCompiler.Contains("GetFiles(managedOutput, \"*.dll\"", StringComparison.Ordinal) ||
     !managedCompiler.Contains("managedInputs", StringComparison.Ordinal) ||
     !managedCompiler.Contains("systemModuleAssembly", StringComparison.Ordinal))
 {
