@@ -12,7 +12,7 @@ public static class KernelConsole
     /// <summary>Initializes serial and framebuffer output.</summary>
     public static Boolean Initialize(BootContext boot)
     {
-        if (!InitializeSerial()) return false;
+        if (!Native.InitializeSerial()) return false;
         if (!_framebuffer.Initialize(boot)) return false;
         if (!_framebuffer.Clear()) return false;
         _initialized = true;
@@ -20,20 +20,17 @@ public static class KernelConsole
     }
 
     /// <summary>Writes a managed string without appending a line terminator.</summary>
-    public static unsafe Boolean Write(String value)
+    public static Boolean Write(String value)
     {
         if (!_initialized || value == null) return false;
         Int32 length = value.Length;
         Int32 index = 0;
-        fixed (Char* characters = value)
+        while (index < length)
         {
-            while (index < length)
-            {
-                Char character = characters[index];
-                if ((UInt32)character > 0x7FU) character = (Char)'?';
-                if (!Write((Byte)character)) return false;
-                index++;
-            }
+            Char character = value[index];
+            if ((UInt32)character > 0x7FU) character = (Char)'?';
+            if (!Write((Byte)character)) return false;
+            index++;
         }
         return true;
     }
@@ -50,19 +47,7 @@ public static class KernelConsole
     public static Boolean Write(Byte value)
     {
         if (!_initialized) return false;
-        if (!Native.WritePort8(0x3F8, value)) return false;
+        if (!Native.WriteSerial(value)) return false;
         return _framebuffer.Write(value);
     }
-
-    private static Boolean InitializeSerial()
-    {
-        if (!Native.WritePort8(0x3F9, 0x00)) return false;
-        if (!Native.WritePort8(0x3FB, 0x80)) return false;
-        if (!Native.WritePort8(0x3F8, 0x01)) return false;
-        if (!Native.WritePort8(0x3F9, 0x00)) return false;
-        if (!Native.WritePort8(0x3FB, 0x03)) return false;
-        if (!Native.WritePort8(0x3FA, 0xC7)) return false;
-        return Native.WritePort8(0x3FC, 0x0B);
-    }
-
 }

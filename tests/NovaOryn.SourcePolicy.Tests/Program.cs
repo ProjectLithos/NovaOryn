@@ -167,12 +167,12 @@ if (bootstrapCoreLib.Contains("public sealed class String { public readonly Int3
 {
     failures.Add("Freestanding System.String must not retain the non-terminating placeholder indexer.");
 }
-if (!bootstrapConsole.Contains("public static unsafe Boolean Write(String value)", StringComparison.Ordinal) ||
-    !bootstrapConsole.Contains("fixed (Char* characters = value)", StringComparison.Ordinal) ||
-    !bootstrapConsole.Contains("Char character = characters[index];", StringComparison.Ordinal) ||
-    bootstrapConsole.Contains("Char character = value[index];", StringComparison.Ordinal))
+if (!bootstrapConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
+    !bootstrapConsole.Contains("Char character = value[index];", StringComparison.Ordinal) ||
+    bootstrapConsole.Contains("public static unsafe Boolean Write(String value)", StringComparison.Ordinal) ||
+    bootstrapConsole.Contains("fixed (Char* characters = value)", StringComparison.Ordinal))
 {
-    failures.Add("KernelConsole.Write must consume the managed string buffer directly instead of entering the placeholder string indexer.");
+    failures.Add("KernelConsole.Write must remain a normal managed C# method and use the terminating freestanding string indexer.");
 }
 string visualStudioCoreLib = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Freestanding.CoreLib", "CoreLib.cs"));
 string visualStudioConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
@@ -292,15 +292,20 @@ if (!projectCreator.Contains("source.Contains(\"DllImport\"", StringComparison.O
     failures.Add("Legacy kernel migration must recognize the generated monolithic low-level kernel by stable structural markers.");
 }
 string lowLevelAssembly = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.X64.LowLevel", "Native.cs"));
-foreach (string nativeMember in new[] { "class Native", "WritePort8", "InitializeBootstrapDescriptors", "InitializeBootstrapInterrupts", "DisableLegacyPic", "Halt" })
+foreach (string nativeMember in new[] { "class Native", "InitializeSerial", "WriteSerial", "private static extern Boolean WritePort8", "InitializeBootstrapDescriptors", "InitializeBootstrapInterrupts", "DisableLegacyPic", "Halt" })
 {
     if (!lowLevelAssembly.Contains(nativeMember, StringComparison.Ordinal)) failures.Add($"The low-level x64 assembly is missing {nativeMember}.");
 }
 string managedKernelConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
 if (!managedKernelConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
-    !managedKernelConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal))
+    !managedKernelConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal) ||
+    managedKernelConsole.Contains("unsafe Boolean Write", StringComparison.Ordinal) ||
+    managedKernelConsole.Contains("WritePort8", StringComparison.Ordinal) ||
+    managedKernelConsole.Contains("0x3F8", StringComparison.Ordinal) ||
+    !managedKernelConsole.Contains("Native.InitializeSerial()", StringComparison.Ordinal) ||
+    !managedKernelConsole.Contains("Native.WriteSerial(value)", StringComparison.Ordinal))
 {
-    failures.Add("Freestanding Write and WriteLine must be normal managed C# functions.");
+    failures.Add("Freestanding Write and WriteLine must be normal managed C# functions with raw serial I/O confined to the low-level assembly.");
 }
 
 string uefiEntry = File.ReadAllText(Path.Combine(root, "native", "x64", "Entry.asm"));
@@ -549,9 +554,12 @@ if (!visualStudioLowLevel.Contains("class Native", StringComparison.Ordinal) || 
 }
 string visualStudioTemplateConsole = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "Sdk", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
 if (!visualStudioTemplateConsole.Contains("public static Boolean Write(String value)", StringComparison.Ordinal) ||
-    !visualStudioTemplateConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal))
+    !visualStudioTemplateConsole.Contains("public static Boolean WriteLine(String value)", StringComparison.Ordinal) ||
+    visualStudioTemplateConsole.Contains("unsafe Boolean Write", StringComparison.Ordinal) ||
+    visualStudioTemplateConsole.Contains("WritePort8", StringComparison.Ordinal) ||
+    visualStudioTemplateConsole.Contains("0x3F8", StringComparison.Ordinal))
 {
-    failures.Add("Visual Studio template must expose normal managed Write and WriteLine functions from the console assembly.");
+    failures.Add("Visual Studio template must expose normal managed Write and WriteLine functions while hiding raw serial I/O in the low-level assembly.");
 }
 string visualStudioVstemplate = File.ReadAllText(Path.Combine(visualStudioTemplateRoot, "NovaOrynKernel.vstemplate"));
 if (!visualStudioVstemplate.Contains("NovaOryn.Kernel.X64.LowLevel", StringComparison.Ordinal) ||
