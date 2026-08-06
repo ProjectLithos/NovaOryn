@@ -401,7 +401,7 @@ if (!buildScript.Contains("Refreshing the existing external NovaOryn kernel proj
 }
 if (!projectCreatorDefaults.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordinal) ||
     !projectCreatorDefaults.Contains("internal static class Native", StringComparison.Ordinal) ||
-    !projectCreatorDefaults.Contains(".pre-0.0.69.bak", StringComparison.Ordinal))
+    !projectCreatorDefaults.Contains(".pre-0.0.74.bak", StringComparison.Ordinal))
 {
     failures.Add("Project creator must migrate SDK-generated monolithic kernels while preserving a backup.");
 }
