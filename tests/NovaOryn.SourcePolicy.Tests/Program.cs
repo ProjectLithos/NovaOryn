@@ -90,6 +90,11 @@ if (!buildScript.Contains("--property:Platform=\"Any CPU\"", StringComparison.Or
 {
     failures.Add("Build script must explicitly select Any CPU for managed solution projects.");
 }
+if (buildScript.Contains(".Contains($forbiddenKernelToken, [StringComparison]::Ordinal)", StringComparison.Ordinal) ||
+    !buildScript.Contains(".IndexOf($forbiddenKernelToken, [StringComparison]::Ordinal) -ge 0", StringComparison.Ordinal))
+{
+    failures.Add("Build script must use a Windows PowerShell-compatible ordinal kernel-token check.");
+}
 if (!buildScript.Contains("--ilc $ilc", StringComparison.Ordinal))
 {
     failures.Add("Build script must pass the repository-pinned ILC executable to NovaOryn.ManagedCompiler.");

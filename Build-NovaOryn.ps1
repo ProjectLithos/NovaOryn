@@ -198,7 +198,7 @@ if (Test-Path -LiteralPath $externalKernelDirectory -PathType Container) {
 
     $externalKernelSource = Get-Content -LiteralPath $externalUserKernel -Raw
     foreach ($forbiddenKernelToken in @("DllImport", "internal static class Native", "WritePort8", "RuntimeExport", "FramebufferConsole", "0x3F8")) {
-        if ($externalKernelSource.Contains($forbiddenKernelToken, [StringComparison]::Ordinal)) {
+        if ($externalKernelSource.IndexOf($forbiddenKernelToken, [StringComparison]::Ordinal) -ge 0) {
             throw "External user kernel still exposes low-level token '$forbiddenKernelToken': $externalUserKernel"
         }
     }

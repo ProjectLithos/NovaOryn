@@ -1,15 +1,16 @@
 {
   "schemaVersion": 2,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.84",
-  "baseVersion": "0.0.83",
+  "version": "0.0.85",
+  "baseVersion": "0.0.84",
   "changedFiles": [
+    "Build-NovaOryn.ps1",
     "Directory.Build.props",
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
     "docs/NovaOryn.Documentation.json",
-    "docs/Release-0.0.84.md",
+    "docs/Release-0.0.85.md",
     "src/NovaOryn.ManagedCompiler/Program.cs",
     "src/NovaOryn.QemuLauncher/Program.cs",
     "src/NovaOryn.VisualStudio/NovaOrynPackage.cs",
@@ -21,7 +22,7 @@
     "toolchain/NovaOryn.Toolchain.json"
   ],
   "deletedFiles": [
-    "docs/Release-0.0.83.md"
+    "docs/Release-0.0.84.md"
   ],
   "renamedFiles": []
 }
