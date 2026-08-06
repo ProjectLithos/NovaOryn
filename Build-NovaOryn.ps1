@@ -180,6 +180,14 @@ if (-not (Test-Path -LiteralPath $projectCreator -PathType Leaf)) {
     throw "NovaOryn.ProjectCreator was not produced: $projectCreator"
 }
 
+$externalKernelDirectory = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)) "Source\Repos\NovaOrynKernel"
+if (Test-Path -LiteralPath $externalKernelDirectory -PathType Container) {
+    Write-Host "[INFO] Refreshing the existing external NovaOryn kernel project."
+    & $dotnet $projectCreator create --output $externalKernelDirectory --sdk-root $root
+    if ($LASTEXITCODE -ne 0) { throw "External NovaOryn kernel project refresh failed with exit code $LASTEXITCODE." }
+    Write-Host "[ OK ] External kernel project refreshed: $externalKernelDirectory"
+}
+
 $defaultKernelDirectory = Join-Path $root "src\NovaOryn.Kernel.Bootstrap"
 $projectManifest = if ([string]::IsNullOrWhiteSpace($Project)) {
     Join-Path $defaultKernelDirectory "NovaOrynProject.json"

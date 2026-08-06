@@ -1,16 +1,16 @@
 {
   "schemaVersion": 2,
   "product": "Nova Oryn OS SDK",
-  "version": "0.0.71",
-  "baseVersion": "0.0.70",
+  "version": "0.0.72",
+  "baseVersion": "0.0.71",
   "changedFiles": [
+    "Build-NovaOryn.ps1",
     "Directory.Build.props",
     "NovaOryn-Changes.json",
     "NovaOryn-SourceManifest.json",
     "README.md",
     "docs/NovaOryn.Documentation.json",
-    "docs/Release-0.0.71.md",
-    "src/NovaOryn.Kernel.Entry.X64/KernelEntry.cs",
+    "docs/Release-0.0.72.md",
     "src/NovaOryn.ManagedCompiler/Program.cs",
     "src/NovaOryn.QemuLauncher/Program.cs",
     "src/NovaOryn.VisualStudio/NovaOrynPackage.cs",
@@ -18,10 +18,11 @@
     "src/NovaOryn.VisualStudio/ProjectTemplates/NovaOryn.VisualStudio.Project.vstman",
     "src/NovaOryn.VisualStudio/Properties/AssemblyInfo.cs",
     "src/NovaOryn.VisualStudio/source.extension.vsixmanifest",
-    "templates/NovaOrynKernel/Sdk/NovaOryn.Kernel.Entry.X64/KernelEntry.cs",
     "tests/NovaOryn.SourcePolicy.Tests/Program.cs",
     "toolchain/NovaOryn.Toolchain.json"
   ],
-  "deletedFiles": [],
+  "deletedFiles": [
+    "docs/Release-0.0.71.md"
+  ],
   "renamedFiles": []
 }

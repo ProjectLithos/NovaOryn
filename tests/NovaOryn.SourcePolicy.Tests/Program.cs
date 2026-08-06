@@ -375,6 +375,17 @@ if (!buildScript.Contains("src\\NovaOryn.Kernel.Bootstrap", StringComparison.Ord
 {
     failures.Add("Build script must compile the authoritative in-repository bootstrap by default.");
 }
+if (!buildScript.Contains("Refreshing the existing external NovaOryn kernel project", StringComparison.Ordinal) ||
+    !buildScript.Contains("$dotnet $projectCreator create --output $externalKernelDirectory --sdk-root $root", StringComparison.Ordinal))
+{
+    failures.Add("Build script must safely refresh an existing external NovaOryn kernel project.");
+}
+if (!projectCreatorDefaults.Contains("IsSdkGeneratedLegacyKernel", StringComparison.Ordinal) ||
+    !projectCreatorDefaults.Contains("internal static class Native", StringComparison.Ordinal) ||
+    !projectCreatorDefaults.Contains(".pre-0.0.69.bak", StringComparison.Ordinal))
+{
+    failures.Add("Project creator must migrate SDK-generated monolithic kernels while preserving a backup.");
+}
 string kernelTemplate = Path.Combine(root, "templates", "NovaOrynKernel", "Kernel", "Kernel.cs");
 if (!File.Exists(kernelTemplate))
 {
