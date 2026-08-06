@@ -60,11 +60,24 @@ static int MainEntry(string[] args)
         return Fail($"Roslyn did not produce the bootstrap IL assembly: {managedAssembly}");
     }
 
+    string systemModuleAssembly = Path.Combine(managedOutput, systemModule + ".dll");
+    if (!File.Exists(systemModuleAssembly))
+    {
+        return Fail($"Roslyn did not produce the configured freestanding system module: {systemModuleAssembly}");
+    }
+
+    string[] managedInputs = Directory
+        .GetFiles(managedOutput, "*.dll", SearchOption.TopDirectoryOnly)
+        .Select(Path.GetFullPath)
+        .OrderBy(path => string.Equals(path, managedAssembly, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+        .ThenBy(path => path, StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
     string nativeObject = Path.Combine(nativeOutput, project.Name + ".obj");
     string ilcMap = Path.Combine(nativeOutput, project.Name + ".ilc.map");
-    string[] ilcArguments =
+    List<string> ilcArguments = [.. managedInputs];
+    ilcArguments.AddRange(
     [
-        managedAssembly,
         $"-o:{nativeObject}",
         "--systemmodule", systemModule,
         "--targetos:win",
@@ -75,7 +88,7 @@ static int MainEntry(string[] args)
         "--noscan",
         "--reflectiondata:none",
         "--nopreinitstatics"
-    ];
+    ]);
 
     Console.WriteLine($"[INFO] Compiling managed IL with the repository-pinned ILC host: {ilc}");
     Console.WriteLine("[INFO] targetos:win selects the PE/COFF ABI used by x64 UEFI; no Windows CoreLib or Windows runtime library is referenced.");
@@ -94,7 +107,7 @@ static int MainEntry(string[] args)
     File.WriteAllText(compileManifest, JsonSerializer.Serialize(new
     {
         schemaVersion = 5,
-        productVersion = "0.0.30",
+        productVersion = "0.0.67",
         project = project.Name,
         kernelEntry = project.KernelEntry,
         architecture = project.TargetArchitecture,
@@ -104,6 +117,7 @@ static int MainEntry(string[] args)
         optimization = "BootstrapCorrectness",
         managedAssembly,
         systemModule,
+        managedInputs,
         nativeObject,
         ilcMap,
         ilcExecutable = ilc,

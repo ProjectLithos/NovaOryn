@@ -161,6 +161,12 @@ foreach (string required in new[] { "--systemmodule", "--targetos:win", "--targe
         failures.Add($"Direct ILC invocation is missing {required}.");
     }
 }
+if (!managedCompiler.Contains("GetFiles(managedOutput, "*.dll"", StringComparison.Ordinal) ||
+    !managedCompiler.Contains("managedInputs", StringComparison.Ordinal) ||
+    !managedCompiler.Contains("systemModuleAssembly", StringComparison.Ordinal))
+{
+    failures.Add("Direct ILC compilation must include every managed bootstrap assembly and verify the configured system module exists.");
+}
 if (!managedCompiler.Contains("nativeObject", StringComparison.Ordinal))
 {
     failures.Add("Compilation manifest must record the direct ILC native object.");
