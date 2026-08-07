@@ -11,13 +11,15 @@ namespace NovaOryn.Kernel.Sample;
 
 public static class Kernel
 {
+    private const uint ConsoleFontSize = 32U;
+
     [KernelEntry]
     public static bool KMain(BootContext boot)
     {
         SerialConsole serial = new();
         FramebufferConsole framebuffer = new();
         if (!serial.Configure(SerialConfiguration.Com1())) return false;
-        if (!framebuffer.Configure(FramebufferConfiguration.Default())) return false;
+        if (!framebuffer.Configure(FramebufferConfiguration.Default(ConsoleFontSize))) return false;
         if (!serial.Initialize(boot)) return false;
         if (!framebuffer.Initialize(boot)) return false;
         if (!WriteLine(serial, framebuffer, "NovaOryn KMain started.")) return false;

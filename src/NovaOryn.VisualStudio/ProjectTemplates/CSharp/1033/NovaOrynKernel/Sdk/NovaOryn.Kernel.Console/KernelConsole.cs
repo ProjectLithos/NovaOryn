@@ -6,14 +6,27 @@ namespace NovaOryn.Kernel.Console;
 /// <summary>Provides normal managed C# console output for a freestanding NovaOryn kernel.</summary>
 public static class KernelConsole
 {
+    private const UInt32 DefaultFontSize = BitmapFont.DefaultFontSize;
     private static FramebufferConsole _framebuffer;
     private static Boolean _initialized;
 
-    /// <summary>Initializes serial and framebuffer output.</summary>
+    /// <summary>Gets the exact glyph height used by the framebuffer renderer, in pixels.</summary>
+    public static UInt32 FontSize
+    {
+        get { return _framebuffer.FontSize; }
+    }
+
+    /// <summary>Initializes serial output and a 32-pixel framebuffer font.</summary>
     public static Boolean Initialize(BootContext boot)
     {
+        return Initialize(boot, DefaultFontSize);
+    }
+
+    /// <summary>Initializes serial and framebuffer output with an exact rendered font size.</summary>
+    public static Boolean Initialize(BootContext boot, UInt32 fontSize)
+    {
         if (!Native.InitializeSerial()) return false;
-        if (!_framebuffer.Initialize(boot)) return false;
+        if (!_framebuffer.Initialize(boot, fontSize)) return false;
         if (!_framebuffer.Clear()) return false;
         _initialized = true;
         return true;

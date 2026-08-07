@@ -15,11 +15,20 @@ internal unsafe struct FramebufferConsole
     private UInt32 _blueMask;
     private UInt32 _cursorX;
     private UInt32 _cursorY;
-    private UInt32 _scale;
+    private UInt32 _fontSize;
+    private UInt32 _glyphWidth;
+    private UInt32 _characterAdvance;
+    private UInt32 _lineHeight;
+    private UInt32 _margin;
     private UInt32 _foreground;
     private UInt32 _background;
 
-    internal Boolean Initialize(BootContext boot)
+    internal UInt32 FontSize
+    {
+        get { return _fontSize; }
+    }
+
+    internal Boolean Initialize(BootContext boot, UInt32 fontSize)
     {
         NativeBootContext* context = boot.GetNativeContext();
         if (context == null || context->Signature != 0x4E59524F41564F4EUL) return false;
@@ -47,6 +56,17 @@ internal unsafe struct FramebufferConsole
             if (!IsContiguousMask(context->BlueMask)) return false;
         }
 
+        if (BitmapFont.GetFontContractVersion() != 2U) return false;
+        if (fontSize < BitmapFont.MinimumFontSize || fontSize > BitmapFont.MaximumFontSize) return false;
+        UInt32 glyphWidth = BitmapFont.GetRenderedGlyphWidth(fontSize);
+        UInt32 characterAdvance = BitmapFont.GetRenderedCharacterAdvance(fontSize);
+        UInt32 lineHeight = BitmapFont.GetRenderedLineHeight(fontSize);
+        UInt32 margin = fontSize / 2U;
+        if (margin == 0U) margin = 1U;
+        if (glyphWidth == 0U || characterAdvance < glyphWidth || lineHeight < fontSize) return false;
+        if (margin >= context->Width || margin >= context->Height) return false;
+        if (glyphWidth > context->Width - margin || fontSize > context->Height - margin) return false;
+
         _address = context->FramebufferAddress;
         _size = context->FramebufferSize;
         _width = context->Width;
@@ -56,9 +76,13 @@ internal unsafe struct FramebufferConsole
         _redMask = context->RedMask;
         _greenMask = context->GreenMask;
         _blueMask = context->BlueMask;
-        _scale = _width >= 480U && _height >= 120U ? 2U : 1U;
-        _cursorX = 16U * _scale;
-        _cursorY = 16U * _scale;
+        _fontSize = fontSize;
+        _glyphWidth = glyphWidth;
+        _characterAdvance = characterAdvance;
+        _lineHeight = lineHeight;
+        _margin = margin;
+        _cursorX = margin;
+        _cursorY = margin;
         _foreground = PackColor(232, 240, 248);
         _background = PackColor(9, 16, 24);
         return true;
@@ -76,6 +100,8 @@ internal unsafe struct FramebufferConsole
             pixel++;
             pixelCount--;
         }
+        _cursorX = _margin;
+        _cursorY = _margin;
         return true;
     }
 
@@ -83,64 +109,50 @@ internal unsafe struct FramebufferConsole
     {
         if (value == (Byte)'\r') return true;
         if (value == (Byte)'\n') return MoveToNextLine();
-
-        UInt32 glyphWidth = 5U * _scale;
-        UInt32 advance = glyphWidth + (2U * _scale);
-        if (_cursorX + glyphWidth >= _width && !MoveToNextLine()) return false;
-        if (_cursorY + (7U * _scale) >= _height) return false;
+        if (_cursorX > _width - _glyphWidth && !MoveToNextLine()) return false;
+        if (_cursorY > _height - _fontSize) return false;
         if (!DrawGlyph(value, _cursorX, _cursorY)) return false;
-        _cursorX += advance;
+        _cursorX += _characterAdvance;
         return true;
     }
 
     private Boolean MoveToNextLine()
     {
-        _cursorX = 16U * _scale;
-        _cursorY += 10U * _scale;
-        return _cursorY + (7U * _scale) < _height;
+        _cursorX = _margin;
+        if (_cursorY > 0xFFFFFFFFU - _lineHeight) return false;
+        _cursorY += _lineHeight;
+        return _cursorY <= _height - _fontSize;
     }
 
     private Boolean DrawGlyph(Byte value, UInt32 originX, UInt32 originY)
     {
-        UInt64 glyph = BitmapFont.GetGlyph(value);
-        UInt32 row = 0;
-        while (row < 7U)
+        UInt32 renderedRow = 0;
+        while (renderedRow < _fontSize)
         {
-            UInt32 shift = (6U - row) * 5U;
-            UInt32 bits = (UInt32)((glyph >> (Int32)shift) & 0x1FUL);
-            UInt32 column = 0;
-            while (column < 5U)
+            UInt32 sourceRow = BitmapFont.GetSourceRow(renderedRow, _fontSize);
+            UInt32 bits = BitmapFont.GetGlyphRow(value, sourceRow);
+            UInt32 renderedColumn = 0;
+            while (renderedColumn < _glyphWidth)
             {
-                UInt32 mask = 1U << (Int32)(4U - column);
-                if ((bits & mask) != 0)
+                UInt32 sourceColumn = BitmapFont.GetSourceColumn(renderedColumn, _glyphWidth);
+                UInt32 mask = 1U << (Int32)((BitmapFont.GlyphWidth - 1U) - sourceColumn);
+                if ((bits & mask) != 0U)
                 {
-                    if (!DrawBlock(originX + (column * _scale), originY + (row * _scale))) return false;
+                    if (!DrawPixel(originX + renderedColumn, originY + renderedRow)) return false;
                 }
-                column++;
+                renderedColumn++;
             }
-            row++;
+            renderedRow++;
         }
         return true;
     }
 
-    private Boolean DrawBlock(UInt32 originX, UInt32 originY)
+    private Boolean DrawPixel(UInt32 pixelX, UInt32 pixelY)
     {
-        UInt32 y = 0;
-        while (y < _scale)
-        {
-            UInt32 x = 0;
-            while (x < _scale)
-            {
-                UInt32 pixelX = originX + x;
-                UInt32 pixelY = originY + y;
-                if (pixelX >= _width || pixelY >= _height) return false;
-                UInt64 index = ((UInt64)pixelY * (UInt64)_pitch) + pixelX;
-                if (index >= _size / 4UL) return false;
-                *((UInt32*)_address + index) = _foreground;
-                x++;
-            }
-            y++;
-        }
+        if (pixelX >= _width || pixelY >= _height) return false;
+        UInt64 index = ((UInt64)pixelY * (UInt64)_pitch) + pixelX;
+        if (index >= _size / 4UL) return false;
+        *((UInt32*)_address + index) = _foreground;
         return true;
     }
 

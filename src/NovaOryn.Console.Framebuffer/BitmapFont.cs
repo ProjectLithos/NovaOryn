@@ -44,6 +44,23 @@ internal static class BitmapFont
         return (uint)((((ulong)metric * fontSize) + GlyphHeight - 1U) / GlyphHeight);
     }
 
+    internal static uint GetFontContractVersion()
+    {
+        return 2U;
+    }
+
+    internal static bool TryGetGlyphRow(char value, uint row, out byte bits)
+    {
+        if (row >= GlyphHeight)
+        {
+            bits = 0;
+            return false;
+        }
+
+        bits = GetGlyphRow(value, row);
+        return true;
+    }
+
     internal static byte GetGlyphRow(char value, uint row)
     {
         if (row >= GlyphHeight) return 0;

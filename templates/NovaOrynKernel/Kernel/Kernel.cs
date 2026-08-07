@@ -7,10 +7,12 @@ namespace NovaOryn.Kernel.Bootstrap;
 /// <summary>Defines the user-owned NovaOryn kernel.</summary>
 public static class Kernel
 {
+    private const UInt32 ConsoleFontSize = 32U;
+
     /// <summary>Initializes the kernel platform and enters the terminal processor halt state.</summary>
     public static Boolean KMain(BootContext boot)
     {
-        if (!KernelConsole.Initialize(boot, 32U)) return false;
+        if (!KernelConsole.Initialize(boot, ConsoleFontSize)) return false;
         if (!KernelConsole.WriteLine("NovaOryn KMain started.")) return false;
 
         // USER CODE: change this text, add more managed calls, then rebuild.

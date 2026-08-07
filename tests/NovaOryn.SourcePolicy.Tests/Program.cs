@@ -492,6 +492,7 @@ string bootstrapBitmapFont = File.ReadAllText(Path.Combine(root, "src", "NovaOry
 string commandLineBitmapFont = File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "BitmapFont.cs"));
 string visualStudioBitmapFont = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "BitmapFont.cs"));
 string reusableBitmapFont = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Console.Framebuffer", "BitmapFont.cs"));
+string reusableFramebuffer = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Console.Framebuffer", "FramebufferConsole.cs"));
 string commandLineFramebuffer = File.ReadAllText(Path.Combine(root, "templates", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "FramebufferConsole.cs"));
 string visualStudioFramebuffer = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.VisualStudio", "ProjectTemplates", "CSharp", "1033", "NovaOrynKernel", "Sdk", "NovaOryn.Kernel.Console", "FramebufferConsole.cs"));
 if (!string.Equals(bootstrapFramebuffer, commandLineFramebuffer, StringComparison.Ordinal) ||
@@ -512,6 +513,7 @@ foreach (string required in new[]
     "CharacterAdvance = 10U",
     "LineHeight = 20U",
     "DefaultFontSize = 32U",
+    "GetFontContractVersion",
     "GetRenderedGlyphWidth",
     "GetRenderedCharacterAdvance",
     "GetRenderedLineHeight",
@@ -529,6 +531,14 @@ if (bootstrapBitmapFont.Contains("switch (value)", StringComparison.Ordinal) ||
     reusableBitmapFont.Contains("switch (value)", StringComparison.Ordinal))
 {
     failures.Add("Framebuffer glyph dispatch must use the branch-only bit tree rather than a dense switch table.");
+}
+if (!reusableBitmapFont.Contains("GetFontContractVersion", StringComparison.Ordinal) ||
+    !reusableBitmapFont.Contains("TryGetGlyphRow", StringComparison.Ordinal) ||
+    !reusableFramebuffer.Contains("BitmapFont.GetFontContractVersion", StringComparison.Ordinal) ||
+    !reusableFramebuffer.Contains("BitmapFont.TryGetGlyphRow", StringComparison.Ordinal) ||
+    reusableFramebuffer.Contains("BitmapFont.GetGlyph(", StringComparison.Ordinal))
+{
+    failures.Add("The reusable framebuffer renderer must use the current row-based bitmap-font API and contain no legacy GetGlyph caller.");
 }
 ulong[] expectedGlyphTop = new ulong[0x7F];
 ulong[] expectedGlyphBottom = new ulong[0x7F];
@@ -594,7 +604,8 @@ if (!thirdPartyNotices.Contains("DejaVu Sans Mono Bold 2.37", StringComparison.O
     failures.Add("The embedded framebuffer font must retain its DejaVu/Bitstream provenance notice.");
 }
 string kernelConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
-if (!kernelConsole.Contains("_framebuffer.Initialize(boot, fontSize)", StringComparison.Ordinal) ||
+if (!kernelConsole.Contains("DefaultFontSize = BitmapFont.DefaultFontSize", StringComparison.Ordinal) ||
+    !kernelConsole.Contains("_framebuffer.Initialize(boot, fontSize)", StringComparison.Ordinal) ||
     !kernelConsole.Contains("_framebuffer.Clear()", StringComparison.Ordinal) ||
     !kernelConsole.Contains("Native.WriteSerial(value)", StringComparison.Ordinal) ||
     !kernelConsole.Contains("_framebuffer.Write(value)", StringComparison.Ordinal))

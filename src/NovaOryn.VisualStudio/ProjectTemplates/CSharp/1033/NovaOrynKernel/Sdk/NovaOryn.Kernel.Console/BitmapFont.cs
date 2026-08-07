@@ -16,6 +16,11 @@ internal static class BitmapFont
 
     // FontSize is the rendered glyph height in framebuffer pixels. All other
     // renderer measurements are derived from that one value.
+    internal static UInt32 GetFontContractVersion()
+    {
+        return 2U;
+    }
+
     internal static UInt32 GetRenderedGlyphWidth(UInt32 fontSize)
     {
         return ScaleMetric(GlyphWidth, fontSize);
