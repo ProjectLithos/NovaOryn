@@ -1,10 +1,10 @@
 @echo off
 setlocal EnableExtensions
-set "SCRIPT=%~dp0Update-NovaOryn.ps1"
-if not exist "%SCRIPT%" (
-  echo [FAIL] Missing Update-NovaOryn.ps1 beside this batch file.
+set "BOOTSTRAP=%~dp0Bootstrap-Update-NovaOryn.ps1"
+if not exist "%BOOTSTRAP%" (
+  echo [FAIL] Missing Bootstrap-Update-NovaOryn.ps1 beside this batch file.
   exit /b 1
 )
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" %*
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%BOOTSTRAP%" %*
 set "EXITCODE=%ERRORLEVEL%"
 endlocal & exit /b %EXITCODE%

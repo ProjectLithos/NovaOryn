@@ -19,5 +19,5 @@ public sealed class DoesNotReturnAttribute : Attribute
 public readonly record struct VersionInfo(ushort Major, ushort Minor, ushort Patch)
 {
     /// <summary>Gets the version of the currently installed NovaOryn SDK.</summary>
-    public static VersionInfo Current => new(0, 0, 96);
+    public static VersionInfo Current => new(0, 0, 97);
 }

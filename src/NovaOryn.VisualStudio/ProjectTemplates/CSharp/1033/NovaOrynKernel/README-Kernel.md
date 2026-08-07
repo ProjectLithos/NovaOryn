@@ -1,6 +1,6 @@
 # Editable NovaOryn kernel
 
-This project requires **NovaOryn SDK 0.0.96 or later**.
+This project requires **NovaOryn SDK 0.0.97 or later**.
 
 Edit `Kernel\Kernel.cs`. Do not move the file and do not add native imports to it. The line marked `USER CODE` is safe to change immediately.
 

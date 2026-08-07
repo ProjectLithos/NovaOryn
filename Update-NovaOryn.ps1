@@ -192,6 +192,58 @@ function Get-ArchiveTargetPathSet([string]$ArchivePath) {
     }
 }
 
+function Assert-TargetSourceManifest([string]$RepositoryRoot) {
+    $manifestPath = Join-Path $RepositoryRoot 'NovaOryn-SourceManifest.json'
+    if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+        Fail 'Updated source tree does not contain NovaOryn-SourceManifest.json.'
+    }
+
+    try {
+        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+    } catch {
+        Fail 'Updated NovaOryn-SourceManifest.json is invalid.'
+    }
+
+    $problems = [Collections.Generic.List[string]]::new()
+    foreach ($file in @($manifest.files)) {
+        if ($null -eq $file -or [string]::IsNullOrWhiteSpace([string]$file.path)) {
+            $problems.Add('<manifest entry without path>')
+            continue
+        }
+
+        $relative = ([string]$file.path).Replace('\', '/')
+        if ([IO.Path]::IsPathRooted($relative) -or $relative.Split('/') -contains '..') {
+            $problems.Add("$relative (unsafe path)")
+            continue
+        }
+
+        $target = Join-Path $RepositoryRoot $relative
+        if (-not (Test-Path -LiteralPath $target -PathType Leaf)) {
+            $problems.Add("$relative (missing)")
+            continue
+        }
+
+        $actualItem = Get-Item -LiteralPath $target
+        $expectedSize = [long]$file.size
+        if ($actualItem.Length -ne $expectedSize) {
+            $problems.Add("$relative (size $($actualItem.Length), expected $expectedSize)")
+            continue
+        }
+
+        $expectedHash = ([string]$file.sha256).ToLowerInvariant()
+        $actualHash = Get-Sha256 $target
+        if ($actualHash -ne $expectedHash) {
+            $problems.Add("$relative (SHA-256 mismatch)")
+        }
+    }
+
+    if ($problems.Count -gt 0) {
+        Fail "Updated source tree does not match NovaOryn-SourceManifest.json: $($problems -join ', ')"
+    }
+
+    Write-Ok "Target source manifest verified: $(@($manifest.files).Count) file(s)."
+}
+
 function Get-PreviouslySuppliedFileHashes([string]$RepositoryRoot) {
     $manifestPath = Join-Path $RepositoryRoot 'NovaOryn-SourceManifest.json'
     $hashes = @{}
@@ -339,6 +391,7 @@ try {
     if ($hasCommit) { Assert-SafeWorkingTree $repositoryRoot $latest.File.FullName } else { Clear-UncommittedInitialTree $repositoryRoot }
     Expand-SourceArchive $latest.File.FullName $repositoryRoot
     if ($hasCommit) { Apply-ChangeManifest $repositoryRoot }
+    Assert-TargetSourceManifest $repositoryRoot
 
     & git.exe -C $repositoryRoot add -A
     if ($LASTEXITCODE -ne 0) { Fail 'git add failed.' }

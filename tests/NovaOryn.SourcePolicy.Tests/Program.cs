@@ -597,11 +597,19 @@ foreach (int descender in new[] { 0x67, 0x6A, 0x70, 0x71, 0x79 })
         failures.Add($"NovaOryn Mono descender U+{descender:X4} must draw below the baseline.");
     }
 }
-string thirdPartyNotices = File.ReadAllText(Path.Combine(root, "THIRD-PARTY-NOTICES.md"));
-if (!thirdPartyNotices.Contains("DejaVu Sans Mono Bold 2.37", StringComparison.Ordinal) ||
-    !thirdPartyNotices.Contains("Bitstream Vera Fonts Copyright", StringComparison.Ordinal))
+string thirdPartyNoticesPath = Path.Combine(root, "THIRD-PARTY-NOTICES.md");
+if (!File.Exists(thirdPartyNoticesPath))
 {
-    failures.Add("The embedded framebuffer font must retain its DejaVu/Bitstream provenance notice.");
+    failures.Add("Required repository file is missing: THIRD-PARTY-NOTICES.md");
+}
+else
+{
+    string thirdPartyNotices = File.ReadAllText(thirdPartyNoticesPath);
+    if (!thirdPartyNotices.Contains("DejaVu Sans Mono Bold 2.37", StringComparison.Ordinal) ||
+        !thirdPartyNotices.Contains("Bitstream Vera Fonts Copyright", StringComparison.Ordinal))
+    {
+        failures.Add("The embedded framebuffer font must retain its DejaVu/Bitstream provenance notice.");
+    }
 }
 string kernelConsole = File.ReadAllText(Path.Combine(root, "src", "NovaOryn.Kernel.Console", "KernelConsole.cs"));
 if (!kernelConsole.Contains("DefaultFontSize = BitmapFont.DefaultFontSize", StringComparison.Ordinal) ||
@@ -975,6 +983,17 @@ if (!updaterSource.Contains("NovaOryn-SourceManifest.json", StringComparison.Ord
     !updaterSource.Contains("archiveHashes.ContainsKey($normalized)", StringComparison.Ordinal))
 {
     failures.Add("Updater must permit the selected archive to replace generated source-manifest metadata.");
+}
+if (!updaterSource.Contains("Assert-TargetSourceManifest", StringComparison.Ordinal) ||
+    !updaterSource.Contains("Target source manifest verified", StringComparison.Ordinal) ||
+    !updaterSource.Contains("SHA-256 mismatch", StringComparison.Ordinal))
+{
+    failures.Add("Updater must verify the complete target source manifest before staging or pushing an update.");
+}
+string sourceManifestText = File.ReadAllText(Path.Combine(root, "NovaOryn-SourceManifest.json"));
+if (!sourceManifestText.Contains("\"path\": \"THIRD-PARTY-NOTICES.md\"", StringComparison.Ordinal))
+{
+    failures.Add("The authoritative source manifest must include THIRD-PARTY-NOTICES.md.");
 }
 
 if (failures.Count != 0)

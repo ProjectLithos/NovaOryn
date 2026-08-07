@@ -1,12 +1,12 @@
-# Nova Oryn OS SDK 0.0.96
+# Nova Oryn OS SDK 0.0.97
 
 Nova Oryn OS SDK (`NovaOryn`) is a from-scratch SDK for compiling user-owned freestanding C# kernels and operating systems with the real .NET NativeAOT compiler (`ilc`).
 
-## Release 0.0.96
+## Release 0.0.97
 
-Release 0.0.96 repairs and synchronises the complete framebuffer-font pipeline after the bitmap font moved from the legacy packed 5×7 `GetGlyph` API to the real 8×16 row API. The reusable console, freestanding kernel console, command-line template, and Visual Studio template are all supplied together in ChangedFiles so an installation that missed an earlier font update cannot retain an incompatible caller or renderer.
+Release 0.0.97 repairs incomplete ChangedFiles installations that can otherwise leave the repository without `THIRD-PARTY-NOTICES.md`. The notice is deliberately revised and reissued in this release, so applying 0.0.97 restores the required root file even when an earlier incremental update omitted it.
 
-The reusable renderer now obtains each raster row through `TryGetGlyphRow`; every renderer validates font contract version 2; and source-policy validation rejects any remaining `BitmapFont.GetGlyph(` call. The release also aligns the SDK version reported by `VersionInfo.Current` and the image-builder manifest with the actual release. The editable `Kernel\Kernel.cs` remains user-owned and uses one `ConsoleFontSize` value.
+Source-policy validation now checks for the notice file before reading it and reports a normal test failure rather than terminating with `FileNotFoundException`. The updater also validates every file, size, and SHA-256 recorded by the target `NovaOryn-SourceManifest.json` after extraction and deletion/rename processing, before the source is committed or pushed. This prevents a future ChangedFiles update from silently producing an incomplete source tree.
 
 ## Release 0.0.95
 
@@ -142,7 +142,7 @@ Kernel and OS creation is performed by NovaOryn executable tools. Scripts may bo
 
 The updater now accepts exact NovaOryn files left uncommitted from earlier releases when their SHA-256 values match the existing source manifest. Unrelated local edits are still rejected.
 
-See `docs/Release-0.0.96.md` for this release.
+See `docs/Release-0.0.97.md` for this release.
 
 
 ## 0.0.22 build
@@ -214,7 +214,7 @@ The SDK also contains the reusable `NovaOryn.Console.Framebuffer` assembly and t
 
 ## Visual Studio
 
-Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.96** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
+Run `Install-NovaOrynVSIX.bat`, then create a **NovaOryn Kernel 0.0.97** project in Visual Studio. F5 and Ctrl+F5 invoke the NovaOryn build-and-run pipeline.
 
 ## Kernel project layout
 
